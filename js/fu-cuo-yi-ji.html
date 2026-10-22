@@ -1366,19 +1366,18 @@
     renderProductDetail();
     $('pdScroll').scrollTop = 0;
     $('pdPage').classList.add('show');
-    notifyParentOverlay();
+    notifyParentImmersive(true);
   }
 
   function closeProductDetail() {
     $('pdPage').classList.remove('show');
-    notifyParentOverlay();
+    notifyParentImmersive(false);
   }
 
-  // 详情/下单遮罩打开时通知父页面隐藏其导航栏，避免出现两个返回键
-  function notifyParentOverlay() {
-    if (window.parent === window) return;
-    const open = $('pdPage').classList.contains('show') || $('ckPage').classList.contains('show');
-    try { window.parent.postMessage({ type: 'fzyj-overlay', open: open }, '*'); } catch (e) {}
+  // 详情页置顶时通知外层应用隐藏自身的「福厝艺集」导航栏，实现满屏效果
+  function notifyParentImmersive(on) {
+    if (window.self === window.top) return;
+    try { parent.postMessage({ type: 'fzyj-immersive', on: on }, '*'); } catch (e) {}
   }
 
   function renderProductDetail() {
@@ -1455,12 +1454,10 @@
     renderCheckout();
     $('ckScroll').scrollTop = 0;
     $('ckPage').classList.add('show');
-    notifyParentOverlay();
   }
 
   function closeCheckout() {
     $('ckPage').classList.remove('show');
-    notifyParentOverlay();
   }
 
   function renderCheckout() {

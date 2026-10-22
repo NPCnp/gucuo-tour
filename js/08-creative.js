@@ -5,6 +5,15 @@
   /* ========== 打开福厝艺集页面 ========== */
   function openCultural() {
     showScreen('cultural');
+    // 首次进入时与 iframe 内详情页状态保持一致（避免上次退出时导航栏仍处于隐藏状态）
+    const page = document.getElementById('page-cultural');
+    const frame = document.querySelector('#page-cultural .cultural-iframe');
+    let detailOpen = false;
+    try {
+      const doc = frame && frame.contentDocument;
+      detailOpen = !!(doc && doc.getElementById('pdPage') && doc.getElementById('pdPage').classList.contains('show'));
+    } catch (e) {}
+    if (page) page.classList.toggle('immersive', detailOpen);
   }
 
   /* ========== 接收 iframe（fu-cuo-yi-ji.html）同步的作品数据 ========== */
@@ -14,10 +23,10 @@
       const statEl = document.getElementById('statWorks');
       if (statEl) statEl.textContent = works.length;
     }
-    // 商城详情/下单遮罩打开时，隐藏父级导航栏，避免同时出现两个返回键
-    if (e.data && e.data.type === 'fzyj-overlay') {
+    // 商品详情置顶时隐藏外层导航栏，让详情页满屏显示
+    if (e.data && e.data.type === 'fzyj-immersive') {
       const page = document.getElementById('page-cultural');
-      if (page) page.classList.toggle('cultural-detail-open', !!e.data.open);
+      if (page) page.classList.toggle('immersive', !!e.data.on);
     }
   });
 
