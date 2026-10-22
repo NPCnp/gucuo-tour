@@ -61,6 +61,16 @@
     return url;
   }
 
+  // 百度地图网页版路线（无 App 时的兜底）
+  function baiduWebNavUrl(p) {
+    const mode = p.mode === 'car' ? 'driving' : p.mode === 'bus' ? 'transit' : 'walking';
+    let url = 'https://api.map.baidu.com/direction?';
+    if (p.start) url += 'origin=latlng:' + p.start.lat + ',' + p.start.lng + '|name:' + encodeURIComponent(p.fromName) + '&';
+    url += 'destination=latlng:' + p.dest.lat + ',' + p.dest.lng + '|name:' + encodeURIComponent(p.toName) +
+      '&mode=' + mode + '&coord_type=gcj02&output=html&src=webapp.gucuo';
+    return url;
+  }
+
   function openAmapAppNav(to, toName, from, mode, fromName) {
     if (!to || !to[0] || !to[1]) {
       showToast('目的地坐标缺失，无法发起导航');
@@ -122,18 +132,29 @@
       label = '高德地图';
     }
 
-    closeMapAppSheet();
+    // 用隐藏 iframe 触发 scheme：不打断用户手势，也不会在 Safari 弹出「无法打开网页」错误页
     let left = false;
     const onVis = () => { if (document.visibilityState === 'hidden') left = true; };
     document.addEventListener('visibilitychange', onVis);
-    try { window.location.href = scheme; } catch (e) {}
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'display:none;width:0;height:0;border:0';
+    document.body.appendChild(iframe);
+    try { iframe.src = scheme; } catch (e) {}
+    closeMapAppSheet();
+
     setTimeout(() => {
+      try { iframe.remove(); } catch (e) {}
       document.removeEventListener('visibilitychange', onVis);
+      // 页面已切到后台，说明 App 已成功唤起
       if (left || document.visibilityState !== 'visible') return;
-      const mask = document.getElementById('mapAppMask');
-      if (mask) mask.classList.add('show');
-      showToast('未能打开' + label + '，请确认已安装或改用其他方式');
-    }, 1500);
+      // 未能唤起（未安装或被拦截）：自动改用网页版导航，保证一定能导航
+      closeMapAppSheet();
+      showToast('未检测到' + label + '，已为你打开网页版导航');
+      setTimeout(() => {
+        window.location.href = app === 'baidu' ? baiduWebNavUrl(p) : amapWebNavUrl(p, true);
+      }, 400);
+    }, 1200);
   }
 
   // 只看点位（不带路线规划）
@@ -792,6 +813,10 @@
       });
     }
 
+    // 设置封面图，视频缓冲期间先显示实景图，避免白屏
+    const cover = spotPhoto(v.name) || spotPhoto(name);
+    if (cover) video.poster = cover;
+
     // 设置 src 并进入播放状态
     if (video.getAttribute('src') !== v.local) video.src = v.local;
     enterVideoPlaying();
@@ -833,6 +858,8 @@
     }
 
     box.style.display = 'block';
+    const dCover = spotPhoto(name);
+    if (dCover) video.poster = dCover;
     if (video.getAttribute('src') !== v.local) video.src = v.local;
     video.play().catch(function() {
       showToast('视频加载失败');
