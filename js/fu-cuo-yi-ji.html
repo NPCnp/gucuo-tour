@@ -869,6 +869,87 @@
     font-size: 12px; color: #555; margin-top: 4px; line-height: 1.5;
   }
   .ck-addr-arrow { color: #bbb; font-size: 15px; }
+  .ck-addr-empty { font-size: 13px; color: #1a1a1a; font-weight: 600; }
+  .ck-addr-empty em { font-style: normal; color: #e53935; font-weight: 400; margin-left: 6px; }
+
+  /* 收货地址编辑弹层 */
+  .addr-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+    padding: 0 18px;
+  }
+  .addr-mask.show { display: flex; }
+  .addr-sheet {
+    width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 16px 16px;
+  }
+  .addr-head { position: relative; text-align: center; margin-bottom: 4px; }
+  .addr-title { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+  .addr-close {
+    position: absolute; right: -4px; top: -6px;
+    width: 28px; height: 28px;
+    border: none; background: none;
+    color: #999; font-size: 15px; cursor: pointer;
+  }
+  .addr-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    border-bottom: 1px solid #eee;
+  }
+  .addr-k { width: 64px; flex-shrink: 0; font-size: 14px; color: #1a1a1a; }
+  .addr-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: none;
+    font-size: 14px;
+    color: #1a1a1a;
+    font-family: inherit;
+  }
+  .addr-input::placeholder { color: #bbb; }
+  .addr-locate {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    border: none;
+    background: none;
+    color: #e53935;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .addr-locate span { font-size: 15px; line-height: 1; }
+  .addr-err {
+    min-height: 16px;
+    font-size: 11px;
+    color: #e53935;
+    margin-top: 6px;
+  }
+  .addr-save {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 8px;
+    background: #e53935;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .addr-save:active { opacity: .88; }
+
   .ck-ship {
     display: flex; align-items: center; gap: 6px;
     background: #eef9f0; color: #1f8a4c;
@@ -1088,6 +1169,35 @@
       <div class="preview-mask" id="previewMask" onclick="closePreview()">
         <button class="preview-close" onclick="closePreview()">✕</button>
         <img id="previewImg" src="" alt="文创效果图预览" />
+      </div>
+
+      <!-- 收货地址编辑弹层 -->
+      <div class="addr-mask" id="addrMask">
+        <div class="addr-sheet">
+          <div class="addr-head">
+            <span class="addr-title">添加收货地址</span>
+            <button class="addr-close" onclick="closeAddrForm()">✕</button>
+          </div>
+          <div class="addr-row">
+            <span class="addr-k">收货人</span>
+            <input class="addr-input" id="addrName" type="text" maxlength="20" placeholder="收货人姓名" />
+          </div>
+          <div class="addr-row">
+            <span class="addr-k">手机号</span>
+            <input class="addr-input" id="addrPhone" type="tel" maxlength="11" inputmode="numeric" placeholder="收货人手机号" />
+          </div>
+          <div class="addr-row">
+            <span class="addr-k">地区</span>
+            <input class="addr-input" id="addrRegion" type="text" maxlength="40" placeholder="如：福建省 福州市 鼓楼区" />
+          </div>
+          <div class="addr-row">
+            <span class="addr-k">详细地址</span>
+            <input class="addr-input" id="addrDetail" type="text" maxlength="60" placeholder="如街道、门牌号、小区、乡镇、村等" />
+            <button class="addr-locate" type="button" onclick="locateAddress()"><span>📍</span>定位</button>
+          </div>
+          <div class="addr-err" id="addrErr"></div>
+          <button class="addr-save" onclick="saveAddress()">保存</button>
+        </div>
       </div>
 
       <!-- Toast -->
@@ -1474,19 +1584,89 @@
     $('ckPage').classList.remove('show');
   }
 
+  /* ========== 收货地址：填写 / 保存 / 回显 ========== */
+  const ADDR_KEY = 'fzyj_address';
+
+  // 扫码游客的地址只保存在本次会话，普通用户保存在本机
+  function addrStorage() {
+    try {
+      if (window.top !== window && window.top.sessionStorage.getItem('gucuo_scan_guest')) return sessionStorage;
+    } catch (e) {}
+    return localStorage;
+  }
+
+  function loadAddress() {
+    try { return JSON.parse(addrStorage().getItem(ADDR_KEY) || 'null'); } catch (e) { return null; }
+  }
+
+  function hasAddress(a) {
+    return !!(a && a.name && a.phone && a.region && a.detail);
+  }
+
+  function maskPhone(p) {
+    return p && p.length >= 7 ? p.slice(0, 3) + '****' + p.slice(-4) : (p || '');
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function openAddrForm() {
+    const a = loadAddress() || {};
+    $('addrName').value = a.name || '';
+    $('addrPhone').value = a.phone || '';
+    $('addrRegion').value = a.region || '';
+    $('addrDetail').value = a.detail || '';
+    $('addrErr').textContent = '';
+    $('addrMask').classList.add('show');
+    setTimeout(() => { try { $('addrName').focus(); } catch (e) {} }, 50);
+  }
+
+  function closeAddrForm() {
+    $('addrMask').classList.remove('show');
+  }
+
+  // 演示定位：以三坊七巷游客服务中心作为当前位置
+  function locateAddress() {
+    if (!$('addrRegion').value.trim()) $('addrRegion').value = '福建省 福州市 鼓楼区';
+    if (!$('addrDetail').value.trim()) $('addrDetail').value = '南后街三坊七巷游客服务中心';
+    showToast('已定位到三坊七巷');
+  }
+
+  function saveAddress() {
+    const name = $('addrName').value.trim();
+    const phone = $('addrPhone').value.replace(/\s/g, '');
+    const region = $('addrRegion').value.trim();
+    const detail = $('addrDetail').value.trim();
+    const fail = msg => { $('addrErr').textContent = msg; return false; };
+    if (!name) return fail('请填写收货人姓名');
+    if (!/^1\d{10}$/.test(phone)) return fail('请填写 11 位手机号');
+    if (!region) return fail('请填写所在地区');
+    if (!detail) return fail('请填写详细地址');
+    try { addrStorage().setItem(ADDR_KEY, JSON.stringify({ name, phone, region, detail })); } catch (e) {}
+    closeAddrForm();
+    renderCheckout();
+    showToast('收货地址已保存');
+  }
+
   function renderCheckout() {
     const cur = pdCurrent();
     if (!cur) return;
     const { g, spec, unit, offer, discount, total } = cur;
+    const addr = loadAddress();
+    const addrHtml = hasAddress(addr)
+      ? `<div class="ck-addr-top">${escHtml(addr.name)}<span>${maskPhone(addr.phone)}</span></div>
+         <div class="ck-addr-text">${escHtml(addr.region)} ${escHtml(addr.detail)}</div>`
+      : `<div class="ck-addr-empty">请填写收货地址<em>点击完善</em></div>
+         <div class="ck-addr-text">填写收货信息后即可提交订单</div>`;
 
     $('ckScroll').innerHTML = `
       <div class="ck-tip">✅ 早于 99% 同类商品送达 <span style="margin-left:auto;color:#9cc3a8;">✕</span></div>
-      <div class="ck-addr" onclick="showToast('切换收货地址（模拟）')">
+      <div class="ck-addr" onclick="openAddrForm()">
         <span class="ck-addr-ico">📍</span>
-        <div class="ck-addr-main">
-          <div class="ck-addr-top">林女士<span>138****6688</span></div>
-          <div class="ck-addr-text">福建省福州市鼓楼区南后街三坊七巷游客服务中心</div>
-        </div>
+        <div class="ck-addr-main">${addrHtml}</div>
         <span class="ck-addr-arrow">›</span>
       </div>
       <div class="ck-ship">⚡ 后天达　仅剩 <b>5</b> 件，现在下单后天送达</div>
@@ -1571,6 +1751,11 @@
   function submitOrder() {
     const cur = pdCurrent();
     if (!cur) return;
+    if (!hasAddress(loadAddress())) {
+      openAddrForm();
+      showToast('请先填写收货地址');
+      return;
+    }
     notifyParentOrder(cur);
     showToast(`支付成功 ¥${cur.total}（模拟）`);
     closeCheckout();
