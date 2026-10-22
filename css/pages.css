@@ -2411,6 +2411,68 @@
     margin-top: 12px; display: block;
   }
 
+  /* ========== 导航 App 选择弹层 ========== */
+  .mapapp-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: flex-end;
+    z-index: 3000;
+  }
+  .mapapp-mask.show { display: flex; }
+  .mapapp-sheet {
+    width: 100%;
+    background: #fff;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 18px 18px;
+    animation: mapSheetUp .22s ease;
+  }
+  @keyframes mapSheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .mapapp-title { font-size: 16px; font-weight: 600; color: #1a1a1a; text-align: center; }
+  .mapapp-sub { font-size: 12px; color: #999; text-align: center; margin: 6px 0 16px; }
+  .mapapp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    height: 56px;
+    padding: 0 14px;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+  }
+  .mapapp-item:active { background: #f7f7f7; }
+  .mapapp-logo {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .mapapp-logo.amap { background: #1677ff; }
+  .mapapp-logo.baidu { background: #2d63f5; }
+  .mapapp-name { flex: 1; font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .mapapp-arrow { color: #ccc; font-size: 18px; }
+  .mapapp-web {
+    width: 100%;
+    height: 44px;
+    margin-top: 4px;
+    border: none;
+    background: none;
+    color: #999;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
   /* ========== 真机（窄屏）适配：加大点按区域，导航更易操作 ========== */
   @media (max-width: 520px) {
     .chip { padding: 9px 15px; font-size: 12.5px; }

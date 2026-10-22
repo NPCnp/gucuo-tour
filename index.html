@@ -30,7 +30,7 @@
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=8">
-<link rel="stylesheet" href="css/pages.css?v=12">
+<link rel="stylesheet" href="css/pages.css?v=13">
 </head>
 <body>
   <div class="phone">
@@ -1086,16 +1086,35 @@
         <img id="previewImg" src="" alt="文创效果图预览" />
       </div>
 
+      <!-- 导航 App 选择弹层：手机端唤起高德/百度原生地图 -->
+      <div class="mapapp-mask" id="mapAppMask" onclick="closeMapAppSheet()">
+        <div class="mapapp-sheet" onclick="event.stopPropagation()">
+          <div class="mapapp-title">选择导航方式</div>
+          <div class="mapapp-sub">将直接打开手机里的地图 App</div>
+          <button class="mapapp-item" onclick="launchMapApp('amap')">
+            <span class="mapapp-logo amap">高</span>
+            <span class="mapapp-name">高德地图</span>
+            <span class="mapapp-arrow">›</span>
+          </button>
+          <button class="mapapp-item" onclick="launchMapApp('baidu')">
+            <span class="mapapp-logo baidu">百</span>
+            <span class="mapapp-name">百度地图</span>
+            <span class="mapapp-arrow">›</span>
+          </button>
+          <button class="mapapp-web" onclick="launchMapWeb()">使用网页版导航</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script src="js/01-data.js?v=5"></script>
-  <script src="js/02-core.js?v=14"></script>
+  <script src="js/02-core.js?v=15"></script>
   <script src="js/03-checkin.js?v=6"></script>
   <script src="js/04-route.js"></script>
-  <script src="js/05-narrations.js?v=4"></script>
+  <script src="js/05-narrations.js?v=5"></script>
   <script src="js/06-narrator.js?v=4"></script>
-  <script src="js/07-nav.js?v=6"></script>
+  <script src="js/07-nav.js?v=7"></script>
   <script src="js/08-creative.js?v=6"></script>
   <script src="js/09-profile.js?v=2"></script>
   <script src="js/10-init.js?v=3"></script>

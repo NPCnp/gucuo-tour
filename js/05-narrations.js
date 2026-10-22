@@ -747,12 +747,12 @@
     status.textContent = '正在申请获取您的当前位置…';
     locateVisitor(8000).then(res => {
       if (res.coord) {
-        status.textContent = '已获取位置，正在拉起高德导航…';
+        status.textContent = '已获取位置，请选择导航方式…';
         openAmapNav(res.coord, destCoord, n.name);
       } else {
         status.textContent = window.isSecureContext === false
-          ? '当前网页无法精确定位（需 HTTPS），已直接打开目的地地图'
-          : '定位失败，已为您打开目的地地图';
+          ? '当前网页无法精确定位（需 HTTPS），请手动选择导航方式'
+          : '定位失败，请手动选择导航方式';
         openAmapNav(null, destCoord, n.name);
       }
       btn.textContent = '重新导航';

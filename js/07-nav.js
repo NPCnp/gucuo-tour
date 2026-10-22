@@ -552,7 +552,6 @@
       return;
     }
 
-    showToast('正在唤起高德导航…');
     openAmapAppNav(last.coord, last.name, from, 'walk', currentStart || '我的位置');
   }
 

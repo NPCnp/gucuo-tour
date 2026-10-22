@@ -48,31 +48,92 @@
     }, 1500);
   }
 
-  // 路线导航（方案B：统一高德URI，callnative=1优先唤起APP，未安装自动退网页版）
+  /* ========== 路线导航：手机端唤起高德/百度原生 App ========== */
   // to=目的地坐标[lng,lat]，toName=目的地名，from=起点坐标[lng,lat]（可选，缺省用当前位置）
   // fromName=起点名（可选），mode=walk/car/bus
+  let mapAppPending = null;
+
+  function amapWebNavUrl(p, callnative) {
+    let url = 'https://uri.amap.com/navigation?';
+    if (p.start) url += 'from=' + p.start.lng + ',' + p.start.lat + ',' + encodeURIComponent(p.fromName) + '&';
+    url += 'to=' + p.dest.lng + ',' + p.dest.lat + ',' + encodeURIComponent(p.toName) +
+      '&mode=' + p.mode + '&coordinate=gaode&callnative=' + (callnative ? 1 : 0) + '&src=gucuo';
+    return url;
+  }
+
   function openAmapAppNav(to, toName, from, mode, fromName) {
     if (!to || !to[0] || !to[1]) {
       showToast('目的地坐标缺失，无法发起导航');
       return;
     }
-    const lng = Number(to[0]), lat = Number(to[1]);
-    const m = mode || 'walk';
-    let url = 'https://uri.amap.com/navigation?';
-    if (from && from[0] && from[1]) {
-      url += 'from=' + from[0] + ',' + from[1] + ',' + encodeURIComponent(fromName || '我的位置') + '&';
-    }
-    url += 'to=' + lng + ',' + lat + ',' + encodeURIComponent(toName || '目的地') +
-      '&mode=' + m + '&callnative=1&coordinate=gaode&src=gucuo';
-    const inWX = isWeChatBrowser();
-    if (inWX) {
-      showToast('微信内无法直接唤起高德App，请点右上角「···」→「在浏览器打开」后再导航');
-      // 微信内退网页版也只能打开网页高德，提示用户即可，不自动跳转
-      setTimeout(() => { try { window.open(url, '_blank'); } catch(e) {} }, 600);
+    const params = {
+      dest: { lng: Number(to[0]), lat: Number(to[1]) },
+      start: from && from[0] && from[1] ? { lng: Number(from[0]), lat: Number(from[1]) } : null,
+      toName: toName || '目的地',
+      fromName: fromName || '我的位置',
+      mode: mode || 'walk'
+    };
+
+    // 微信内置浏览器拦截外部 App scheme，只能提示用户在浏览器打开
+    if (isWeChatBrowser()) {
+      showToast('微信内无法直接唤起地图App，请点右上角「···」→「在浏览器打开」');
       return;
     }
-    if (!isMobileDevice()) { window.open(url, '_blank'); return; }
-    window.location.href = url;
+    // 桌面端没有原生地图 App，直接打开网页版
+    if (!isMobileDevice()) {
+      window.open(amapWebNavUrl(params, true), '_blank');
+      return;
+    }
+    mapAppPending = params;
+    const mask = document.getElementById('mapAppMask');
+    if (mask) mask.classList.add('show');
+  }
+
+  function closeMapAppSheet() {
+    const mask = document.getElementById('mapAppMask');
+    if (mask) mask.classList.remove('show');
+  }
+
+  function launchMapWeb() {
+    const p = mapAppPending;
+    closeMapAppSheet();
+    if (p) window.location.href = amapWebNavUrl(p, false);
+  }
+
+  // 选择高德/百度后，用原生 scheme 唤起 App；1.5 秒内未离开页面则给出提示并重新选择
+  function launchMapApp(app) {
+    const p = mapAppPending;
+    if (!p) { closeMapAppSheet(); return; }
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    let scheme;
+    let label;
+    if (app === 'baidu') {
+      const mode = p.mode === 'car' ? 'driving' : p.mode === 'bus' ? 'transit' : 'walking';
+      scheme = 'baidumap://map/direction?coord_type=gcj02&src=webapp.gucuo&mode=' + mode;
+      if (p.start) scheme += '&origin=latlng:' + p.start.lat + ',' + p.start.lng + '|name:' + encodeURIComponent(p.fromName);
+      scheme += '&destination=latlng:' + p.dest.lat + ',' + p.dest.lng + '|name:' + encodeURIComponent(p.toName);
+      label = '百度地图';
+    } else {
+      const m = p.mode === 'car' ? 0 : p.mode === 'bus' ? 1 : 2;
+      scheme = (isIOS ? 'iosamap://route' : 'androidamap://route') +
+        '?sourceApplication=gucuo&dev=0&m=' + m + '&t=0';
+      if (p.start) scheme += '&slat=' + p.start.lat + '&slon=' + p.start.lng + '&sname=' + encodeURIComponent(p.fromName);
+      scheme += '&dlat=' + p.dest.lat + '&dlon=' + p.dest.lng + '&dname=' + encodeURIComponent(p.toName);
+      label = '高德地图';
+    }
+
+    closeMapAppSheet();
+    let left = false;
+    const onVis = () => { if (document.visibilityState === 'hidden') left = true; };
+    document.addEventListener('visibilitychange', onVis);
+    try { window.location.href = scheme; } catch (e) {}
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onVis);
+      if (left || document.visibilityState !== 'visible') return;
+      const mask = document.getElementById('mapAppMask');
+      if (mask) mask.classList.add('show');
+      showToast('未能打开' + label + '，请确认已安装或改用其他方式');
+    }, 1500);
   }
 
   // 只看点位（不带路线规划）
