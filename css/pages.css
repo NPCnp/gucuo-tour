@@ -1714,6 +1714,8 @@
     border: none;
     display: block;
   }
+  /* 商品详情/确认订单打开时隐藏父级导航，页内只保留一个返回键 */
+  #page-cultural.cultural-detail-open > .nav-bar { display: none; }
 
   /* ========== 排行榜（景点 / 美食 / 娱乐） ========== */
   /* 顶部分类 Tab */

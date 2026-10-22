@@ -14,6 +14,11 @@
       const statEl = document.getElementById('statWorks');
       if (statEl) statEl.textContent = works.length;
     }
+    // 商城详情/下单遮罩打开时，隐藏父级导航栏，避免同时出现两个返回键
+    if (e.data && e.data.type === 'fzyj-overlay') {
+      const page = document.getElementById('page-cultural');
+      if (page) page.classList.toggle('cultural-detail-open', !!e.data.open);
+    }
   });
 
   /* ========== 工具函数 ========== */
