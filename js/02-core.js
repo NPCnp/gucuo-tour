@@ -184,17 +184,54 @@
   }
 
   // 跳转对应地图的官方下载页（应用商店页也属外链，微信内会引导至浏览器/应用宝）
+  // 微信内改为复制链接，避免触发「将要访问」中转页
   function launchMapDownload() {
     const p = mapAppPending;
+    if (!p || !p.downloadUrl) { closeMapAppSheet(); return; }
+    if (isWeChatBrowser()) {
+      copyUrlToClipboard(p.downloadUrl, '下载链接已复制，请粘贴到浏览器打开');
+      return;
+    }
     closeMapAppSheet();
-    if (p && p.downloadUrl) window.location.href = p.downloadUrl;
+    window.location.href = p.downloadUrl;
   }
 
+  // 使用网页版导航（兜底）
+  // 微信内改为复制链接，避免触发「将要访问」中转页
   function launchMapWeb() {
     const p = mapAppPending;
+    if (!p) { closeMapAppSheet(); return; }
+    const url = p.webUrl || amapWebNavUrl(p, false);
+    if (isWeChatBrowser()) {
+      copyUrlToClipboard(url, '网页版链接已复制，请粘贴到浏览器打开');
+      return;
+    }
     closeMapAppSheet();
-    if (!p) return;
-    window.location.href = p.webUrl || amapWebNavUrl(p, false);
+    window.location.href = url;
+  }
+
+  // 复制指定链接到剪贴板（微信内替代直接跳转，避免中转页）
+  function copyUrlToClipboard(url, tip) {
+    const done = () => {
+      showToast(tip || '链接已复制，请粘贴到浏览器打开');
+      showWxGuide();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopyUrl(url, done));
+    } else {
+      fallbackCopyUrl(url, done);
+    }
+  }
+  function fallbackCopyUrl(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (cb) cb();
   }
 
   // 选择高德/腾讯/百度后，用原生 scheme 唤起 App；1.5 秒内未离开页面则引导下载
