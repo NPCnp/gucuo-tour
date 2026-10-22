@@ -28,6 +28,10 @@
       const page = document.getElementById('page-cultural');
       if (page) page.classList.toggle('immersive', !!e.data.on);
     }
+    // 福厝艺集下单成功：写入「待收货」列表
+    if (e.data && e.data.type === 'fzyj-order' && e.data.order) {
+      addOrder(e.data.order);
+    }
   });
 
   /* ========== 工具函数 ========== */

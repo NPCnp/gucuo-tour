@@ -63,6 +63,47 @@
     `).join('');
   }
 
+  /* ========== 待收货：文创订单 ========== */
+  // 扫码游客的订单只保存在本次会话，普通用户保存在本机缓存
+  function orderStorage() {
+    return scanSessionActive ? sessionStorage : localStorage;
+  }
+
+  function loadOrders() {
+    try { return JSON.parse(orderStorage().getItem('gucuo_orders') || '[]'); } catch (e) { return []; }
+  }
+
+  function addOrder(order) {
+    const list = loadOrders();
+    list.unshift(order);
+    try { orderStorage().setItem('gucuo_orders', JSON.stringify(list.slice(0, 30))); } catch (e) {}
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const box = document.getElementById('ordersList');
+    if (!box) return;
+    const list = loadOrders();
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-tip"><div class="big">📦</div>暂无待收货订单<br/>在「福厝艺集」下单后可在这里查看</div>';
+      return;
+    }
+    box.innerHTML = list.map(o => `
+      <div class="od-card">
+        <div class="od-img"><img src="${o.img}" alt="${o.name}" /></div>
+        <div class="od-main">
+          <div class="od-name">${o.name}</div>
+          <div class="od-spec">${o.spec || '单件装'} × ${o.qty || 1}</div>
+          <div class="od-row">
+            <span class="od-status">待收货</span>
+            <span class="od-total">实付 ¥${o.total}</span>
+          </div>
+          <div class="od-time">下单时间：${o.time}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
   /* ========== 头像上传 ========== */
   function onAvatarChange(e) {
     const file = e.target.files && e.target.files[0];

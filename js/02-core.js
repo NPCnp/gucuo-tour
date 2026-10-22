@@ -248,6 +248,7 @@
     if (id === 'works') renderWorks('worksGrid');
     if (id === 'cultural') enterCulturalPage();
     if (id === 'history') renderHistory();
+    if (id === 'orders') renderOrders();
     if (id === 'favorites') renderFavorites();
     if (id === 'search') resetSearchBar();
     if (id === 'settings-manage') syncSettingsUI();

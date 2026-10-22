@@ -393,6 +393,20 @@
     color: #fff;
   }
   .op-regen:active { opacity: .85; }
+  .work-buy {
+    display: block;
+    width: calc(100% - 28px);
+    margin: 10px 14px 14px;
+    height: 44px;
+    border: none;
+    border-radius: 22px;
+    background: #e53935;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .work-buy:active { opacity: .88; }
 
   /* ========== 大图预览弹层 ========== */
   .preview-mask {
@@ -1557,9 +1571,28 @@
   function submitOrder() {
     const cur = pdCurrent();
     if (!cur) return;
+    notifyParentOrder(cur);
     showToast(`支付成功 ¥${cur.total}（模拟）`);
     closeCheckout();
     closeProductDetail();
+  }
+
+  // 下单成功后把订单同步到外层应用的「待收货」列表
+  function notifyParentOrder(cur) {
+    if (window.self === window.top) return;
+    const t = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const time = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
+    const order = {
+      id: 'ord-' + Date.now(),
+      name: cur.g.name,
+      img: cur.g.img,
+      spec: cur.spec.label,
+      qty: pdState.qty,
+      total: cur.total,
+      time: time
+    };
+    try { parent.postMessage({ type: 'fzyj-order', order: order }, '*'); } catch (e) {}
   }
 
   /* ========== 筛选面板 HTML ========== */
@@ -1733,6 +1766,7 @@
           <button class="op-save" onclick="saveWorkToGoods()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>保存</button>
           <button class="op-regen" onclick="generateWork()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>重新生成</button>
         </div>
+        <button class="work-buy" onclick="buyCurrentWork()">立即购买</button>
       </div>`;
     // 同步作品到父页面（个人中心"我的文创作品"展示用）
     if (window.parent && window.parent !== window) {
@@ -1741,10 +1775,10 @@
   }
 
   /* ========== 保存作品为独立商品 ========== */
-  function saveWorkToGoods() {
+  function saveWorkToGoods(silent) {
     if (!currentWork) { showToast('请先生成文创作品'); return; }
     if (savedWorks.some(g => g.img === currentWork.img)) {
-      showToast('该作品已保存过，可在下方查看');
+      if (!silent) showToast('该作品已保存过，可在下方查看');
       return;
     }
     const price = CAT_PRICE[currentWork.cat] || 45;
@@ -1768,9 +1802,23 @@
     });
 
     renderMyGoods();
-    showToast('已保存为我的文创商品');
-    const box = $('myGoodsBox');
-    if (box) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    if (!silent) {
+      showToast('已保存为我的文创商品');
+      const box = $('myGoodsBox');
+      if (box) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    }
+  }
+
+  // 生成的作品直接进入购买流程（未保存时先自动保存为商品）
+  function buyCurrentWork() {
+    if (!currentWork) { showToast('请先生成文创作品'); return; }
+    let g = savedWorks.find(x => x.img === currentWork.img);
+    if (!g) {
+      saveWorkToGoods(true);
+      g = savedWorks.find(x => x.img === currentWork.img);
+    }
+    if (!g) return;
+    openProductDetail('custom', g.id);
   }
 
   function renderMyGoods() {

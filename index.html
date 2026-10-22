@@ -30,7 +30,7 @@
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=7">
-<link rel="stylesheet" href="css/pages.css?v=11">
+<link rel="stylesheet" href="css/pages.css?v=12">
 </head>
 <body>
   <div class="phone">
@@ -521,11 +521,11 @@
                 </div>
                 <div class="pf-svc-text">收藏古厝</div>
               </div>
-              <div class="pf-service" onclick="showScreen('history')">
+              <div class="pf-service" onclick="showScreen('orders')">
                 <div class="pf-svc-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
                 </div>
-                <div class="pf-svc-text">浏览历史</div>
+                <div class="pf-svc-text">待收货</div>
               </div>
             </div>
           </div>
@@ -911,7 +911,7 @@
           <div class="right-placeholder"></div>
         </div>
         <div class="content cultural-iframe-wrap">
-          <iframe src="js/fu-cuo-yi-ji.html?v=5" class="cultural-iframe" frameborder="0"></iframe>
+          <iframe src="js/fu-cuo-yi-ji.html?v=6" class="cultural-iframe" frameborder="0"></iframe>
         </div>
       </div>
 
@@ -1051,6 +1051,18 @@
         </div>
       </div>
 
+      <!-- ===================== 待收货（文创订单） ===================== -->
+      <div class="page" id="page-orders">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">待收货</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="sub-list" id="ordersList"></div>
+        </div>
+      </div>
+
       <!-- ===================== 路线与讲解历史 ===================== -->
       <div class="page" id="page-history">
         <div class="nav-bar">
@@ -1078,14 +1090,14 @@
   </div>
 
   <script src="js/01-data.js?v=4"></script>
-  <script src="js/02-core.js?v=12"></script>
+  <script src="js/02-core.js?v=13"></script>
   <script src="js/03-checkin.js?v=6"></script>
   <script src="js/04-route.js"></script>
   <script src="js/05-narrations.js?v=4"></script>
   <script src="js/06-narrator.js?v=4"></script>
   <script src="js/07-nav.js?v=6"></script>
-  <script src="js/08-creative.js?v=5"></script>
-  <script src="js/09-profile.js?v=1"></script>
+  <script src="js/08-creative.js?v=6"></script>
+  <script src="js/09-profile.js?v=2"></script>
   <script src="js/10-init.js?v=3"></script>
 
   <!-- 分享二维码弹层 -->
