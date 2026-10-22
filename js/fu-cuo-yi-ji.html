@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<!-- 桌面端（非触屏宽屏）动态更新 viewport，移除 user-scalable=no -->
+<script>
+  (function() {
+    var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 1;
+    var isSmall = window.innerWidth <= 520;
+    if (!isTouch && !isSmall) {
+      var vp = document.querySelector('meta[name="viewport"]');
+      if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    }
+  })();
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="theme-color" content="#f5f5f5" />
+<title>福厝艺集 · 低保真原型</title>
+<style>
+  /* ========== 全局重置 ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+  body {
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ========== 手机外壳 ========== */
+  .phone {
+    width: min(375px, 100vw);
+    height: min(812px, 100vh);
+    max-width: 100%;
+    max-height: 100%;
+    background: #f5f5f5;
+    border: 10px solid #1a1a1a;
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .notch {
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 28px;
+    background: #1a1a1a;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    z-index: 100;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ========== 状态栏 ========== */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 24px 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  /* ========== 顶部导航栏 ========== */
+  .nav-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .nav-bar .back {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    border: none; background: none;
+    color: #1a1a1a;
+    font-size: 22px;
+  }
+  .nav-bar .title {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    font-size: 17px; font-weight: 600; color: #1a1a1a;
+    white-space: nowrap;
+  }
+  .nav-bar .right-placeholder { width: 32px; }
+
+  /* ========== Tab 标签栏 ========== */
+  .tab-bar {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 20;
+  }
+  .tab-item {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    transition: color .2s;
+  }
+  .tab-item.active {
+    color: #1a1a1a;
+    font-weight: 600;
+  }
+  .tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 28px; height: 3px;
+    background: #1a1a1a;
+    border-radius: 2px;
+  }
+
+  /* ========== 内容滚动区 ========== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+    background: #f5f5f5;
+    position: relative;
+    z-index: 5;
+  }
+  /* 官方 / 同人文创：排序条全宽紧贴 Tab 栏，其余内容保留 16px 留白 */
+  #panel-official, #panel-fan { padding-bottom: 16px; }
+  #panel-official .shop-list, #panel-fan .shop-list,
+  #panel-official .shop-empty, #panel-fan .shop-empty { margin: 0 16px; }
+  /* 自定义文创面板保留原有留白 */
+  #panel-custom { padding: 16px; }
+
+  /* ========== 提示词模块 ========== */
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+  .prompt-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .form-input {
+    flex: 1;
+    min-height: 56px;
+    padding: 10px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1a1a1a;
+    resize: none;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .form-input:focus { border-color: #1a1a1a; }
+  .ai-polish-btn {
+    flex-shrink: 0;
+    padding: 0 12px;
+    height: 36px;
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    align-self: flex-start;
+    transition: all .2s;
+  }
+  .ai-polish-btn:active:not(:disabled) { background: #1a1a1a; color: #fff; }
+  .ai-polish-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ========== 品类选择 ========== */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .cat-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+  }
+  .cat-item.active {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #1a1a1a;
+  }
+
+  /* ========== 主生成按钮 ========== */
+  .generate-btn {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    margin-bottom: 20px;
+    transition: opacity .2s;
+  }
+  .generate-btn:active:not(:disabled) { opacity: .85; }
+  .generate-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ========== 预览区标题 ========== */
+  .preview-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+  }
+
+  /* ========== 空态 ========== */
+  .empty-state {
+    background: #fff;
+    border: 1px dashed #ccc;
+    border-radius: 12px;
+    padding: 48px 20px;
+    text-align: center;
+    color: #999;
+  }
+  .empty-state .icon {
+    font-size: 44px;
+    margin-bottom: 10px;
+    opacity: .6;
+  }
+  .empty-state .text {
+    font-size: 14px;
+  }
+
+  /* ========== 加载态 ========== */
+  .loading-state {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 48px 20px;
+    text-align: center;
+    color: #1a1a1a;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    margin: 0 auto 14px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #1a1a1a;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-state .text {
+    font-size: 14px;
+    color: #666;
+  }
+
+  /* ========== 作品卡片 ========== */
+  .work-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .work-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .work-img.landscape {
+    aspect-ratio: 4 / 3;
+  }
+  .work-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .work-meta {
+    padding: 12px 14px;
+  }
+  .work-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+  .work-price {
+    font-size: 13px;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+  }
+  .work-price b {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .work-price-tip {
+    font-size: 11px;
+    color: #999;
+    margin-left: 6px;
+  }
+  .work-desc {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .work-ops {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    margin: 14px 14px 0;
+    background: #fafafa;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .work-ops button {
+    flex: 1;
+    height: 38px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid transparent;
+  }
+  .work-ops button svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .op-preview {
+    border-color: #d0d0d0;
+    background: #fff;
+    color: #1a1a1a;
+  }
+  .op-preview:active { background: #f5f5f5; }
+  .op-save {
+    border-color: #d0d0d0;
+    background: #fff;
+    color: #1a1a1a;
+  }
+  .op-save:active { background: #f5f5f5; }
+  .op-regen {
+    border: none;
+    background: #1a1a1a;
+    color: #fff;
+  }
+  .op-regen:active { opacity: .85; }
+
+  /* ========== 大图预览弹层 ========== */
+  .preview-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .preview-mask.show { display: flex; }
+  .preview-mask img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  }
+  .preview-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ========== Toast ========== */
+  .toast {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,.78);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ========== 官方 / 同人 商品列表 ========== */
+  .shop-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .shop-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .shop-img {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #fafafa;
+    overflow: hidden;
+  }
+  .shop-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .shop-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    color: #fff;
+  }
+  .shop-badge.official { background: #1a1a1a; }
+  .shop-badge.fan { background: #666; }
+  .shop-badge.custom { background: #b7700e; }
+
+  /* 我的文创商品 */
+  .my-goods-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 22px 0 10px;
+  }
+  .my-goods-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .my-goods-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 13px;
+    background: #b7700e;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: -2px;
+  }
+  .my-goods-count { font-size: 11px; color: #999; }
+  .shop-info { padding: 8px 10px 10px; }
+  .shop-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .shop-stats {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 6px;
+  }
+  .shop-price-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .shop-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .shop-price b { font-size: 18px; }
+  .shop-sold {
+    font-size: 11px;
+    color: #999;
+    flex: 1;
+  }
+  .shop-cart {
+    width: 26px; height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shop-cart:active { background: #e0e0e0; }
+  .shop-promos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .shop-promos span {
+    font-size: 10px;
+    color: #888;
+    border: 1px solid #e0e0e0;
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* ========== iframe 嵌入时自适应（作为 index.html 子页面） ========== */
+  body.in-iframe {
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: block;
+    overflow: hidden;
+    height: 100%;
+  }
+  body.in-iframe .phone {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: #f5f5f5;
+    overflow: hidden;
+  }
+  body.in-iframe .notch { display: none; }
+  body.in-iframe .status-bar { display: none; }
+  body.in-iframe .nav-bar { display: none; }
+  body.in-iframe .screen { height: 100%; background: #f5f5f5; overflow: hidden; }
+
+  /* ========== 商城排序条 ========== */
+  .shop-sortbar {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    transition: transform .25s ease;
+    will-change: transform;
+  }
+  /* 向上滚动时收起排序条，浏览更简洁 */
+  .shop-sortbar.sb-hidden {
+    transform: translateY(-110%);
+  }
+  .ss-item {
+    position: relative;
+    padding: 11px 10px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ss-item.active { color: #1a1a1a; font-weight: 700; }
+  .ss-arrow { font-size: 10px; }
+  .ss-filter {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 11px 14px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+  }
+  .ss-filter.active { color: #1a1a1a; font-weight: 700; }
+  /* 综合下拉菜单 */
+  .comp-menu {
+    position: absolute;
+    top: 100%; left: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.1);
+    z-index: 20;
+    min-width: 120px;
+  }
+  .comp-opt { padding: 9px 12px; font-size: 12px; color: #555; font-weight: 400; white-space: nowrap; }
+  .comp-opt.active { color: #1a1a1a; font-weight: 700; background: #f5f5f5; }
+
+  /* ========== 商城筛选面板 ========== */
+  .shop-filter-panel {
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 12px 16px 14px;
+  }
+  .sf-label { font-size: 12px; color: #888; margin-bottom: 8px; font-weight: 600; }
+  .sf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .sf-chip {
+    padding: 5px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 12px;
+    color: #555;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .sf-chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .sf-price {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .sf-price-item {
+    padding: 5px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 12px;
+    color: #555;
+    cursor: pointer;
+  }
+  .sf-price-item.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .sf-actions { display: flex; gap: 10px; }
+  .sf-actions button {
+    flex: 1;
+    height: 36px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sf-reset { background: #fff; border: 1px solid #e0e0e0; color: #555; }
+  .sf-reset:active { background: #f5f5f5; }
+  .sf-confirm { background: #1a1a1a; border: none; color: #fff; }
+  .sf-confirm:active { opacity: .85; }
+
+  /* ========== 空态（筛选无结果） ========== */
+  .shop-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 48px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+  .shop-empty span { font-size: 12px; color: #bbb; display: block; margin-top: 6px; }
+
+  /* ========== 商品详情页（覆盖层，图二布局） ========== */
+  .pd-page, .ck-page {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 300;
+    background: #f5f5f5;
+    flex-direction: column;
+  }
+  .pd-page.show, .ck-page.show { display: flex; }
+  .pd-nav {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+    padding: 0 8px;
+  }
+  .pd-back {
+    width: 32px; height: 32px;
+    border: none; background: transparent;
+    font-size: 22px; color: #1a1a1a;
+    cursor: pointer; line-height: 1;
+  }
+  .pd-nav-title {
+    flex: 1;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+  .pd-nav-act {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #333; cursor: pointer;
+  }
+  .pd-scroll, .ck-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  /* 顶部大图 */
+  .pd-hero { position: relative; background: #fafafa; }
+  .pd-hero img { width: 100%; display: block; aspect-ratio: 1 / 1; object-fit: cover; }
+  .pd-shop {
+    position: absolute; right: 10px; top: 10px;
+    max-width: 60%;
+    background: rgba(0,0,0,.45); color: #fff;
+    font-size: 11px; padding: 4px 10px; border-radius: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pd-hero-count {
+    position: absolute; right: 10px; bottom: 10px;
+    background: rgba(0,0,0,.5); color: #fff;
+    font-size: 11px; padding: 3px 10px; border-radius: 12px;
+  }
+
+  /* 价格区 */
+  .pd-price-card { background: #fff; padding: 12px 14px 10px; }
+  .pd-price-row { display: flex; align-items: baseline; gap: 8px; }
+  .pd-price { color: #e53935; font-weight: 700; font-size: 13px; }
+  .pd-price b { font-size: 27px; }
+  .pd-origin { color: #999; font-size: 12px; text-decoration: line-through; }
+  .pd-sold { margin-left: auto; font-size: 12px; color: #888; }
+  .pd-coupon-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .pd-coupon {
+    font-size: 11px; color: #e53935;
+    background: #fdeceb; border: 1px solid #f7c9c6;
+    padding: 2px 8px; border-radius: 3px;
+  }
+  .pd-coupon.link { color: #555; background: #f7f7f7; border-color: #eee; }
+  .pd-deliver {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 10px;
+    background: linear-gradient(90deg,#3ba55d,#4cbb6b);
+    color: #fff; font-size: 12px; padding: 8px 10px; border-radius: 4px;
+  }
+  .pd-deliver b { font-weight: 700; }
+
+  /* 标题与数据 */
+  .pd-title {
+    background: #fff;
+    padding: 12px 14px 4px;
+    font-size: 14.5px; font-weight: 600; line-height: 1.55; color: #1a1a1a;
+  }
+  .pd-title-row {
+    display: flex; gap: 4px; align-items: center;
+    background: #fff; padding: 0 14px 10px;
+  }
+  .pd-tagchip {
+    font-size: 11px; color: #666;
+    border: 1px solid #eee; background: #fafafa;
+    padding: 3px 8px; border-radius: 3px;
+  }
+  .pd-stats {
+    display: flex; gap: 0;
+    background: #fff; border-top: 1px solid #f5f5f5;
+    padding: 9px 14px;
+  }
+  .pd-stat { flex: 1; font-size: 11.5px; color: #888; text-align: center; border-right: 1px solid #f0f0f0; }
+  .pd-stat:last-child { border-right: none; }
+
+  /* 通用白块 */
+  .pd-sec { background: #fff; margin-top: 8px; padding: 13px 14px; }
+  .pd-sec-title {
+    font-size: 13.5px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;
+  }
+  .pd-sec-title span { font-size: 11px; color: #999; font-weight: 400; }
+  .pd-desc { font-size: 13px; color: #555; line-height: 1.8; }
+  .pd-kv { display: flex; font-size: 12.5px; color: #666; margin-top: 8px; line-height: 1.6; }
+  .pd-kv .k { width: 64px; color: #999; flex-shrink: 0; }
+
+  /* 评价 */
+  .pd-review { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #f6f6f6; }
+  .pd-review:first-of-type { border-top: none; padding-top: 2px; }
+  .pd-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #eef2f7; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .pd-review-name { font-size: 11.5px; color: #999; margin-bottom: 3px; }
+  .pd-review-text { font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+
+  /* 底部操作栏 */
+  .pd-bottom {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border-top: 1px solid #eee;
+    padding: 8px 12px; flex-shrink: 0;
+  }
+  .pd-btm-item {
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    width: 42px; font-size: 10px; color: #666; cursor: pointer;
+  }
+  .pd-btm-item span:first-child { font-size: 16px; line-height: 1.2; }
+  .pd-buy {
+    flex: 1; height: 40px; border: none; border-radius: 20px;
+    background: #e53935; color: #fff;
+    font-size: 14.5px; font-weight: 600; cursor: pointer;
+  }
+  .pd-buy:active { opacity: .85; }
+
+  /* ========== 确认订单 / 付款页（图三布局） ========== */
+  .ck-tip {
+    display: flex; align-items: center; gap: 6px;
+    background: #e8f6ec; color: #1f8a4c;
+    font-size: 11.5px; padding: 8px 14px;
+  }
+  .ck-tip b { font-weight: 700; color: #17803f; }
+  .ck-addr {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; padding: 14px; cursor: pointer;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .ck-addr-ico { font-size: 17px; color: #1f8a4c; flex-shrink: 0; }
+  .ck-addr-main { flex: 1; min-width: 0; }
+  .ck-addr-top { font-size: 13px; color: #1a1a1a; font-weight: 600; }
+  .ck-addr-top span { font-weight: 400; color: #666; margin-left: 6px; }
+  .ck-addr-text {
+    font-size: 12px; color: #555; margin-top: 4px; line-height: 1.5;
+  }
+  .ck-addr-arrow { color: #bbb; font-size: 15px; }
+  .ck-ship {
+    display: flex; align-items: center; gap: 6px;
+    background: #eef9f0; color: #1f8a4c;
+    font-size: 11.5px; padding: 8px 14px;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .ck-ship b { color: #e53935; }
+
+  /* 商品行 */
+  .ck-prod { display: flex; gap: 10px; background: #fff; padding: 12px 14px; }
+  .ck-prod-img {
+    width: 78px; height: 78px; border-radius: 6px; overflow: hidden;
+    background: #fafafa; flex-shrink: 0;
+  }
+  .ck-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ck-prod-main { flex: 1; min-width: 0; }
+  .ck-prod-name {
+    font-size: 12.5px; color: #1a1a1a; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .ck-prod-spec {
+    display: inline-block; font-size: 11px; color: #777;
+    background: #f6f6f6; padding: 2px 6px; border-radius: 3px; margin-top: 5px;
+  }
+  .ck-prod-price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .ck-prod-price { color: #e53935; font-weight: 700; font-size: 15px; }
+  .ck-prod-origin { color: #aaa; font-size: 11px; text-decoration: line-through; }
+  .ck-prod-stock { margin-left: auto; font-size: 11px; color: #e53935; }
+
+  /* 数量 */
+  .ck-row {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; padding: 12px 14px;
+    border-top: 1px solid #f5f5f5;
+    font-size: 13px; color: #333;
+  }
+  .ck-row .k { flex-shrink: 0; }
+  .ck-row .v { margin-left: auto; color: #888; font-size: 12px; }
+  .ck-stepper {
+    margin-left: auto; display: flex; align-items: center;
+    border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden;
+  }
+  .ck-step-btn {
+    width: 30px; height: 26px; border: none; background: #fafafa;
+    font-size: 15px; color: #333; cursor: pointer;
+  }
+  .ck-step-num { width: 38px; text-align: center; font-size: 13px; }
+
+  /* 优惠 / 规格 */
+  .ck-sec { background: #fff; margin-top: 8px; }
+  .ck-sec-head {
+    display: flex; align-items: center;
+    padding: 12px 14px 8px;
+    font-size: 13px; font-weight: 700; color: #1a1a1a;
+  }
+  .ck-sec-head .more { margin-left: auto; font-size: 11.5px; color: #e53935; font-weight: 400; }
+  .ck-offer {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-top: 1px solid #f7f7f7;
+    font-size: 12.5px; color: #333; cursor: pointer;
+  }
+  .ck-offer-ico {
+    font-size: 10px; color: #e53935;
+    border: 1px solid #f7c9c6; background: #fdeceb;
+    padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
+  }
+  .ck-offer-txt { flex: 1; min-width: 0; }
+  .ck-offer-txt em { font-style: normal; color: #999; font-size: 11px; margin-left: 4px; }
+  .ck-radio {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1px solid #ddd; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #fff;
+  }
+  .ck-offer.on .ck-radio { background: #e53935; border-color: #e53935; }
+
+  /* 底部结算条 */
+  .ck-bottom {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; border-top: 1px solid #eee;
+    padding: 9px 14px; flex-shrink: 0;
+  }
+  .ck-total { font-size: 12px; color: #666; }
+  .ck-total b { color: #e53935; font-size: 14px; }
+  .ck-submit {
+    margin-left: auto;
+    min-width: 150px; height: 40px;
+    border: none; border-radius: 20px;
+    background: #e53935; color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .ck-submit:active { opacity: .85; }
+  .ck-submit b { font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+
+      <!-- 顶部导航栏 -->
+      <div class="nav-bar">
+        <button class="back" onclick="goBack()">‹</button>
+        <div class="title">福厝艺集</div>
+        <div class="right-placeholder"></div>
+      </div>
+
+      <!-- Tab 标签栏 -->
+      <div class="tab-bar">
+        <div class="tab-item active" data-tab="official" onclick="switchTab('official')">官方文创</div>
+        <div class="tab-item" data-tab="fan" onclick="switchTab('fan')">同人文创</div>
+        <div class="tab-item" data-tab="custom" onclick="switchTab('custom')">自定义文创</div>
+      </div>
+
+      <!-- 内容区 -->
+      <div class="content" id="content">
+        <!-- 官方文创 -->
+        <div class="tab-panel" id="panel-official">
+          <div class="shop-sortbar" id="sortbar-official"></div>
+          <div class="shop-filter-panel" id="filter-official" style="display:none"></div>
+          <div class="shop-list" id="officialList"></div>
+          <div class="shop-empty" id="empty-official" style="display:none">🔍 没有符合条件的商品<br/><span>换个筛选条件试试</span></div>
+        </div>
+
+        <!-- 同人文创 -->
+        <div class="tab-panel" id="panel-fan" style="display:none">
+          <div class="shop-sortbar" id="sortbar-fan"></div>
+          <div class="shop-filter-panel" id="filter-fan" style="display:none"></div>
+          <div class="shop-list" id="fanList"></div>
+          <div class="shop-empty" id="empty-fan" style="display:none">🔍 没有符合条件的商品<br/><span>换个筛选条件试试</span></div>
+        </div>
+
+        <!-- 自定义文创 -->
+        <div class="tab-panel" id="panel-custom" style="display:none">
+          <!-- 提示词模块 -->
+          <div class="form-group">
+            <label class="form-label">提示词</label>
+            <div class="prompt-wrap">
+              <textarea class="form-input" id="culturalPrompt" placeholder="描述你的创意，如：以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致">以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致</textarea>
+              <button class="ai-polish-btn" id="polishBtn" onclick="optimizePrompt()">AI优化文案</button>
+            </div>
+          </div>
+
+          <!-- 文创品类选择 -->
+          <div class="form-group">
+            <label class="form-label">文创品类</label>
+            <div class="category-grid" id="categoryGrid">
+              <div class="cat-item active" data-cat="书签">书签</div>
+              <div class="cat-item" data-cat="帆布袋">帆布袋</div>
+              <div class="cat-item" data-cat="明信片">明信片</div>
+              <div class="cat-item" data-cat="手机壳">手机壳</div>
+              <div class="cat-item" data-cat="冰箱贴">冰箱贴</div>
+              <div class="cat-item" data-cat="钥匙扣">钥匙扣</div>
+              <div class="cat-item" data-cat="马克杯">马克杯</div>
+              <div class="cat-item" data-cat="折扇">折扇</div>
+            </div>
+          </div>
+
+          <!-- 主生成按钮 -->
+          <button class="generate-btn" id="generateBtn" onclick="generateWork()">AI生成文创效果图</button>
+
+          <!-- 作品预览区 -->
+          <div class="preview-title">作品预览</div>
+          <div id="previewArea">
+            <div class="empty-state">
+              <div class="icon">🎨</div>
+              <div class="text">暂无文创作品</div>
+            </div>
+          </div>
+
+          <!-- 保存后的我的文创商品 -->
+          <div id="myGoodsBox" style="display:none;">
+            <div class="my-goods-head">
+              <span class="my-goods-title">我的文创商品</span>
+              <span class="my-goods-count" id="myGoodsCount"></span>
+            </div>
+            <div class="shop-list" id="myGoodsGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品详情页（覆盖层，置于页面最顶层，隐藏外层导航） -->
+      <div class="pd-page" id="pdPage">
+        <div class="pd-nav">
+          <button class="pd-back" onclick="closeProductDetail()">‹</button>
+          <span class="pd-nav-title">商品详情</span>
+          <span class="pd-nav-act" onclick="showToast('已分享（模拟）')">↗</span>
+        </div>
+        <div class="pd-scroll" id="pdScroll"></div>
+        <div class="pd-bottom">
+          <div class="pd-btm-item" onclick="showToast('已进入店铺（模拟）')"><span>🏬</span><span>店铺</span></div>
+          <div class="pd-btm-item" onclick="showToast('已收藏（模拟）')"><span>☆</span><span>收藏</span></div>
+          <div class="pd-btm-item" onclick="showToast('客服已接入（模拟）')"><span>💬</span><span>客服</span></div>
+          <button class="pd-buy" onclick="openCheckout()">立即购买</button>
+        </div>
+      </div>
+
+      <!-- 确认订单 / 付款页（覆盖层） -->
+      <div class="ck-page" id="ckPage">
+        <div class="pd-nav">
+          <button class="pd-back" onclick="closeCheckout()">‹</button>
+          <span class="pd-nav-title">确认订单</span>
+          <span class="pd-nav-act"></span>
+        </div>
+        <div class="ck-scroll" id="ckScroll"></div>
+        <div class="ck-bottom">
+          <div class="ck-total">店铺券已减 <b id="ckDiscount">¥3</b></div>
+          <button class="ck-submit" onclick="submitOrder()">提交订单 <b id="ckTotal">¥0</b></button>
+        </div>
+      </div>
+
+      <!-- 大图预览弹层 -->
+      <div class="preview-mask" id="previewMask" onclick="closePreview()">
+        <button class="preview-close" onclick="closePreview()">✕</button>
+        <img id="previewImg" src="" alt="文创效果图预览" />
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+<script>
+  /* ============================================================
+     福厝艺集 · 内置大模型模拟逻辑
+     单文件离线演示：提示词润色 + AI 文创效果图生成
+     ============================================================ */
+
+  /* ========== iframe 嵌入检测 ========== */
+  if (window.self !== window.top) {
+    document.body.classList.add('in-iframe');
+  }
+
+  /* ========== 工具函数 ========== */
+  const $ = id => document.getElementById(id);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  /* ========== 品类映射（含实物形态描述，确保生成图不像别的品类） ========== */
+  const CAT_EN = {
+    '书签':   'a long thin rectangular brass metal bookmark with a hanging tassel, Fuzhou ancient house swallow-tail ridge and horse-saddle wall pattern engraved on the bookmark surface',
+    '帆布袋': 'a canvas tote bag with handles, Fuzhou ancient house ink-wash pattern printed on the bag body',
+    '明信片': 'a single rectangular landscape postcard, Fuzhou ancient house watercolor scenery illustration filling the front surface, with small calligraphy text in the corner',
+    '手机壳': 'a smartphone case back cover, Fuzhou ancient house carving pattern embossed on the case surface',
+    '冰箱贴': 'a flat fridge magnet, Fuzhou ancient house swallow-tail ridge pattern on the magnet surface',
+    '钥匙扣': 'a keychain with a small pendant, Fuzhou ancient house gate pattern on the pendant',
+    '马克杯': 'a ceramic mug with a handle, Fuzhou ancient alley scenery printed around the mug body',
+    '折扇':   'an open folding fan with bamboo ribs, Fuzhou ancient house ink painting on the fan surface'
+  };
+  const CAT_ICON = {
+    '书签': '🔖', '帆布袋': '👜', '明信片': '✉️', '手机壳': '📱',
+    '冰箱贴': '🧲', '钥匙扣': '🔑', '马克杯': '☕', '折扇': '🪭'
+  };
+  // 自定义文创定价：略高于官方/同人，但不过分
+  const CAT_PRICE = {
+    '书签': 45, '帆布袋': 79, '明信片': 29, '手机壳': 65,
+    '冰箱贴': 35, '钥匙扣': 42, '马克杯': 89, '折扇': 109
+  };
+  // 明信片用横向长方形图，其余用方形
+  const CAT_IMG_SIZE = {
+    '书签': 'square', '帆布袋': 'square', '明信片': 'landscape_4_3', '手机壳': 'square',
+    '冰箱贴': 'square', '钥匙扣': 'square', '马克杯': 'square', '折扇': 'square'
+  };
+
+  /* ========== 福州古厝强制元素（润色必须融入，不丢失地域特色） ========== */
+  const MUST_ELEMENTS = ['马鞍墙', '燕尾脊', '灰塑', '青瓦', '榕树'];
+
+  /* ========== 品类材质工艺映射（按品类自动匹配） ========== */
+  const POLISH_CRAFT = {
+    '书签':   '卡纸/竹片雕刻工艺，简约线条，薄款质感',
+    '帆布袋': '棉麻布料丝网印刷，哑光质感，适合大面积图案',
+    '明信片': '特种艺术纸印刷，淡雅国风',
+    '手机壳': 'TPU磨砂壳，图案精细印刷',
+    '冰箱贴': '亚克力材质，扁平插画',
+    '钥匙扣': '亚克力/木质挂件，小巧精致纹样',
+    '马克杯': '陶瓷釉面印花',
+    '折扇':   '宣纸扇面配竹骨'
+  };
+
+  /* ========== 多样化风格库（随机切换，避免模板化） ========== */
+  const POLISH_STYLE = [
+    '国风线描插画', '简约清新插画', '浅淡水彩质感', '国潮插画风',
+    '东方水墨写意', '新中式国风设计', '线描勾勒淡雅上色', '清新国风插画',
+    '闽都古韵插画', '极简国风线条'
+  ];
+
+  /* ========== 构图/细节描述库（随机切换） ========== */
+  const POLISH_COMPOSITION = [
+    '线条干净柔和，构图简约，细节精致',
+    '画面层次柔和，大面积纹样',
+    '主体居中，疏朗留白，笔触细腻',
+    '对称构图，层次分明，色彩淡雅',
+    '局部特写，细节丰富，画面通透',
+    '构图饱满，线条流畅，质感清新',
+    '疏密有致，留白得当，意境悠远'
+  ];
+
+  /* ========== 当前选中品类 ========== */
+  let currentCat = '书签';
+
+  /* ========== Tab 切换 ========== */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-item').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.style.display = p.id === 'panel-' + tab ? '' : 'none';
+    });
+    if (tab === 'official') renderShop('official');
+    else if (tab === 'fan') renderShop('fan');
+    // 切换 Tab 时恢复排序条显示并重置滚动基线
+    if (window.resetSortbarVisibility) window.resetSortbarVisibility();
+  }
+
+  /* ========== 官方 / 同人 商品数据（含 salesNum / date 用于排序） ========== */
+  const OFFICIAL_GOODS = [
+    { id: 'of1', cat: '书签',   name: '【三坊七巷官方】古厝燕尾脊鎏金金属书签礼盒', price: 39, rate: '好评率98.5%', stat: '600+人加购',    soldText: '2000+', salesNum: 2000, date: '2026-09-12', promos: ['满150减5会员券', '运费险', '180天内发货'], img: t2i('elegant brass metal bookmark inspired by Fuzhou ancient house swallow tail ridge roof silhouette, gold finish, luxury gift box, product photography, clean white background, e-commerce studio shot') },
+    { id: 'of2', cat: '帆布袋', name: '【三坊七巷官方】马鞍墙水墨帆布袋 大容量通勤款', price: 69, rate: '好评率97.8%', stat: '300+人带图评价', soldText: '1500+', salesNum: 1500, date: '2026-08-28', promos: ['满1件8.5折', '运费险', '包邮'], img: t2i('canvas tote bag printed with Fuzhou traditional architecture horse saddle wall pattern, minimalist chinese ink illustration, beige fabric, product photography, clean white background, e-commerce shot') },
+    { id: 'of3', cat: '明信片', name: '【三坊七巷官方】坊巷手绘明信片套装（12张入）', price: 25, rate: '好评率99.1%', stat: '1千+人收藏',    soldText: '3000+', salesNum: 3000, date: '2026-07-15', promos: ['满150减5会员券', '包邮'], img: t2i('set of hand painted postcards featuring Fuzhou Three Lanes and Seven Alleys ancient architecture, watercolor style, fanned out display, product photography, clean white background') },
+    { id: 'of4', cat: '手机壳', name: '【三坊七巷官方】古厝雕花浮雕手机壳 防摔软边款', price: 59, rate: '好评率96.9%', stat: '200+人加购',    soldText: '800+',  salesNum: 800,  date: '2026-10-05', promos: ['满1件8.5折', '运费险'], img: t2i('smartphone case with embossed Fuzhou ancient house carving pattern, elegant dark green design, product photography, clean white background, e-commerce shot') },
+    { id: 'of5', cat: '冰箱贴', name: '【三坊七巷官方】燕尾脊珐琅冰箱贴 礼盒装', price: 29, rate: '好评率98.2%', stat: '2千+人加购',    soldText: '5000+', salesNum: 5000, date: '2026-06-20', promos: ['满150减5会员券', '运费险', '180天内发货'], img: t2i('fridge magnet shaped like Fuzhou ancient house swallow tail ridge roof, colorful enamel metal craft, gift box, product photography, clean white background, e-commerce shot') },
+    { id: 'of6', cat: '钥匙扣', name: '【三坊七巷官方】坊巷门楼铜制钥匙扣 复古做旧款', price: 35, rate: '好评率97.5%', stat: '150+人收藏',    soldText: '1200+', salesNum: 1200, date: '2026-08-01', promos: ['运费险', '包邮'], img: t2i('vintage bronze keychain pendant of Fuzhou traditional lane gate architecture, antique metal craft, product photography, clean white background, e-commerce shot') },
+    { id: 'of7', cat: '马克杯', name: '【三坊七巷官方】闽都风物陶瓷马克杯 400ml', price: 79, rate: '好评率98.8%', stat: '400+人加购',    soldText: '600+',  salesNum: 600,  date: '2026-09-20', promos: ['满1件8.5折', '运费险', '180天内发货'], img: t2i('white ceramic mug with Fuzhou ancient alley scenery print, elegant chinese ink painting style, product photography, clean light background, e-commerce shot') },
+    { id: 'of8', cat: '折扇',   name: '【三坊七巷官方】古厝彩绘宣纸折扇 手工竹骨', price: 99, rate: '好评率98.0%', stat: '90+人收藏',     soldText: '400+',  salesNum: 400,  date: '2026-10-12', promos: ['满150减5会员券', '运费险'], img: t2i('traditional chinese folding fan painted with Fuzhou ancient house scenery, bamboo ribs, elegant ink wash painting, half open display, product photography, clean white background') }
+  ];
+
+  const FAN_GOODS = [
+    { id: 'fa1', cat: '书签',   name: '「古厝物语」同人 Q版厝灵亚克力书签套组', price: 18, rate: '好评率99.3%', stat: '800+人加购',    soldText: '900+',  salesNum: 900,  date: '2026-09-05', promos: ['满2件9折', '包邮'], img: t2i('cute anime chibi style acrylic bookmark set featuring moe personification of ancient chinese architecture spirit, colorful, doujin fan merchandise, product photography, clean white background') },
+    { id: 'fa2', cat: '帆布袋', name: '「厝厝君」同人印花帆布袋 画师联名款', price: 49, rate: '好评率98.6%', stat: '500+人带图评价', soldText: '700+',  salesNum: 700,  date: '2026-10-01', promos: ['满2件9折', '运费险'], img: t2i('anime style canvas tote bag with cute chibi ancient chinese house spirit character print, kawaii illustration, doujin fan merchandise, product photography, clean background') },
+    { id: 'fa3', cat: '明信片', name: '「古厝四季」同人绘明信片 烫金收藏套装', price: 16, rate: '好评率99.0%', stat: '2千+人收藏',    soldText: '2600+', salesNum: 2600, date: '2026-07-22', promos: ['包邮'], img: t2i('anime illustration postcard set of ancient chinese town in four seasons, soft pastel colors, gold foil accents, doujin fan art merchandise, product photography, white background') },
+    { id: 'fa4', cat: '手机壳', name: '「燕尾脊拟人」同人手机壳 软壳全包防摔', price: 39, rate: '好评率97.2%', stat: '300+人加购',    soldText: '500+',  salesNum: 500,  date: '2026-10-08', promos: ['满2件9折', '运费险'], img: t2i('anime chibi phone case with cute ancient chinese roof personification character, pastel pink and blue colors, doujin fan merchandise, product photography, clean background') },
+    { id: 'fa5', cat: '冰箱贴', name: '「马鞍墙团团」Q版冰箱贴 同人周边', price: 19, rate: '好评率98.9%', stat: '900+人加购',    soldText: '1500+', salesNum: 1500, date: '2026-08-14', promos: ['包邮'], img: t2i('cute chibi acrylic fridge magnet of cartoon ancient chinese house wall character, kawaii doujin fan merchandise, product photography, clean white background') },
+    { id: 'fa6', cat: '钥匙扣', name: '「古厝守护灵」亚克力钥匙扣 同人挂件', price: 22, rate: '好评率99.5%', stat: '1千+人收藏',    soldText: '1800+', salesNum: 1800, date: '2026-09-30', promos: ['满2件9折', '包邮'], img: t2i('kawaii acrylic keychain of chibi ancient chinese architecture guardian spirit character, anime doujin merchandise with glitter epoxy, product photography, white background') },
+    { id: 'fa7', cat: '马克杯', name: '「坊巷日常」同人绘马克杯 320ml', price: 45, rate: '好评率98.1%', stat: '200+人加购',    soldText: '300+',  salesNum: 300,  date: '2026-08-20', promos: ['运费险'], img: t2i('anime style ceramic mug printed with chibi ancient chinese alley daily life characters, cute doujin illustration, fan merchandise, product photography, clean background') },
+    { id: 'fa8', cat: '折扇',   name: '「古厝绘卷」同人插画折扇 夏日祭款', price: 36, rate: '好评率97.8%', stat: '120+人收藏',    soldText: '200+',  salesNum: 200,  date: '2026-09-18', promos: ['满2件9折', '运费险'], img: t2i('anime illustration folding fan with cute chibi ancient chinese town characters at summer festival, colorful doujin fan art merchandise, product photography, clean background') }
+  ];
+
+  /* ========== 商城：排序/筛选状态（official 和 fan 各自独立） ========== */
+  const shopState = {
+    official: { sort: 'comprehensive', cats: [], price: 'all', compOpen: false, filterOpen: false, compJustOpened: false },
+    fan:      { sort: 'comprehensive', cats: [], price: 'all', compOpen: false, filterOpen: false, compJustOpened: false }
+  };
+  const COMP_LABEL = { comprehensive: '综合', priceAsc: '价格↑', priceDesc: '价格↓' };
+  const CATS_ALL = ['书签','帆布袋','明信片','手机壳','冰箱贴','钥匙扣','马克杯','折扇'];
+  const PRICE_RANGES = [
+    { key: 'all',   label: '全部价格', min: 0,   max: Infinity },
+    { key: 'low',   label: '¥0-30',    min: 0,   max: 30 },
+    { key: 'mid',   label: '¥30-60',   min: 30,  max: 60 },
+    { key: 'high',  label: '¥60-100',  min: 60,  max: 100 },
+    { key: 'lux',   label: '¥100+',    min: 100, max: Infinity }
+  ];
+
+  /* ========== 渲染官方 / 同人 商品列表（含过滤 + 排序 + 排序条 + 筛选面板） ========== */
+  function renderShop(view) {
+    const all = view === 'official' ? OFFICIAL_GOODS : FAN_GOODS;
+    const st = shopState[view];
+    const badge = view === 'official' ? '官方' : '同人';
+
+    // --- 过滤 ---
+    let list = all.slice();
+    if (st.cats.length) list = list.filter(g => st.cats.includes(g.cat));
+    const pr = PRICE_RANGES.find(p => p.key === st.price);
+    if (pr && st.price !== 'all') list = list.filter(g => g.price >= pr.min && g.price < pr.max);
+
+    // --- 排序 ---
+    switch (st.sort) {
+      case 'sales':     list.sort((a, b) => b.salesNum - a.salesNum); break;
+      case 'new':       list.sort((a, b) => b.date.localeCompare(a.date)); break;
+      case 'priceAsc':  list.sort((a, b) => a.price - b.price); break;
+      case 'priceDesc': list.sort((a, b) => b.price - a.price); break;
+      // comprehensive: 不额外排序（保持数据原始顺序即可）
+    }
+
+    // --- 渲染排序条 ---
+    const filterActive = st.cats.length > 0 || st.price !== 'all';
+    const sortActive = s => st.sort === s ? 'active' : '';
+    const sortbarEl = $('sortbar-' + view);
+    sortbarEl.innerHTML = `
+      <div class="ss-item ${['comprehensive','priceAsc','priceDesc'].includes(st.sort) ? 'active' : ''}" onclick="toggleCompMenu('${view}')">
+        ${COMP_LABEL[st.sort] || '综合'} <span class="ss-arrow">${st.compOpen ? '▴' : '▾'}</span>
+        ${st.compOpen ? `<div class="comp-menu">
+          <div class="comp-opt ${sortActive('comprehensive')}" onclick="event.stopPropagation();setShopSort('${view}','comprehensive')">综合推荐</div>
+          <div class="comp-opt ${sortActive('priceAsc')}" onclick="event.stopPropagation();setShopSort('${view}','priceAsc')">价格从低到高</div>
+          <div class="comp-opt ${sortActive('priceDesc')}" onclick="event.stopPropagation();setShopSort('${view}','priceDesc')">价格从高到低</div>
+        </div>` : ''}
+      </div>
+      <div class="ss-item ${sortActive('sales')}" onclick="setShopSort('${view}','sales')">销量</div>
+      <div class="ss-item ${sortActive('new')}" onclick="setShopSort('${view}','new')">上新</div>
+      <div class="ss-filter ${st.filterOpen || filterActive ? 'active' : ''}" onclick="toggleShopFilter('${view}')">
+        ${filterActive ? '筛选' : '筛选'} <span class="ss-arrow">${st.filterOpen ? '▴' : '▾'}</span>
+      </div>`;
+
+    // --- 渲染筛选面板（展开时） ---
+    const filterEl = $('filter-' + view);
+    if (st.filterOpen) {
+      filterEl.style.display = '';
+      filterEl.innerHTML = shopFilterHtml(view, st);
+    } else {
+      filterEl.style.display = 'none';
+      filterEl.innerHTML = '';
+    }
+
+    // --- 渲染商品网格 ---
+    const gridEl = $(view === 'official' ? 'officialList' : 'fanList');
+    const emptyEl = $('empty-' + view);
+    if (list.length === 0) {
+      gridEl.innerHTML = '';
+      emptyEl.style.display = '';
+    } else {
+      emptyEl.style.display = 'none';
+      gridEl.innerHTML = list.map(g => `
+        <div class="shop-card" onclick="openProductDetail('${view}', '${g.id}')">
+          <div class="shop-img">
+            <img src="${g.img}" alt="${g.name}" loading="lazy">
+            <span class="shop-badge ${view}">${badge}</span>
+          </div>
+          <div class="shop-info">
+            <div class="shop-name">${g.name}</div>
+            <div class="shop-stats">${g.rate}&ensp;·&ensp;${g.stat}</div>
+            <div class="shop-price-row">
+              <span class="shop-price">¥<b>${g.price}</b></span>
+              <span class="shop-sold">已售${g.soldText}</span>
+              <button class="shop-cart" onclick="event.stopPropagation(); showToast('已加入购物车（模拟）')">🛒</button>
+            </div>
+            <div class="shop-promos">${g.promos.map(p => `<span>${p}</span>`).join('')}</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  /* ========== 商品详情 / 确认订单（付款） ========== */
+  const pdState = { view: 'official', id: '', qty: 1, offer: 0, spec: 0 };
+
+  // 自定义文创中"保存"过的作品，作为独立商品展示与售卖
+  let currentWork = null;
+  let savedWorks = [];
+
+  // 按品类给出的介绍文案与规格（未匹配到品类时用通用文案）
+  const PD_COPY = {
+    '书签': '以三坊七巷古厝燕尾脊为设计原型，金属压铸成型后再手工描金，纹样取自马鞍墙与花窗格。',
+    '帆布袋': '12 安加厚纯棉帆布，水墨马鞍墙图案数码直喷，内衬加厚、可装 A4 与 13 寸笔电。',
+    '明信片': '12 张一套，采用 300g 特种纸，收录坊巷、古厝、闽江等手绘场景，可寄可收藏。',
+    '手机壳': 'TPU 软边 + 浮雕背板，古厝雕花立体成型，四角加厚防摔，支持多机型定制。',
+    '折扇': '竹骨纸面折扇，扇面印古厝花窗纹样，展开宽约 60cm，附赠锦袋包装。',
+    '冰箱贴': '树脂立体冰箱贴，手工上色，还原燕尾脊与马鞍墙细节，背面强磁贴附。',
+    '钥匙扣': '铜制复古做旧，门楼造型立体雕刻，配皮绳与礼盒，日常携带不易掉色。',
+    '马克杯': '陶瓷高温烧制，杯身印闽都风物水墨图案，容量适中，可进洗碗机。'
+  };
+  const PD_SPECS = [
+    { label: '单件装', extra: 0 },
+    { label: '礼盒装', extra: 15 },
+    { label: '双件优惠装', extra: 25 }
+  ];
+  const PD_OFFERS = [
+    { label: '店铺券', desc: '满 1 件可用', amount: 3 },
+    { label: '会员券', desc: '满 150 元可用', amount: 5 },
+    { label: '不使用优惠券', desc: '', amount: 0 }
+  ];
+  const PD_REVIEWS = {
+    official: [
+      { n: '榕城小吴', a: '🧑', t: '官方正品，包装很用心，古厝元素做得很细，送人自留都合适。' },
+      { n: '阿岚',     a: '👩', t: '质感比预期好，颜色也正，已经回购第二次了。' }
+    ],
+    fan: [
+      { n: '坊巷爱好者', a: '🎨', t: '同人设计很有想法，细节处的小彩蛋一看就是懂福州的人做的。' },
+      { n: '周末逛展',   a: '🧑‍🎤', t: '发货快，实物和图片一致，已经安利给同好群。' }
+    ],
+    custom: [
+      { n: '创作者本人', a: '🖌️', t: '用自己的提示词生成的定制款，独一无二，很满意。' },
+      { n: 'AI 助手',   a: '🤖', t: '该作品由 AI 依据你的描述生成，可再次生成获得新版本。' }
+    ]
+  };
+
+  function findGoods(view, id) {
+    if (view === 'custom') return savedWorks.find(g => g.id === id) || null;
+    const list = view === 'official' ? OFFICIAL_GOODS : FAN_GOODS;
+    return list.find(g => g.id === id) || null;
+  }
+
+  function pdCurrent() {
+    const g = findGoods(pdState.view, pdState.id);
+    if (!g) return null;
+    const spec = PD_SPECS[pdState.spec];
+    const unit = g.price + spec.extra;
+    const offer = PD_OFFERS[pdState.offer];
+    const discount = offer.amount;
+    const total = Math.max(0, unit * pdState.qty - discount);
+    return { g, spec, unit, offer, discount, total };
+  }
+
+  function openProductDetail(view, id) {
+    if (!findGoods(view, id)) return;
+    pdState.view = view;
+    pdState.id = id;
+    pdState.qty = 1;
+    pdState.offer = 0;
+    pdState.spec = 0;
+    renderProductDetail();
+    $('pdScroll').scrollTop = 0;
+    $('pdPage').classList.add('show');
+  }
+
+  function closeProductDetail() {
+    $('pdPage').classList.remove('show');
+  }
+
+  function renderProductDetail() {
+    const cur = pdCurrent();
+    if (!cur) return;
+    const { g, unit, discount } = cur;
+    const shopName = pdState.view === 'official'
+      ? '福厝艺集官方旗舰店'
+      : pdState.view === 'fan' ? '坊巷同人创意工作室' : '我的文创工坊（AI定制）';
+    const desc = g.desc || PD_COPY[g.cat] || '以福州古厝建筑元素为设计灵感，兼顾日常实用与收藏价值，做工细致、包装妥帖。';
+    const reviews = PD_REVIEWS[pdState.view] || [];
+
+    $('pdScroll').innerHTML = `
+      <div class="pd-hero">
+        <img src="${g.img}" alt="${g.name}">
+        <span class="pd-shop">店铺名：${shopName}</span>
+        <span class="pd-hero-count">1/3</span>
+      </div>
+
+      <div class="pd-price-card">
+        <div class="pd-price-row">
+          <span class="pd-price">券后 ¥<b>${Math.max(0, unit - discount)}</b></span>
+          <span class="pd-origin">¥${unit + 10}</span>
+          <span class="pd-sold">已售 ${g.soldText}</span>
+        </div>
+        <div class="pd-coupon-row">
+          <span class="pd-coupon">已优惠 ${discount} 元</span>
+          <span class="pd-coupon">${g.promos[0]}</span>
+          <span class="pd-coupon link">${g.promos[1] || '运费险'}</span>
+        </div>
+        <div class="pd-deliver">
+          <b>⚡ 后天达</b>
+          <span>现在下单，后天送达</span>
+        </div>
+      </div>
+
+      <div class="pd-title">${g.name}</div>
+      <div class="pd-title-row">
+        <span class="pd-tagchip">${g.cat}</span>
+        ${g.promos.map(p => `<span class="pd-tagchip">${p}</span>`).join('')}
+      </div>
+
+      <div class="pd-stats">
+        <div class="pd-stat">${g.rate.replace('好评率', '')} 好评</div>
+        <div class="pd-stat">${g.stat}</div>
+        <div class="pd-stat">${g.soldText} 人已买</div>
+      </div>
+
+      <div class="pd-sec">
+        <div class="pd-sec-title">商品介绍</div>
+        <div class="pd-desc">${desc}</div>
+        <div class="pd-kv"><span class="k">品类</span><span>${g.cat}</span></div>
+        <div class="pd-kv"><span class="k">规格</span><span>${PD_SPECS.map(s => s.label).join(' / ')}</span></div>
+        <div class="pd-kv"><span class="k">发货地</span><span>福建 · 福州</span></div>
+        <div class="pd-kv"><span class="k">售后</span><span>7 天无理由退换 · 运费险</span></div>
+      </div>
+
+      <div class="pd-sec">
+        <div class="pd-sec-title">用户评价 <span>（${g.stat}）</span></div>
+        ${reviews.map(r => `
+          <div class="pd-review">
+            <div class="pd-avatar">${r.a}</div>
+            <div>
+              <div class="pd-review-name">${r.n}</div>
+              <div class="pd-review-text">${r.t}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="height:10px;"></div>
+    `;
+  }
+
+  function openCheckout() {
+    renderCheckout();
+    $('ckScroll').scrollTop = 0;
+    $('ckPage').classList.add('show');
+  }
+
+  function closeCheckout() {
+    $('ckPage').classList.remove('show');
+  }
+
+  function renderCheckout() {
+    const cur = pdCurrent();
+    if (!cur) return;
+    const { g, spec, unit, offer, discount, total } = cur;
+
+    $('ckScroll').innerHTML = `
+      <div class="ck-tip">✅ 早于 99% 同类商品送达 <span style="margin-left:auto;color:#9cc3a8;">✕</span></div>
+      <div class="ck-addr" onclick="showToast('切换收货地址（模拟）')">
+        <span class="ck-addr-ico">📍</span>
+        <div class="ck-addr-main">
+          <div class="ck-addr-top">林女士<span>138****6688</span></div>
+          <div class="ck-addr-text">福建省福州市鼓楼区南后街三坊七巷游客服务中心</div>
+        </div>
+        <span class="ck-addr-arrow">›</span>
+      </div>
+      <div class="ck-ship">⚡ 后天达　仅剩 <b>5</b> 件，现在下单后天送达</div>
+
+      <div class="ck-prod">
+        <div class="ck-prod-img"><img src="${g.img}" alt="${g.name}"></div>
+        <div class="ck-prod-main">
+          <div class="ck-prod-name">${g.name}</div>
+          <span class="ck-prod-spec">已选：${spec.label}</span>
+          <div class="ck-prod-price-row">
+            <span class="ck-prod-price">¥${unit}</span>
+            <span class="ck-prod-origin">¥${unit + 10}</span>
+            <span class="ck-prod-stock">仅剩5件</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ck-row">
+        <span class="k">购买数量</span>
+        <div class="ck-stepper">
+          <button class="ck-step-btn" onclick="changeQty(-1)">−</button>
+          <span class="ck-step-num">${pdState.qty}</span>
+          <button class="ck-step-btn" onclick="changeQty(1)">＋</button>
+        </div>
+      </div>
+
+      <div class="ck-sec">
+        <div class="ck-sec-head">优惠 <span class="more" onclick="showToast('去领券中心（模拟）')">店铺券 -3 元 ›</span></div>
+        ${PD_OFFERS.map((o, i) => `
+          <div class="ck-offer ${i === pdState.offer ? 'on' : ''}" onclick="selectOffer(${i})">
+            <span class="ck-offer-ico">券</span>
+            <span class="ck-offer-txt">${o.label}${o.desc ? `<em>${o.desc}</em>` : ''}</span>
+            <span style="color:#e53935;">${o.amount ? '-¥' + o.amount : '—'}</span>
+            <span class="ck-radio">✓</span>
+          </div>`).join('')}
+      </div>
+
+      <div class="ck-sec">
+        <div class="ck-sec-head">选择规格</div>
+        ${PD_SPECS.map((s, i) => `
+          <div class="ck-offer ${i === pdState.spec ? 'on' : ''}" onclick="selectSpec(${i})">
+            <span class="ck-offer-ico" style="color:#1f8a4c;border-color:#c6e5d0;background:#eef9f0;">规格</span>
+            <span class="ck-offer-txt">${s.label}<em>每件 ¥${g.price + s.extra}</em></span>
+            <span style="color:#e53935;">¥${g.price + s.extra}</span>
+            <span class="ck-radio">✓</span>
+          </div>`).join('')}
+      </div>
+
+      <div class="ck-sec">
+        <div class="ck-sec-head">配送与备注</div>
+        <div class="ck-offer" onclick="showToast('选择配送方式（模拟）')">
+          <span class="ck-offer-txt">配送方式<em>快递免运费</em></span>
+          <span class="ck-addr-arrow">›</span>
+        </div>
+        <div class="ck-offer" onclick="showToast('填写订单备注（模拟）')">
+          <span class="ck-offer-txt">订单备注<em>选填</em></span>
+          <span class="ck-addr-arrow">›</span>
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+    `;
+
+    $('ckDiscount').textContent = '¥' + discount;
+    $('ckTotal').textContent = '¥' + total;
+  }
+
+  function changeQty(d) {
+    pdState.qty = Math.min(9, Math.max(1, pdState.qty + d));
+    renderCheckout();
+  }
+
+  function selectOffer(i) {
+    pdState.offer = i;
+    renderCheckout();
+  }
+
+  function selectSpec(i) {
+    pdState.spec = i;
+    renderCheckout();
+  }
+
+  function submitOrder() {
+    const cur = pdCurrent();
+    if (!cur) return;
+    showToast(`支付成功 ¥${cur.total}（模拟）`);
+    closeCheckout();
+    closeProductDetail();
+  }
+
+  /* ========== 筛选面板 HTML ========== */
+  function shopFilterHtml(view, st) {
+    const chipSel = c => st.cats.includes(c) ? 'active' : '';
+    const priceSel = p => st.price === p.key ? 'active' : '';
+    return `
+      <div class="sf-label">品类（可多选）</div>
+      <div class="sf-chips">
+        ${CATS_ALL.map(c => `<div class="sf-chip ${chipSel(c)}" onclick="toggleShopCat('${view}','${c}')">${c}</div>`).join('')}
+      </div>
+      <div class="sf-label">价格</div>
+      <div class="sf-price">
+        ${PRICE_RANGES.map(p => `<div class="sf-price-item ${priceSel(p)}" onclick="setShopPrice('${view}','${p.key}')">${p.label}</div>`).join('')}
+      </div>
+      <div class="sf-actions">
+        <button class="sf-reset" onclick="resetShopFilter('${view}')">重置</button>
+        <button class="sf-confirm" onclick="applyShopFilter('${view}')">确定</button>
+      </div>`;
+  }
+
+  /* ========== 交互函数 ========== */
+  function setShopSort(view, sort) {
+    const st = shopState[view];
+    st.sort = sort; st.compOpen = false;
+    renderShop(view);
+  }
+  function toggleCompMenu(view) {
+    const st = shopState[view];
+    // 快速切换：点其他 Tab 先关下拉
+    st.compOpen = !st.compOpen; st.filterOpen = false;
+    renderShop(view);
+  }
+  function toggleShopFilter(view) {
+    const st = shopState[view];
+    st.filterOpen = !st.filterOpen; st.compOpen = false;
+    renderShop(view);
+  }
+  function toggleShopCat(view, cat) {
+    const st = shopState[view];
+    const i = st.cats.indexOf(cat);
+    if (i >= 0) st.cats.splice(i, 1); else st.cats.push(cat);
+    renderShop(view);
+  }
+  function setShopPrice(view, key) {
+    shopState[view].price = key;
+    renderShop(view);
+  }
+  function resetShopFilter(view) {
+    const st = shopState[view];
+    st.cats = []; st.price = 'all';
+    renderShop(view);
+  }
+  function applyShopFilter(view) {
+    shopState[view].filterOpen = false;
+    renderShop(view);
+  }
+
+  /* ========== 品类单选 ========== */
+  $('categoryGrid').addEventListener('click', e => {
+    const item = e.target.closest('.cat-item');
+    if (!item) return;
+    document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+    item.classList.add('active');
+    currentCat = item.dataset.cat;
+  });
+
+  /* ========== AI 优化文案：内置大模型润色 ========== */
+  // 逻辑：保留用户核心创意 → 强制融入福州古厝5元素 → 按品类匹配工艺 → 随机风格/构图
+  function optimizePrompt() {
+    const ta = $('culturalPrompt');
+    const btn = $('polishBtn');
+
+    let base = (ta.value || '').trim();
+    if (!base) base = '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+
+    // 若之前优化过，剥离旧的「【AI优化】」段，取用户原始创意
+    base = base.split('【AI优化】')[0].replace(/[。\s]+$/, '');
+    // 去掉开头的「以」方便拼接句式
+    const baseClean = base.replace(/^以/, '').replace(/[。\s]+$/, '');
+
+    btn.disabled = true;
+    btn.textContent = '优化中…';
+
+    // 模拟大模型思考延迟
+    setTimeout(() => {
+      // 强制元素：马鞍墙、燕尾脊、灰塑、青瓦、榕树（全部必须出现）
+      const elementsStr = '融入福州古厝' + MUST_ELEMENTS.join('、') + '元素';
+
+      // 按品类匹配材质工艺
+      const craft = POLISH_CRAFT[currentCat] || '精致工艺细节';
+      // 随机风格 + 构图，避免每次雷同
+      const style = pick(POLISH_STYLE);
+      const composition = pick(POLISH_COMPOSITION);
+
+      // 句式选择：短创意用「以…为主体」，长描述直接拼接，避免语法不通
+      const isShortPhrase = !base.includes('为元素') && !base.includes('风格') && base.length <= 12;
+      const templates = isShortPhrase
+        ? [
+            `以${baseClean}为主体，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
+            `主体为${baseClean}，${elementsStr}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
+            `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
+          ]
+        : [
+            `${base}，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
+            `${base}，结合${elementsStr.replace('融入', '')}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
+            `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
+          ];
+      const polished = pick(templates);
+
+      ta.value = `【AI优化】${polished}`;
+
+      // 自适应高度：先 auto 让内容溢出，再读真实 scrollHeight
+      ta.style.height = 'auto';
+      ta.offsetHeight; // 强制回流
+      ta.style.height = Math.min(ta.scrollHeight + 4, 280) + 'px';
+
+      showToast('AI 已完成文案优化');
+      btn.disabled = false;
+      btn.textContent = 'AI优化文案';
+    }, 600);
+  }
+
+  function pickN(arr, n) {
+    const copy = arr.slice();
+    const out = [];
+    while (copy.length && out.length < n) {
+      out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+    }
+    return out;
+  }
+
+  /* ========== 文生图接口（与主项目保持一致） ========== */
+  function t2i(prompt, size) {
+    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt='
+      + encodeURIComponent(prompt) + '&image_size=' + (size || 'square');
+  }
+
+  /* ========== 渲染预览区 ========== */
+  function renderEmpty() {
+    $('previewArea').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🎨</div>
+        <div class="text">暂无文创作品</div>
+      </div>`;
+  }
+
+  function renderLoading() {
+    $('previewArea').innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <div class="text">AI正在绘制古厝文创，请稍候</div>
+      </div>`;
+  }
+
+  function renderWork(work) {
+    const price = CAT_PRICE[work.cat] || 0;
+    const isLandscape = work.cat === '明信片';
+    currentWork = work;
+    $('previewArea').innerHTML = `
+      <div class="work-card">
+        <div class="work-img ${isLandscape ? 'landscape' : ''}" onclick="openPreview('${work.img}')">
+          <img src="${work.img}" alt="${work.name}" />
+        </div>
+        <div class="work-meta">
+          <div class="work-name">${CAT_ICON[work.cat] || '🎁'} 古厝元素·${work.cat}</div>
+          <div class="work-price">¥<b>${price}</b><span class="work-price-tip">（AI定制款，含设计费）</span></div>
+        </div>
+        <div class="work-ops">
+          <button class="op-preview" onclick="openPreview('${work.img}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>预览</button>
+          <button class="op-save" onclick="saveWorkToGoods()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>保存</button>
+          <button class="op-regen" onclick="generateWork()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>重新生成</button>
+        </div>
+      </div>`;
+    // 同步作品到父页面（个人中心"我的文创作品"展示用）
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'fzyj-work', work: work }, '*');
+    }
+  }
+
+  /* ========== 保存作品为独立商品 ========== */
+  function saveWorkToGoods() {
+    if (!currentWork) { showToast('请先生成文创作品'); return; }
+    if (savedWorks.some(g => g.img === currentWork.img)) {
+      showToast('该作品已保存过，可在下方查看');
+      return;
+    }
+    const price = CAT_PRICE[currentWork.cat] || 45;
+    const name = `古厝元素·${currentWork.cat}（AI定制款）`;
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10);
+
+    savedWorks.unshift({
+      id: 'custom-' + Date.now(),
+      name: name,
+      cat: currentWork.cat,
+      price: price,
+      img: currentWork.img,
+      rate: '好评率100%',
+      stat: '1 人评价',
+      soldText: '1',
+      salesNum: 1,
+      date: dateStr,
+      promos: ['AI定制款', '含设计费'],
+      desc: `依据你的描述「${(currentWork.prompt || '').slice(0, 40) || '福州古厝元素'}」由 AI 生成的定制${currentWork.cat}，纹样取自燕尾脊、马鞍墙与花窗格，单件制作、独一无二。`
+    });
+
+    renderMyGoods();
+    showToast('已保存为我的文创商品');
+    const box = $('myGoodsBox');
+    if (box) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+  }
+
+  function renderMyGoods() {
+    const box = $('myGoodsBox');
+    const grid = $('myGoodsGrid');
+    if (!box || !grid) return;
+    if (!savedWorks.length) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    $('myGoodsCount').textContent = `共 ${savedWorks.length} 件`;
+    grid.innerHTML = savedWorks.map(g => `
+      <div class="shop-card" onclick="openProductDetail('custom', '${g.id}')">
+        <div class="shop-img">
+          <img src="${g.img}" alt="${g.name}" loading="lazy">
+          <span class="shop-badge custom">定制</span>
+        </div>
+        <div class="shop-info">
+          <div class="shop-name">${g.name}</div>
+          <div class="shop-stats">${g.rate}&ensp;·&ensp;${g.stat}</div>
+          <div class="shop-price-row">
+            <span class="shop-price">¥<b>${g.price}</b></span>
+            <span class="shop-sold">已售${g.soldText}</span>
+            <button class="shop-cart" onclick="event.stopPropagation(); showToast('已加入购物车（模拟）')">🛒</button>
+          </div>
+          <div class="shop-promos">${g.promos.map(p => `<span>${p}</span>`).join('')}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ========== AI 生成文创效果图（含轮询重试，确保真图可见） ========== */
+  function generateWork() {
+    const prompt = ($('culturalPrompt').value || '').trim()
+      || '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+
+    const btn = $('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '生成中…';
+
+    renderLoading();
+
+    // 拼装文生图提示词：先锁定产品实物形态，古厝元素仅作为表面纹样
+    const typeEn = CAT_EN[currentCat] || 'souvenir';
+    const imgPrompt = `product photography of ${typeEn}, the ancient house elements (swallow-tail ridge, horse-saddle wall, grey tile, banyan tree) are decorative patterns on the product surface only, NOT the product shape, chinese guofeng style, ${prompt}, elegant minimalist design, clean solid white background, e-commerce studio shot, high detail, sharp focus`;
+    const baseUrl = t2i(imgPrompt, CAT_IMG_SIZE[currentCat] || 'square');
+
+    // 离线兜底占位图：当真实文生图接口不可用时，展示国风占位 SVG
+    const fallback = placeholderImg(currentCat);
+
+    let finalImg = null;
+
+    // 用 Image 对象加载（不受跨域 CORS 限制）
+    // 返回 Promise<{ok:boolean, url:string}>
+    function loadImage(url) {
+      return new Promise(resolve => {
+        const img = new Image();
+        let done = false;
+        const timeout = setTimeout(() => {
+          if (!done) { done = true; resolve({ ok: false, url: url }); }
+        }, 10000); // 单次加载 10s 超时
+        img.onload = () => {
+          if (!done) {
+            done = true; clearTimeout(timeout);
+            // naturalWidth > 0 确认是真图（非占位文本）
+            resolve({ ok: img.naturalWidth > 0, url: url });
+          }
+        };
+        img.onerror = () => {
+          if (!done) { done = true; clearTimeout(timeout); resolve({ ok: false, url: url }); }
+        };
+        img.src = url;
+      });
+    }
+
+    function finish() {
+      renderWork({ img: finalImg || fallback, cat: currentCat, prompt: prompt.slice(0, 60) });
+      btn.disabled = false; btn.textContent = 'AI生成文创效果图';
+    }
+
+    // 轮询：先等 1.5s loading，然后每 3s 重试，最多 10 次（约 31s）
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    async function poll() {
+      await new Promise(r => setTimeout(r, 1500));
+      while (attempts < maxAttempts) {
+        attempts++;
+        const tsUrl = baseUrl + '&_t=' + Date.now();
+        const result = await loadImage(tsUrl);
+        if (result.ok) { finalImg = result.url; finish(); return; }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+      // 超限用兜底 SVG（绝对不会空白）
+      finalImg = fallback; finish();
+    }
+
+    poll();
+  }
+
+  /* ========== 离线兜底：生成国风占位 SVG ========== */
+  function placeholderImg(cat) {
+    const icon = CAT_ICON[cat] || '🎁';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+      <rect width="400" height="400" fill="#f2f2f2"/>
+      <rect x="20" y="20" width="360" height="360" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="8 6" rx="12"/>
+      <text x="200" y="170" font-size="120" text-anchor="middle">${icon}</text>
+      <text x="200" y="230" font-size="22" font-family="sans-serif" text-anchor="middle" fill="#1a1a1a" font-weight="bold">古厝元素·${cat}</text>
+      <text x="200" y="265" font-size="14" font-family="sans-serif" text-anchor="middle" fill="#888">福州古厝国风文创</text>
+      <text x="200" y="320" font-size="12" font-family="sans-serif" text-anchor="middle" fill="#aaa">（示意图 · 联网后展示 AI 生成效果图）</text>
+      <path d="M60 350 Q100 320 140 340 Q180 315 220 340 Q260 315 300 340 Q340 320 340 350" fill="none" stroke="#1a1a1a" stroke-width="2" opacity="0.3"/>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  /* ========== 大图预览 ========== */
+  function openPreview(src) {
+    $('previewImg').src = src;
+    $('previewMask').classList.add('show');
+  }
+  function closePreview() {
+    $('previewMask').classList.remove('show');
+  }
+
+  /* ========== 保存图片（模拟） ========== */
+  function saveImage(src) {
+    // 跨域图片无法直接 a[download]，改用新标签打开供用户右键另存，避免跳转走当前页
+    try { window.open(src, '_blank'); } catch(e) {}
+    showToast('已打开图片，可长按/右键保存');
+  }
+
+  /* ========== 返回 ========== */
+  function goBack() {
+    showToast('返回上一页');
+  }
+
+  /* ========== 排序筛选栏：跟随页面滑动隐藏/显示 ========== */
+  // 向上滑动（内容上滚）超过阈值后隐藏排序条；向下滑动或回到顶部附近时重新显示。
+  // 筛选面板 / 综合下拉展开时不自动隐藏，避免打断用户操作。
+  (function () {
+    const contentEl = $('content');
+    if (!contentEl) return;
+    let lastTop = 0;
+    let ticking = false;
+    const HIDE_AFTER = 50;   // 滚动超过该距离后才允许隐藏
+    const DIR_DELTA = 6;     // 方向判定死区，防止轻微抖动
+
+    function currentSortbar() {
+      const off = $('panel-official'), fan = $('panel-fan');
+      if (off && off.style.display !== 'none') return $('sortbar-official');
+      if (fan && fan.style.display !== 'none') return $('sortbar-fan');
+      return null; // 自定义文创页无排序条
+    }
+
+    function update() {
+      ticking = false;
+      const bar = currentSortbar();
+      const top = contentEl.scrollTop;
+      if (!bar) { lastTop = top; return; }
+      const view = bar.id === 'sortbar-official' ? 'official' : 'fan';
+      const st = shopState[view];
+      const delta = top - lastTop;
+
+      // 筛选面板或综合下拉展开时：保持显示，不随滚动隐藏
+      if (st && (st.filterOpen || st.compOpen)) {
+        bar.classList.remove('sb-hidden');
+        lastTop = top;
+        return;
+      }
+
+      if (top <= HIDE_AFTER || delta < -DIR_DELTA) {
+        bar.classList.remove('sb-hidden');           // 向下滚动 / 接近顶部 → 显示
+      } else if (delta > DIR_DELTA && top > HIDE_AFTER) {
+        bar.classList.add('sb-hidden');              // 向上滚动 → 隐藏
+      }
+      lastTop = top;
+    }
+
+    contentEl.addEventListener('scroll', () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
+
+    // 供 switchTab 调用：恢复显示并重置基线
+    window.resetSortbarVisibility = function () {
+      lastTop = contentEl.scrollTop;
+      document.querySelectorAll('.shop-sortbar').forEach(b => b.classList.remove('sb-hidden'));
+    };
+  })();
+
+  /* ========== 初始化：自适应提示词高度 ========== */
+  (function init() {
+    // 默认进入「官方文创」Tab 并渲染商品列表
+    switchTab('official');
+    const ta = $('culturalPrompt');
+    ta.style.height = 'auto';
+    ta.offsetHeight;
+    ta.style.height = Math.min(ta.scrollHeight + 4, 280) + 'px';
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.offsetHeight;
+      ta.style.height = Math.min(ta.scrollHeight + 4, 280) + 'px';
+    });
+  })();
+</script>
+</body>
+</html>

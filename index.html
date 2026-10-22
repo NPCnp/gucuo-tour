@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<!-- 桌面端允许缩放辅助查看；移动端通过 JS 自动更新 viewport -->
+<script>
+  // 桌面端（非触屏）动态更新 viewport，移除 user-scalable=no 以便用户正常缩放
+  (function() {
+    var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 1;
+    var isSmall = window.innerWidth <= 520;
+    if (!isTouch && !isSmall) {
+      var vp = document.querySelector('meta[name="viewport"]');
+      if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    }
+    // 微信内：标记 html 类名，隐藏重复的返回键
+    if (/MicroMessenger/i.test(navigator.userAgent)) {
+      document.documentElement.className += ' in-wechat';
+    }
+    // 检测是否为桌面端（非触屏 + 宽屏），标记类名供 CSS 使用
+    if (!isTouch && window.innerWidth > 520) {
+      document.documentElement.className += ' is-desktop';
+    }
+  })();
+</script>
+<title>福见闽都·古厝元游</title>
+<!-- 高德地图 JS API（请替换为你自己的 Key：https://lbs.amap.com/） -->
+<script>
+  window._AMapSecurityConfig = { securityJsCode: 'c31603b7e17903803ca4a1409e4fa0a1' };
+</script>
+<script src="https://webapi.amap.com/loader.js"></script>
+<!-- 凭证保存为图片 -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- 二维码生成库（qrcode-generator） -->
+<script src="vendor/qrcode.min.js"></script>
+<link rel="stylesheet" href="css/base.css?v=6">
+<link rel="stylesheet" href="css/pages.css?v=10">
+</head>
+<body>
+  <div class="phone">
+    <div class="screen" id="screen">
+
+      <!-- ===================== 启动欢迎页 ===================== -->
+      <div class="page active" id="page-splash">
+        <svg class="splash-bg" viewBox="0 0 375 812" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g fill="none" stroke="#c9c9c9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.18">
+            <path d="M45 205 Q75 172 105 190 Q145 155 188 190 Q228 158 268 190 Q300 172 330 205"/>
+            <path d="M58 208 L58 292 M317 208 L317 292 M58 292 L317 292"/>
+            <path d="M95 292 L95 250 Q125 232 155 250 L155 292"/>
+            <path d="M220 292 L220 250 Q250 232 280 250 L280 292"/>
+            <path d="M165 292 L165 244 L210 244 L210 292"/>
+            <path d="M40 580 Q75 545 110 565 Q150 532 190 565 Q230 532 270 565 Q305 545 335 580"/>
+            <path d="M55 583 L55 660 M320 583 L320 660 M55 660 L320 660"/>
+            <path d="M150 660 L150 612 Q187 590 225 612 L225 660"/>
+            <rect x="75" y="592" width="44" height="40"/>
+            <path d="M75 612 L119 612 M97 592 L97 632"/>
+            <rect x="256" y="592" width="44" height="40"/>
+            <path d="M256 612 L300 612 M278 592 L278 632"/>
+          </g>
+        </svg>
+        <div class="splash-body">
+          <div class="splash-slogan">一座福州城，半部古厝史</div>
+          <div class="splash-logo-wrap">
+            <div class="splash-logo">🏛️</div>
+          </div>
+          <div class="splash-title">福见闽都·古厝元游</div>
+          <div class="splash-sub">福州古厝文旅服务平台</div>
+          <div class="splash-intro">寻访闽都古厝文脉，探寻千年榕城故事，沉浸式解锁福州历史文化旅程</div>
+        </div>
+        <div class="splash-footer">
+          <button class="splash-enter" onclick="goHomeFromSplash()">立即进入</button>
+          <div class="splash-note">— 景点打卡 — 古厝导览 — 路线规划 — 文创收藏 —</div>
+        </div>
+      </div>
+
+      <!-- ===================== 首页 ===================== -->
+      <div class="page" id="page-home">
+        <div class="content">
+          <div class="home-header">
+            <div class="app-name-row">
+              <div>
+                <div class="app-name">福见闽都・古厝元游</div>
+                <div class="app-sub">福州古厝文旅服务平台</div>
+              </div>
+            </div>
+            <div class="search-bar" onclick="showScreen('search')">
+              <div class="s-icon"></div>
+              <span>搜索景点、古厝或美食，如「严复故居」「鱼丸」</span>
+            </div>
+          </div>
+
+          <div class="grid-section">
+            <div class="section-title">探索古厝</div>
+            <div class="feature-grid">
+              <div class="feature-card" onclick="showScreen('ai-route')">
+                <div class="feature-icon">🗺️</div>
+                <div>
+                  <div class="feature-label">智能路线</div>
+                  <div class="feature-desc">AI定制福州古厝游览路线</div>
+                </div>
+              </div>
+              <div class="feature-card" onclick="showScreen('narrator')">
+                <div class="feature-icon">🤖</div>
+                <div>
+                  <div class="feature-label">古厝导览</div>
+                  <div class="feature-desc">数字讲解员陪你逛古厝</div>
+                </div>
+              </div>
+              <div class="feature-card" onclick="openCheckinPage()">
+                <div class="feature-icon">📍</div>
+                <div>
+                  <div class="feature-label">景点打卡</div>
+                  <div class="feature-desc">按路线打卡福州古厝点位</div>
+                </div>
+              </div>
+              <div class="feature-card" onclick="showScreen('cultural')">
+                <div class="feature-icon">🎨</div>
+                <div>
+                  <div class="feature-label">福厝文创</div>
+                  <div class="feature-desc">选购福州古厝主题文创</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 热门古厝：高德好评榜 TOP5，横向滑动 -->
+          <div class="home-section">
+            <div class="section-head">
+              <div class="section-title">热门古厝</div>
+              <button class="more-btn" onclick="openRankingCat('scenic')">更多 ›</button>
+            </div>
+            <div class="hscroll">
+              <div class="reco-card" onclick="gotoDetail('三坊七巷·严复故居')">
+                <div class="reco-thumb">🏛️<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">AI 讲解</span><span class="reco-rank">NO.1</span></div>
+                <div class="reco-info">
+                  <h4>三坊七巷·严复故居</h4>
+                  <p>清代民居 · 近代思想家故居</p>
+                </div>
+              </div>
+              <div class="reco-card" onclick="gotoDetail('水榭戏台')">
+                <div class="reco-thumb">🏯<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">AI 讲解</span><span class="reco-rank">NO.2</span></div>
+                <div class="reco-info">
+                  <h4>水榭戏台</h4>
+                  <p>古厝园林 · 水上私家戏台</p>
+                </div>
+              </div>
+              <div class="reco-card" onclick="gotoDetail('严复翰墨馆')">
+                <div class="reco-thumb">📜<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">AI 讲解</span><span class="reco-rank">NO.3</span></div>
+                <div class="reco-info">
+                  <h4>严复翰墨馆</h4>
+                  <p>书香院落 · 严复翰墨遗存</p>
+                </div>
+              </div>
+              <div class="reco-card" onclick="gotoDetail('二梅书屋')">
+                <div class="reco-thumb">📚<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">AI 讲解</span><span class="reco-rank">NO.4</span></div>
+                <div class="reco-info">
+                  <h4>二梅书屋</h4>
+                  <p>书香古厝 · 清代翰林故居</p>
+                </div>
+              </div>
+              <div class="reco-card" onclick="gotoDetail('林则徐纪念馆')">
+                <div class="reco-thumb">🏛️<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">AI 讲解</span><span class="reco-rank">NO.5</span></div>
+                <div class="reco-info">
+                  <h4>林则徐纪念馆</h4>
+                  <p>清代建筑 · 民族英雄纪念地</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 热门小吃：高德好评榜 TOP5，横向滑动 -->
+          <div class="home-section">
+            <div class="section-head">
+              <div class="section-title">热门小吃</div>
+              <button class="more-btn" onclick="openRankingCat('food')">更多 ›</button>
+            </div>
+            <div class="hscroll">
+              <div class="reco-card food" onclick="openDishDetail('同利肉燕')">
+                <div class="reco-thumb">🥟<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.1</span></div>
+                <div class="reco-info">
+                  <h4>同利肉燕</h4>
+                  <p>百年老铺手工捶打，燕皮薄如纸、入口爽滑</p>
+                </div>
+              </div>
+              <div class="reco-card food" onclick="openDishDetail('永和鱼丸')">
+                <div class="reco-thumb">🍜<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.2</span></div>
+                <div class="reco-info">
+                  <h4>永和鱼丸</h4>
+                  <p>老字号鱼丸，汤头清鲜、鱼丸弹牙多汁</p>
+                </div>
+              </div>
+              <div class="reco-card food" onclick="openDishDetail('花生汤')">
+                <div class="reco-thumb">🥣<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.3</span></div>
+                <div class="reco-info">
+                  <h4>花生汤</h4>
+                  <p>古早味甜品，花生绵软、汤色乳白微甜</p>
+                </div>
+              </div>
+              <div class="reco-card food" onclick="openDishDetail('锅边糊')">
+                <div class="reco-thumb">🍲<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.4</span></div>
+                <div class="reco-info">
+                  <h4>锅边糊</h4>
+                  <p>福州经典早餐，米浆沿锅边旋片、配虾干</p>
+                </div>
+              </div>
+              <div class="reco-card food" onclick="openDishDetail('荔枝肉')">
+                <div class="reco-thumb">🍖<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.5</span></div>
+                <div class="reco-info">
+                  <h4>荔枝肉</h4>
+                  <p>形似荔枝的经典闽菜，酸甜酥脆、下饭开胃</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item active" onclick="showScreen('home', true)">
+            <div class="tab-icon">⌂</div>
+            <span>首页</span>
+          </div>
+          <div class="tab-item" onclick="showScreen('ranking', true)">
+            <div class="tab-icon">🏆</div>
+            <span>排行榜</span>
+          </div>
+          <div class="tab-item" onclick="showScreen('profile', true)">
+            <div class="tab-icon">○</div>
+            <span>个人中心</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 搜索页 ===================== -->
+      <div class="page" id="page-search">
+        <div class="search-input-row">
+          <div class="search-input-wrap">
+            <div class="s-icon" style="width:14px;height:14px;"></div>
+            <input id="searchInput" placeholder="输入景点、公厕或小吃名称搜索" oninput="doSearch(this.value)" />
+          </div>
+          <button class="search-cancel" onclick="goBack()">取消</button>
+        </div>
+        <div class="search-cat-bar" id="searchCatBar">
+          <button class="cat-chip active" data-cat="near">周边景点</button>
+          <button class="cat-chip" data-cat="toilet">公共厕所</button>
+          <button class="cat-chip" data-cat="snack">特色小吃</button>
+        </div>
+        <div class="search-loc" id="searchLocStatus">📍 正在获取您的位置，按距离就近排序…</div>
+        <div class="content search-content">
+          <div id="searchResults"></div>
+        </div>
+      </div>
+
+      <!-- ===================== 古厝详情页 ===================== -->
+      <div class="page" id="page-detail">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">古厝详情</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <!-- 古厝封面图（有实景图时自动替换） -->
+          <div class="detail-cover">
+            <img class="detail-cover-img" id="detailCoverImg" alt="" style="display:none">
+            <div class="big-icon">🏛️</div>
+            <div class="cover-label">古厝封面图（占位）</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-name" id="detailName">三坊七巷·严复故居</div>
+            <div class="detail-tags">
+              <span class="detail-tag">清代民居</span>
+              <span class="detail-tag">全国重点文物保护单位</span>
+              <span class="detail-tag">名人故居</span>
+            </div>
+          </div>
+
+          <!-- 古厝简介 -->
+          <div class="detail-section">
+            <div class="section-title">古厝简介</div>
+            <p class="detail-desc" id="detailDesc">
+              严复故居位于福州三坊七巷郎官巷，是一座典型的清代传统民居建筑。宅院坐北朝南，保留完整的木构梁架与雕花门窗，燕尾脊、马鞍墙等闽派建筑元素清晰可辨。这里是近代著名思想家、翻译家严复先生的故居，他翻译的《天演论》影响了一代中国人。如今故居已辟为纪念馆，是了解福州古厝文化与近代历史的重要参观点位。
+            </p>
+          </div>
+
+          <!-- 数字讲解员小厝模块 -->
+          <div class="narrator-panel" style="border-radius:12px; margin:12px 16px; border:1px solid #e0e0e0;">
+            <div class="narrator-head">
+              <div class="narrator-avatar">🧑‍🏫</div>
+              <div class="narrator-meta">
+                <strong>数字讲解员 · 小厝</strong>
+                <span id="narrStatus">正在自动播放讲解…</span>
+              </div>
+              <button class="narr-video-btn" id="narrVideoBtn" onclick="openSpotVideo()">🎬 看视频</button>
+              <button class="narr-play" id="narrPlayBtn" onclick="toggleNarrator()">❚❚</button>
+            </div>
+            <div class="narrator-video" id="narrVideoBox" style="display:none;">
+              <video id="narrVideo" controls playsinline x5-playsinline="true" x5-video-player-type="h5-page" x5-video-player-fullscreen="true" webkit-playsinline="true" preload="metadata"></video>
+            </div>
+            <div class="narrator-script" id="detailNarrScript">
+              <p>各位游客朋友，大家好，我是数字讲解员小厝，欢迎来到严复故居。</p>
+              <p>这座古厝建于清代，是福州典型的传统民居。大家看这里的燕尾脊，两端高高翘起，是闽派建筑的标志性元素。</p>
+              <p>严复是中国近代著名的思想家、翻译家，他翻译的《天演论》影响了整整一代中国人。</p>
+              <p>故居坐北朝南，三进院落，保留了完整的清代木构梁架与雕花门窗。</p>
+              <p>接下来让我们走进正厅，感受这座百年古厝的历史温度……</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn" onclick="goBack()">返回</button>
+          <div class="checkin-action-area" id="detailCheckinArea" style="flex:1; display:flex; gap:10px;">
+            <button class="btn primary" onclick="gpsCheckin()">📍 定位打卡</button>
+            <button class="btn" onclick="photoCheckin()">📷 拍照打卡</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 排行榜 ===================== -->
+      <div class="page" id="page-ranking">
+        <div class="nav-bar">
+          <div class="right-placeholder"></div>
+          <span class="title">排行榜</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="rank-cat-bar" id="rankCatBar">
+          <button class="rank-cat-chip active" data-cat="scenic">景点</button>
+          <button class="rank-cat-chip" data-cat="food">美食</button>
+          <button class="rank-cat-chip" data-cat="fun">娱乐</button>
+        </div>
+        <div class="content rank-content">
+          <div id="rankList"></div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="showScreen('home', true)">
+            <div class="tab-icon">⌂</div>
+            <span>首页</span>
+          </div>
+          <div class="tab-item active" onclick="showScreen('ranking', true)">
+            <div class="tab-icon">🏆</div>
+            <span>排行榜</span>
+          </div>
+          <div class="tab-item" onclick="showScreen('profile', true)">
+            <div class="tab-icon">○</div>
+            <span>个人中心</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 排行榜详情 ===================== -->
+      <div class="page" id="page-rank-detail">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title" id="rdNavTitle">详情</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content rd-content" id="rankDetailBody"></div>
+        <div class="rd-bottom">
+          <div class="rd-btm-icon" onclick="showToast('已收藏（模拟）')">
+            <span>☆</span><span>收藏</span>
+          </div>
+          <div class="rd-btm-icon" onclick="showToast('已分享（模拟）')">
+            <span>↗</span><span>分享</span>
+          </div>
+          <button class="rd-nav-btn" onclick="navigateRankDetail()">🧭 导航前往</button>
+        </div>
+      </div>
+
+      <!-- ===================== 路线打卡 ===================== -->
+      <div class="page" id="page-checkin">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">路线打卡</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="ck-head">
+            <div class="ck-head-main">
+              <div class="ck-route-name" id="ckRouteName">尚未生成路线</div>
+              <div class="ck-route-sub" id="ckRouteSub">生成 AI 路线后，这里会按顺序列出打卡目标</div>
+            </div>
+            <button class="ck-route-btn" id="ckRouteBtn" onclick="showScreen('ai-route')">去规划</button>
+          </div>
+
+          <div class="ck-progress">
+            <div class="ck-progress-top">
+              <span id="ckProgressText">已打卡 0/0</span>
+              <span id="ckProgressPercent">0%</span>
+            </div>
+            <div class="ck-progress-track"><div class="ck-progress-fill" id="ckProgressFill"></div></div>
+          </div>
+
+          <div class="ck-list" id="ckList"></div>
+
+          <div class="ck-empty" id="ckEmpty">
+            <div class="ck-empty-icon">📍</div>
+            <div class="ck-empty-title">还没有打卡目标</div>
+            <div class="ck-empty-desc">先在「AI 路线规划」生成一条路线<br/>系统会按游览顺序列出打卡目标</div>
+            <button class="ck-empty-btn" onclick="showScreen('ai-route')">去生成 AI 路线</button>
+          </div>
+
+          <div class="ck-tip">打卡方式：到达景点 50 米范围内可「定位打卡」；不在现场时也可「拍照打卡」上传该景点照片完成打卡</div>
+        </div>
+      </div>
+
+      <!-- ===================== 点位地图 ===================== -->
+      <div class="page" id="page-points-map">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">点位地图</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="points-map-wrap">
+          <div id="pointsMapContainer"></div>
+          <div id="pointsMapFallback" class="route-map-fallback" style="display:none;">
+            高德地图加载失败<br/>
+            <span style="font-size:11px;">请检查网络或在 index.html 顶部替换为你的高德 Key</span>
+          </div>
+          <div class="map-point-card" id="mapPointCard" style="display:none;">
+            <div class="mpc-head">
+              <strong id="mpcName"></strong>
+              <span class="mpc-close" onclick="document.getElementById('mapPointCard').style.display='none'">×</span>
+            </div>
+            <p class="mpc-desc" id="mpcDesc"></p>
+            <div class="mpc-ops">
+              <button class="mpc-btn ghost" id="mpcDetailBtn">查看简介</button>
+              <button class="mpc-btn dark" id="mpcNavBtn">🧭 导航前往</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 电子证书 ===================== -->
+      <div class="page" id="page-certificate">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">电子证书</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="cert-wrap">
+            <div class="cert-card" id="certCard">
+              <div class="cert-bg" id="certBg"></div>
+              <div class="cert-inner">
+                <div class="cert-seal">🏆</div>
+                <div class="cert-title">福州古厝游览纪念凭证</div>
+                <div class="cert-subtitle">C E R T I F I C A T E</div>
+                <div class="cert-divider"></div>
+                <div class="cert-user" id="certUserName">游客</div>
+                <div class="cert-info">
+                  游览路线：<strong id="certRouteName">AI 推荐游览路线</strong><br/>
+                  已集齐 <strong id="certSpotCount">0</strong> 处路线景点印记，准予结业
+                </div>
+                <div class="cert-spots" id="certSpots"></div>
+                <div class="cert-info" style="margin-top:14px;">
+                  完成日期：<span id="certDate">2026-10-20</span>
+                </div>
+                <div class="cert-no" id="certNo">证书编号：FJMD-20261020-00001</div>
+              </div>
+            </div>
+            <div class="cert-actions">
+              <button class="btn" onclick="saveCertImage()">保存图片</button>
+              <button class="btn primary" onclick="showToast('已分享（模拟）')">分享</button>
+            </div>
+            <div class="cert-actions" style="margin-top:10px;">
+              <button class="btn" onclick="showScreen('home', true)">返回首页</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 个人中心 ===================== -->
+      <div class="page" id="page-profile">
+        <div class="nav-bar">
+          <div class="right-placeholder"></div>
+          <span class="title">我的</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content profile-content">
+          <!-- 用户信息 -->
+          <div class="pf-user">
+            <div class="pf-avatar" id="profileAvatar" onclick="document.getElementById('avatarFile').click()">头像</div>
+            <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="onAvatarChange(event)" />
+            <div class="pf-user-info">
+              <div class="pf-name" id="profileName">游客</div>
+              <div class="pf-level">文旅达人 Lv.5</div>
+            </div>
+            <div class="pf-settings" onclick="showScreen('settings-manage')" title="设置">⚙</div>
+          </div>
+
+          <!-- 数据统计 -->
+          <div class="pf-stats">
+            <div class="pf-stat">
+              <div class="pf-stat-num" id="statDays">0</div>
+              <div class="pf-stat-label">打卡天数</div>
+            </div>
+            <div class="pf-stat">
+              <div class="pf-stat-num" id="statCerts">0</div>
+              <div class="pf-stat-label">已获证书</div>
+            </div>
+            <div class="pf-stat">
+              <div class="pf-stat-num" id="statWorks">0</div>
+              <div class="pf-stat-label">文创作品</div>
+            </div>
+          </div>
+
+          <!-- 我的服务 -->
+          <div class="pf-card">
+            <div class="pf-card-title">我的服务</div>
+            <div class="pf-service-grid">
+              <div class="pf-service" onclick="showScreen('records')">
+                <div class="pf-svc-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </div>
+                <div class="pf-svc-text">打卡记录</div>
+              </div>
+              <div class="pf-service" onclick="showScreen('works')">
+                <div class="pf-svc-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                </div>
+                <div class="pf-svc-text">文创作品</div>
+              </div>
+              <div class="pf-service" onclick="showScreen('favorites')">
+                <div class="pf-svc-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="pf-svc-text">收藏古厝</div>
+              </div>
+              <div class="pf-service" onclick="showScreen('history')">
+                <div class="pf-svc-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div class="pf-svc-text">浏览历史</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 特色功能 -->
+          <div class="pf-card">
+            <div class="pf-card-title">特色功能</div>
+            <div class="pf-feature-list">
+              <div class="pf-feature" onclick="openCultural()">
+                <div class="pf-feat-icon pf-feat-green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg>
+                </div>
+                <div class="pf-feat-info">
+                  <div class="pf-feat-name">福厝艺集</div>
+                  <div class="pf-feat-desc">AI 生成古厝文创周边</div>
+                </div>
+                <span class="pf-feat-arrow">›</span>
+              </div>
+              <div class="pf-feature" onclick="showScreen('ai-route')">
+                <div class="pf-feat-icon pf-feat-orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/></svg>
+                </div>
+                <div class="pf-feat-info">
+                  <div class="pf-feat-name">AI 智能路线</div>
+                  <div class="pf-feat-desc">定制专属古厝游览路线</div>
+                </div>
+                <span class="pf-feat-arrow">›</span>
+              </div>
+              <div class="pf-feature" onclick="showScreen('narrator')">
+                <div class="pf-feat-icon pf-feat-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+                </div>
+                <div class="pf-feat-info">
+                  <div class="pf-feat-name">数字人讲解</div>
+                  <div class="pf-feat-desc">古厝文化智能语音导览</div>
+                </div>
+                <span class="pf-feat-arrow">›</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="showScreen('home', true)">
+            <div class="tab-icon">⌂</div>
+            <span>首页</span>
+          </div>
+          <div class="tab-item" onclick="showScreen('ranking', true)">
+            <div class="tab-icon">🏆</div>
+            <span>排行榜</span>
+          </div>
+          <div class="tab-item active" onclick="showScreen('profile', true)">
+            <div class="tab-icon">○</div>
+            <span>个人中心</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 设置管理 ===================== -->
+      <div class="page" id="page-settings-manage">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">设置</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content st-content">
+          <!-- 账号与安全 -->
+          <div class="st-group st-group-top">
+            <div class="st-row" onclick="showScreen('account')">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>
+              </span>
+              <span class="st-label">账号与安全</span>
+              <span class="st-avatar" id="stAvatar">头像</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-group-title">功能</div>
+          <div class="st-group">
+            <div class="st-row" onclick="toggleSetting('notify', this)">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              </span>
+              <span class="st-label">消息通知</span>
+              <span class="st-switch" id="swNotify"></span>
+            </div>
+            <div class="st-row" onclick="openModeSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+              </span>
+              <span class="st-label">模式选择</span>
+              <span class="st-value" id="stModeText">普通模式</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openDecorateSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 3.6a2 2 0 0 0-2.8 0L12 9.2 6.4 3.6a2 2 0 0 0-2.8 2.8L9.2 12l-5.6 5.6a2 2 0 0 0 2.8 2.8L12 14.8l5.6 5.6a2 2 0 0 0 2.8-2.8L14.8 12l5.6-5.6a2 2 0 0 0 0-2.8z"/></svg>
+              </span>
+              <span class="st-label">个性装扮与特权外显</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openGeneralSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2"/><circle cx="8" cy="16" r="2"/></svg>
+              </span>
+              <span class="st-label">通用</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-group-title">隐私</div>
+          <div class="st-group">
+            <div class="st-row" onclick="openPrivacySheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6z"/><path d="M12 8v4"/><path d="M12 15.5v.01"/></svg>
+              </span>
+              <span class="st-label">隐私设置</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openCollectSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M12 7v6"/></svg>
+              </span>
+              <span class="st-label">个人信息收集清单</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openThirdShareSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2"/></svg>
+              </span>
+              <span class="st-label">第三方个人信息共享清单</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openProtectSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></svg>
+              </span>
+              <span class="st-label">个人信息保护设置</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-group">
+            <div class="st-row" onclick="openAboutSheet()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5v.01"/></svg>
+              </span>
+              <span class="st-label">关于我们与帮助</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-group">
+            <div class="st-row" onclick="openShareQR()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v7M17 21h7"/></svg>
+              </span>
+              <span class="st-label">分享访问二维码</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-group">
+            <div class="st-row" onclick="confirmLogout()">
+              <span class="st-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg>
+              </span>
+              <span class="st-label">退出当前账号</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-version">福见闽都・古厝元游 v1.0.0 · 本地演示版</div>
+        </div>
+      </div>
+
+      <!-- ===================== 账号与安全 ===================== -->
+      <div class="page" id="page-account">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">账号与安全</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content st-content">
+          <div class="st-group st-group-top">
+            <div class="st-row" onclick="document.getElementById('avatarFile').click()">
+              <span class="st-label">头像</span>
+              <span class="st-avatar" id="acAvatar">头像</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="editNickname()">
+              <span class="st-label">昵称</span>
+              <span class="st-value" id="acName">游客</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openBindPhone()">
+              <span class="st-label">绑定手机号</span>
+              <span class="st-value" id="acPhone">未绑定</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openPasswordSheet()">
+              <span class="st-label">登录密码</span>
+              <span class="st-value">修改</span>
+              <span class="st-arrow">›</span>
+            </div>
+            <div class="st-row" onclick="openVerifySheet()">
+              <span class="st-label">实名认证</span>
+              <span class="st-value" id="acVerify">未认证</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-group">
+            <div class="st-row" onclick="openDeactivateSheet()">
+              <span class="st-label st-danger">注销账号</span>
+              <span class="st-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="st-note">本演示为本地游客模式，账号信息仅保存在当前设备浏览器，不上传服务器。绑定手机号、密码与认证均为模拟流程。</div>
+        </div>
+      </div>
+
+      <!-- ===================== 设置基础信息 ===================== -->
+      <div class="page" id="page-settings">
+        <div class="nav-bar">
+          <button class="nav-skip" onclick="skipSettings()">跳过</button>
+          <span class="title">设置基础信息</span>
+          <span class="nav-placeholder"></span>
+        </div>
+        <div class="content">
+          <div class="settings-form">
+            <div class="form-group">
+              <label class="form-label">昵称</label>
+              <input class="form-input" id="setName" value="游客" placeholder="请输入昵称，2-10个字符"
+                     maxlength="10" oninput="validateName()" onblur="validateName(true)" />
+              <div class="form-error" id="nameError"></div>
+            </div>
+            <button class="generate-btn" id="saveSettingsBtn" onclick="saveSettings()">保存</button>
+            <p class="settings-note">昵称仅保存在当前设备，用于打卡与收藏记录，不会上传云端，保护游客隐私</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== AI 路线规划 ===================== -->
+      <div class="page" id="page-ai-route">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">AI 路线规划</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="route-form" id="routeForm">
+            <div class="form-group">
+              <label class="form-label">出行天数</label>
+              <div class="days-input-row">
+                <input class="form-input days-input" id="routeDays" type="number" value="1" min="0.5" max="5" step="0.5" />
+                <span class="days-unit">天</span>
+                <span class="days-hint">支持 0.5 ~ 5 天，AI 将按天数匹配景点数量与节奏</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">出发地点</label>
+              <div class="loc-row">
+                <div class="suggest-wrap">
+                  <input class="form-input suggest-input" id="routeStart" value="" placeholder="当前位置（点击获取定位）" autocomplete="off"
+                         oninput="onSuggestInput('routeStart')" onfocus="onSuggestInput('routeStart')" />
+                  <div class="suggest-panel" id="routeStartSuggest"></div>
+                </div>
+                <button class="locate-btn" type="button" aria-label="获取当前位置" onclick="locateToInput('routeStart', this)">
+                  <span class="loc-ico">◎</span><span class="loc-txt" id="routeStartLocTxt">定位</span>
+                </button>
+              </div>
+              <p class="loc-privacy-note">定位仅用于本次路线规划，不上传、不保存；关闭页面后位置信息即清除。</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">结束地点</label>
+              <div class="loc-row">
+                <div class="suggest-wrap">
+                  <input class="form-input suggest-input" id="routeEnd" value="" placeholder="填写或选择结束地点（可留空，默认返回出发地）" autocomplete="off"
+                         oninput="onSuggestInput('routeEnd')" onfocus="onSuggestInput('routeEnd')" />
+                  <div class="suggest-panel" id="routeEndSuggest"></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">兴趣偏好（可多选）</label>
+              <div class="chip-group" data-group="interest">
+                <div class="chip active">历史文化</div>
+                <div class="chip">建筑艺术</div>
+                <div class="chip">名人故居</div>
+                <div class="chip">民俗风情</div>
+                <div class="chip">美食打卡</div>
+              </div>
+            </div>
+            <button class="generate-btn" onclick="generateRoute()">生成路线</button>
+          </div>
+          <div class="route-result" id="routeResult">
+            <div class="route-result-head">
+              <div class="section-title" id="routeTitle" style="margin:0;">AI 路线规划</div>
+              <button class="edit-form-btn" onclick="backToRouteForm()">‹ 修改参数</button>
+            </div>
+
+            <!-- 路线标签栏（单行压缩） -->
+            <div class="plan-tabs" id="planTabs"></div>
+
+            <div class="module-divider"></div>
+
+            <!-- 高德路线地图（固定占 40% 高度） -->
+            <div class="route-map-card">
+              <div class="route-map-head">
+                <span class="route-map-title">路线地图（高德）</span>
+                <span class="route-map-dist" id="routeMapDist">全程约 2.4 km</span>
+              </div>
+              <div id="amapContainer" class="route-map"></div>
+              <div id="amapFallback" class="route-map-fallback" style="display:none;">
+                高德地图加载失败<br/>
+                <span style="font-size:11px;">请在 index.html 顶部替换为你的高德 Key 与 SecurityCode</span>
+              </div>
+            </div>
+
+            <!-- 站点清单：默认展开，可点击收起为一行 -->
+            <div class="module-divider"></div>
+            <div class="stations-block" id="stationsBlock">
+              <button class="stations-toggle" type="button" onclick="toggleStations()">
+                <span class="st-label">站点清单<span class="st-meta" id="stationsMeta">共0站</span></span>
+                <span class="st-arrow" id="stationsArrow">收起 ▲</span>
+              </button>
+              <div class="stations-body">
+                <!-- 一键导航 -->
+                <button class="route-nav-btn" onclick="navigateRoute()">🧭 开始导航</button>
+                <button class="route-checkin-btn" onclick="gotoRouteCheckin()">✓ 沿这条路线去打卡（景点自动设为打卡点）</button>
+
+                <div class="route-summary" id="routeSummary">
+                  🕐 预估总时长：约 7 小时　　🚶 交通建议：全程步行 + 巷内电瓶车<br/>
+                  🚌 返程：可于南后街南口乘地铁 1 号线
+                </div>
+
+                <!-- 动态路线步骤容器 -->
+                <div id="routeSteps"></div>
+
+                <button class="save-route-btn" onclick="saveRoute()">保存路线（同步到个人中心）</button>
+              </div>
+            </div>
+
+            <!-- AI 路线助手（页面最底部极简条，对话向上弹出不常驻） -->
+            <div class="module-divider ai-pin-divider"></div>
+            <div class="ai-assistant">
+              <div class="ai-chat" id="aiChat">
+                <button class="ai-panel-close" type="button" onclick="toggleAiPanel(false)">收起 ▾</button>
+                <div class="ai-msg ai" id="aiWelcome">你好！我是小厝。想加景点或小吃，直接说，我自动就近插入，地图实时刷新。</div>
+              </div>
+              <div class="ai-hint"><b>【AI小厝】</b>告诉我想增加的景点、美食，就近重排路线</div>
+              <div class="ai-input-row">
+                <input class="ai-input" id="aiInput" placeholder="问问我，例如「中途想吃鱼丸」" onkeydown="if(event.key==='Enter')aiSend()" />
+                <button class="ai-send" onclick="aiSend()">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 定位权限说明弹窗：游客点「允许」后才真正申请手机定位 -->
+        <div class="loc-permit-mask" id="locPermitMask">
+          <div class="loc-permit-card">
+            <div class="loc-permit-ico">◎</div>
+            <div class="loc-permit-title">定位权限说明</div>
+            <p class="loc-permit-text">需要获取您当前位置，用于规划前往古厝的游览路线，定位信息仅本次使用，不会上传或保存</p>
+            <p class="loc-permit-note">点击「允许」后才发起定位申请；拒绝时自动切换为手动填写起点</p>
+            <div class="loc-permit-actions">
+              <button class="loc-permit-btn deny" type="button" onclick="closeLocPermit(false)">暂不</button>
+              <button class="loc-permit-btn allow" type="button" onclick="closeLocPermit(true)">允许</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 文创生成 ===================== -->
+      <div class="page" id="page-cultural">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">福厝艺集</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content cultural-iframe-wrap">
+          <iframe src="js/fu-cuo-yi-ji.html?v=4" class="cultural-iframe" frameborder="0"></iframe>
+        </div>
+      </div>
+
+      <!-- ===================== 古厝导览（独立页） ===================== -->
+      <div class="page" id="page-narrator">
+        <div class="nav-bar">
+          <button class="back" onclick="narrNavBack()">‹</button>
+          <span class="title">古厝导览</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content" style="display:flex; flex-direction:column;">
+          <!-- 搜索 + 兴趣筛选栏 -->
+          <div class="narr-filter-bar" id="narrFilterBar">
+            <div class="narr-search">
+              <span class="s-icon">🔍</span>
+              <input id="narrSearchInput" placeholder="搜索景点名称 / 关键词" oninput="renderNarrGrid()" />
+            </div>
+            <span class="narr-filter-label">兴趣偏好（可多选）</span>
+            <div class="narr-filter-chips" id="narrFilterChips"></div>
+          </div>
+
+          <!-- 景点网格列表视图（默认，双列卡片） -->
+          <div class="narr-grid" id="narrGrid"></div>
+          <div class="narr-empty" id="narrGridEmpty" style="display:none">🔍 没有符合条件的景点<br/><span>换个关键词或减少筛选试试</span></div>
+
+          <!-- 景点详情视图（点击卡片进入） -->
+          <div class="narr-detail" id="narrDetailView" style="display:none">
+            <!-- 标志性景点图片（有实景图时自动替换） -->
+            <div class="spot-cover">
+              <img class="spot-cover-img" id="spotCoverImg" alt="" style="display:none">
+              <div class="icon">🏛️</div><span>标志性景点图片（占位）</span>
+            </div>
+            <div class="spot-intro-label">景点介绍</div>
+            <!-- 黑色信息卡片：全景点统一高度与四角扫描框 -->
+            <div class="spot-frame collapsed" id="spotFrame">
+              <span class="spot-frame-corner sfc-tl"></span>
+              <span class="spot-frame-corner sfc-tr"></span>
+              <span class="spot-frame-corner sfc-bl"></span>
+              <span class="spot-frame-corner sfc-br"></span>
+              <div class="spot-frame-title" id="spotFrameTitle">朱紫坊·萨镇冰故居</div>
+              <div class="spot-meta" id="spotMeta">
+                <div><span class="dot">●</span>地址：鼓楼区朱紫坊河沿</div>
+                <div><span class="dot">●</span>保护级别：市级文物保护单位</div>
+              </div>
+              <div class="spot-sub-label">简介</div>
+              <div class="spot-intro-text" id="spotIntro"></div>
+              <!-- 视频介绍：容器内直接播放，实景图作封面，白色圆形播放按钮 -->
+              <div class="spot-video-container" id="spotVideoContainer">
+                <!-- 封面层 -->
+                <div class="video-cover" id="spotVideoCover" onclick="openNarrSpotVideo()">
+                  <div class="video-play-btn"><div class="play-icon"></div></div>
+                  <div class="video-label" id="spotVideoLabel">视频介绍</div>
+                  <div class="video-error" id="spotVideoError" style="display:none;">视频加载失败</div>
+                </div>
+                <!-- 视频层（初始隐藏） -->
+                <video class="video-el" id="narrSpotVideo" controls playsinline x5-playsinline="true" x5-video-player-type="h5-page" x5-video-player-fullscreen="true" webkit-playsinline="true" preload="metadata"></video>
+              </div>
+              <div class="spot-sub-label spot-history-label">历史背景</div>
+              <div class="spot-history" id="spotHistory"></div>
+              <button class="narr-intro-toggle" id="narrIntroToggle" onclick="toggleNarrIntro()">展开全部介绍 ▾</button>
+            </div>
+            <button class="narr-speak-btn" id="narrSpeakBtn" onclick="toggleNarrSpeak()">听讲解（语音朗读）</button>
+
+            <!-- 功能区（介绍栏目下方） -->
+            <div class="narr-func-row">
+              <button class="narr-func-btn" onclick="favoriteNarration()">收藏讲解</button>
+              <button class="narr-func-btn" onclick="cycleRate()">语速调节：<span id="rateLabel">标准</span></button>
+            </div>
+            <!-- 导航到此 -->
+            <button class="navigate-btn" onclick="showScreen('navigate')">导航到此景点</button>
+
+            <!-- 景点评论区（对应当前选择的景点） -->
+            <div class="comment-section">
+              <div class="comment-head">景点评论 <span id="commentCount">0</span> 条</div>
+              <div id="commentList"></div>
+              <div class="comment-input-row">
+                <input class="comment-input" id="commentInput" placeholder="写下你对当前景点的评论…" />
+                <button class="comment-send" onclick="submitComment()">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== 导航到此（独立页） ===================== -->
+      <div class="page" id="page-navigate">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">导航到此</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="nav-card">
+            <div class="nav-dest-label">目的地</div>
+            <div class="nav-dest-name" id="navDestName">朱紫坊·萨镇冰故居</div>
+            <div class="nav-dest-addr" id="navDestAddr">鼓楼区朱紫坊河沿</div>
+          </div>
+          <div class="nav-status" id="navStatus">点击下方按钮，申请获取您的当前位置后开始导航</div>
+          <button class="generate-btn" id="navStartBtn" onclick="startNavigation()">获取当前位置并导航</button>
+          <p class="settings-note">仅本次导航使用您的位置信息，不会上传或保存</p>
+        </div>
+      </div>
+
+      <!-- ===================== 打卡记录与证书 ===================== -->
+      <div class="page" id="page-records">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">打卡记录与证书</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="sub-list" id="recordsList"></div>
+        </div>
+      </div>
+
+      <!-- ===================== 我的文创作品 ===================== -->
+      <div class="page" id="page-works">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">我的文创作品</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="work-grid" id="worksGrid"></div>
+        </div>
+      </div>
+
+      <!-- ===================== 收藏的古厝 ===================== -->
+      <div class="page" id="page-favorites">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">收藏的古厝</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="sub-list" id="favoritesList"></div>
+        </div>
+      </div>
+
+      <!-- ===================== 路线与讲解历史 ===================== -->
+      <div class="page" id="page-history">
+        <div class="nav-bar">
+          <button class="back" onclick="goBack()">‹</button>
+          <span class="title">路线与讲解历史</span>
+          <div class="right-placeholder"></div>
+        </div>
+        <div class="content">
+          <div class="sub-list" id="historyList"></div>
+        </div>
+      </div>
+
+      <!-- 通用底部弹层（设置项二级面板 / 确认框） -->
+      <div class="sheet-mask" id="sheetMask" onclick="closeSheet()">
+        <div class="sheet" id="sheetPanel" onclick="event.stopPropagation()"></div>
+      </div>
+
+      <!-- 文创大图预览弹层 -->
+      <div class="preview-mask" id="previewMask" onclick="closePreview()">
+        <button class="preview-close" onclick="closePreview()">✕</button>
+        <img id="previewImg" src="" alt="文创效果图预览" />
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/01-data.js?v=4"></script>
+  <script src="js/02-core.js?v=12"></script>
+  <script src="js/03-checkin.js?v=6"></script>
+  <script src="js/04-route.js"></script>
+  <script src="js/05-narrations.js?v=4"></script>
+  <script src="js/06-narrator.js?v=4"></script>
+  <script src="js/07-nav.js?v=6"></script>
+  <script src="js/08-creative.js?v=4"></script>
+  <script src="js/09-profile.js?v=1"></script>
+  <script src="js/10-init.js?v=3"></script>
+
+  <!-- 分享二维码弹层 -->
+  <div id="qrShareMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:24px;" onclick="closeShareQR(event)">
+    <div style="background:#fff;border-radius:20px;padding:24px 20px 20px;width:min(320px,100%);text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)" onclick="event.stopPropagation()">
+      <div style="font-size:17px;font-weight:600;color:#222;margin-bottom:4px">扫码访问「福见闽都」</div>
+      <div style="font-size:12px;color:#888;margin-bottom:16px">用微信/浏览器扫描下方二维码</div>
+      <div id="qrShareBox" style="display:inline-block;padding:14px;background:#fff;border:1px solid #eee;border-radius:12px;margin:0 auto"></div>
+      <div id="qrShareUrl" style="font-size:11px;color:#aaa;margin-top:10px;word-break:break-all;line-height:1.5"></div>
+      <button onclick="closeShareQR()" style="margin-top:18px;width:100%;padding:11px;background:#222;color:#fff;border-radius:10px;border:none;font-size:14px;cursor:pointer">关闭</button>
+    </div>
+  </div>
+
+</body>
+</html>

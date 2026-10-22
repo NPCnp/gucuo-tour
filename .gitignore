@@ -1,0 +1,5 @@
+# 本地开发产物与原始素材，不参与线上部署
+.trae/
+.screenshots/
+.trae-html-share-packages/
+景点图片1(1)/
