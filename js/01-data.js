@@ -47,6 +47,19 @@
     return ` style="background-image:url('${url}');background-size:cover;background-position:center;${extra || ''}"`;
   }
 
+  // 搜索页小吃类 POI 配图（复用排行榜美食图）
+  const POI_PHOTOS = {
+    '福州鱼丸': 'images/rank/yuwan.jpg',
+    '肉燕': 'images/rank/rouyan.jpg',
+    '佛跳墙': 'images/rank/fotiaoqiang.jpg',
+    '芋泥': 'images/rank/yuni.jpg'
+  };
+
+  // 搜索卡片配图：优先景点实景图，其次小吃图；都没有时回退 emoji 图标
+  function poiPhoto(name) {
+    return spotPhoto(name) || POI_PHOTOS[name] || '';
+  }
+
   /* ========== 景点介绍视频（按「福州景点介绍视频清单」备注一一对应） ==========
      no = 清单序号（与图库编号一致）；title = 清单视频标题；link = 抖音分享链接
      本地视频文件路径：视频/{no}_{景点名称}.mp4（已放置在项目 视频/ 目录） */

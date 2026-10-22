@@ -434,9 +434,14 @@
         : '<div class="search-empty">该分类下暂无地点</div>';
       return;
     }
-    box.innerHTML = list.map(({ p, dist }) => `
+    box.innerHTML = list.map(({ p, dist }) => {
+      const photo = poiPhoto(p.name);
+      const thumb = photo
+        ? `<img src="${photo}" alt="${p.name}" loading="lazy" onerror="this.parentNode.textContent='${p.thumb}'">`
+        : p.thumb;
+      return `
       <div class="poi-card" onclick="gotoDetail('${p.name}')">
-        <div class="sc-icon">${p.thumb}</div>
+        <div class="sc-icon">${thumb}</div>
         <div class="sc-main">
           <h4>${p.name}</h4>
           <div class="sc-tags">${p.tags.map(t => `<span class="sc-tag">${t}</span>`).join('')}</div>
@@ -446,8 +451,8 @@
           <button class="sc-btn-detail" onclick="event.stopPropagation(); gotoDetail('${p.name}')">查看详情</button>
           <button class="sc-btn-nav" onclick="event.stopPropagation(); navigateToSpot([${p.coord[0]},${p.coord[1]}], '${p.name}')">地图导航</button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   // 分类标签栏：横向滑动 + 点击筛选
