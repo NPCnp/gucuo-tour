@@ -49,10 +49,14 @@
 
   // 搜索页小吃类 POI 配图（复用排行榜美食图）
   const POI_PHOTOS = {
-    '福州鱼丸': 'images/rank/yuwan.jpg',
-    '肉燕': 'images/rank/rouyan.jpg',
     '佛跳墙': 'images/rank/fotiaoqiang.jpg',
-    '芋泥': 'images/rank/yuni.jpg'
+    '福州鱼丸': 'images/rank/yuwan.jpg',
+    '同利肉燕': 'images/rank/rouyan.jpg',
+    '永和鱼丸': 'images/rank/yonghe.jpg',
+    '花生汤': 'images/rank/huashengtang.jpg',
+    '锅边糊': 'images/rank/guobianhu.jpg',
+    '荔枝肉': 'images/rank/lizhirou.jpg',
+    '福州芋泥': 'images/rank/yuni.jpg'
   };
 
   // 搜索卡片配图：优先景点实景图，其次小吃图；都没有时回退 emoji 图标
@@ -211,11 +215,15 @@
     { name: '三坊七巷入口公厕',  thumb: '🚻', cat: 'toilet', coord: [119.296800, 26.084000], tags: ['便民设施', '景区配套'] },
     { name: '上下杭三通桥旁公厕', thumb: '🚻', cat: 'toilet', coord: [119.301500, 26.056600], tags: ['便民设施', '景区配套'] },
     { name: '烟台山景区公厕',    thumb: '🚻', cat: 'toilet', coord: [119.304500, 26.046300], tags: ['便民设施', '景区配套'] },
-    // —— 特色小吃 ——
+    // —— 特色小吃（与排行榜一致，8个） ——
+    { name: '佛跳墙',            thumb: '🍲', cat: 'snack',  coord: [119.298800, 26.085900], tags: ['闽菜之首', '非遗名菜'] },
     { name: '福州鱼丸',          thumb: '🍜', cat: 'snack',  coord: [119.296700, 26.083200], tags: ['闽味小吃', '街边美食'] },
-    { name: '肉燕',              thumb: '🥟', cat: 'snack',  coord: [119.296300, 26.082600], tags: ['闽味小吃', '非遗美食'] },
-    { name: '佛跳墙',            thumb: '🍲', cat: 'snack',  coord: [119.298800, 26.085900], tags: ['经典闽菜', '宴席名菜'] },
-    { name: '芋泥',              thumb: '🍡', cat: 'snack',  coord: [119.297500, 26.080800], tags: ['传统甜品', '福州小吃'] }
+    { name: '同利肉燕',          thumb: '🥟', cat: 'snack',  coord: [119.296300, 26.082600], tags: ['非遗美食', '百年老店'] },
+    { name: '永和鱼丸',          thumb: '🍜', cat: 'snack',  coord: [119.296900, 26.082700], tags: ['老字号鱼丸', '汤鲜弹牙'] },
+    { name: '花生汤',            thumb: '🥣', cat: 'snack',  coord: [119.297000, 26.082900], tags: ['古早甜品', '花生绵软'] },
+    { name: '锅边糊',            thumb: '🥣', cat: 'snack',  coord: [119.297100, 26.083000], tags: ['福州早餐', '传统小吃'] },
+    { name: '荔枝肉',            thumb: '🍖', cat: 'snack',  coord: [119.297200, 26.083100], tags: ['经典闽菜', '酸甜口感'] },
+    { name: '福州芋泥',          thumb: '🍡', cat: 'snack',  coord: [119.297500, 26.080800], tags: ['传统甜品', '槟榔芋'] }
   ];
   // 定位失败时的兜底参考点：三坊七巷游客中心（福州市中心）
   const SEARCH_FALLBACK_COORD = [119.2972, 26.0825];

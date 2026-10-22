@@ -171,39 +171,60 @@
               <button class="more-btn" onclick="openRankingCat('food')">更多 ›</button>
             </div>
             <div class="hscroll">
+              <div class="reco-card food" onclick="openDishDetail('佛跳墙')">
+                <div class="reco-thumb">🍲<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.1</span></div>
+                <div class="reco-info">
+                  <h4>佛跳墙</h4>
+                  <p>闽菜之首，非遗名菜，宴席必备</p>
+                </div>
+              </div>
+              <div class="reco-card food" onclick="openDishDetail('福州鱼丸')">
+                <div class="reco-thumb">🍜<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.2</span></div>
+                <div class="reco-info">
+                  <h4>福州鱼丸</h4>
+                  <p>闽味小吃，街边美食，三星鱼丸</p>
+                </div>
+              </div>
               <div class="reco-card food" onclick="openDishDetail('同利肉燕')">
-                <div class="reco-thumb">🥟<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.1</span></div>
+                <div class="reco-thumb">🥟<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.3</span></div>
                 <div class="reco-info">
                   <h4>同利肉燕</h4>
-                  <p>百年老铺手工捶打，燕皮薄如纸、入口爽滑</p>
+                  <p>非遗美食，百年老店，手打肉燕</p>
                 </div>
               </div>
               <div class="reco-card food" onclick="openDishDetail('永和鱼丸')">
-                <div class="reco-thumb">🍜<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.2</span></div>
+                <div class="reco-thumb">🍜<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.4</span></div>
                 <div class="reco-info">
                   <h4>永和鱼丸</h4>
-                  <p>老字号鱼丸，汤头清鲜、鱼丸弹牙多汁</p>
+                  <p>老字号鱼丸，汤鲜弹牙，南后街</p>
                 </div>
               </div>
               <div class="reco-card food" onclick="openDishDetail('花生汤')">
-                <div class="reco-thumb">🥣<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.3</span></div>
+                <div class="reco-thumb">🥣<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.5</span></div>
                 <div class="reco-info">
                   <h4>花生汤</h4>
-                  <p>古早味甜品，花生绵软、汤色乳白微甜</p>
+                  <p>古早甜品，花生绵软，早餐搭档</p>
                 </div>
               </div>
               <div class="reco-card food" onclick="openDishDetail('锅边糊')">
-                <div class="reco-thumb">🍲<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.4</span></div>
+                <div class="reco-thumb">🥣<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.6</span></div>
                 <div class="reco-info">
                   <h4>锅边糊</h4>
-                  <p>福州经典早餐，米浆沿锅边旋片、配虾干</p>
+                  <p>福州早餐，传统小吃，配虾酥</p>
                 </div>
               </div>
               <div class="reco-card food" onclick="openDishDetail('荔枝肉')">
-                <div class="reco-thumb">🍖<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.5</span></div>
+                <div class="reco-thumb">🍖<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.7</span></div>
                 <div class="reco-info">
                   <h4>荔枝肉</h4>
-                  <p>形似荔枝的经典闽菜，酸甜酥脆、下饭开胃</p>
+                  <p>经典闽菜，酸甜口感，下饭神器</p>
+                </div>
+              </div>
+              <div class="reco-card food" onclick="openDishDetail('福州芋泥')">
+                <div class="reco-thumb">🍡<span class="reco-thumb-note">实景图（占位）</span><span class="reco-flag">人气推荐</span><span class="reco-rank">NO.8</span></div>
+                <div class="reco-info">
+                  <h4>福州芋泥</h4>
+                  <p>传统甜品，槟榔芋，软糯香甜</p>
                 </div>
               </div>
             </div>
@@ -263,7 +284,7 @@
 
           <div class="detail-section">
             <div class="detail-name" id="detailName">三坊七巷·严复故居</div>
-            <div class="detail-tags">
+            <div class="detail-tags" id="detailTags">
               <span class="detail-tag">清代民居</span>
               <span class="detail-tag">全国重点文物保护单位</span>
               <span class="detail-tag">名人故居</span>
@@ -810,16 +831,6 @@
                          oninput="onSuggestInput('routeEnd')" onfocus="onSuggestInput('routeEnd')" />
                   <div class="suggest-panel" id="routeEndSuggest"></div>
                 </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">兴趣偏好（可多选）</label>
-              <div class="chip-group" data-group="interest">
-                <div class="chip active">历史文化</div>
-                <div class="chip">建筑艺术</div>
-                <div class="chip">名人故居</div>
-                <div class="chip">民俗风情</div>
-                <div class="chip">美食打卡</div>
               </div>
             </div>
             <button class="generate-btn" onclick="generateRoute()">生成路线</button>

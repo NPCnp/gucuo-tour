@@ -700,6 +700,77 @@
   let narrPageSpeaking = false; // 古厝导览页「听讲解」状态
   let narrVoice = null;         // 小厝的朗读音色
   let narrSeq = 0;              // 朗读序号，用于作废旧的回调
+  let currentAudio = null;      // 当前播放的音频对象
+  let audioPlaying = false;     // 音频是否正在播放
+
+  // 音频文件名到景点名称的映射
+  const AUDIO_MAP = {
+    '严复故居': 'audio/01_三坊七巷·严复故居.mp3',
+    '萨镇冰故居': 'audio/02_朱紫坊·萨镇冰故居.mp3',
+    '南后街': 'audio/03_南后街.mp3',
+    '小黄楼': 'audio/04_小黄楼.mp3',
+    '衣锦坊': 'audio/05_衣锦坊.mp3',
+    '沈葆桢故居': 'audio/06_沈葆桢故居.mp3',
+    '林觉民故居': 'audio/07_林觉民故居.mp3',
+    '冰心故居': 'audio/08_冰心故居.mp3',
+    '林则徐纪念馆': 'audio/09_林则徐纪念馆.mp3',
+    '烟台山': 'audio/10_烟台山历史风貌区.mp3',
+    '三通桥': 'audio/11_上下杭·三通桥.mp3',
+    '泛船浦天主教堂': 'audio/12_泛船浦天主教堂.mp3',
+    '福建博物院': 'audio/13_福建博物院.mp3',
+    '鼓山': 'audio/14_鼓山风景区.mp3',
+    '水榭戏台': 'audio/15_水榭戏台.mp3',
+    '二梅书屋': 'audio/16_二梅书屋.mp3',
+    '陈氏五楼': 'audio/17_螺洲·陈氏五楼.mp3',
+    '泰山宫': 'audio/18_林浦·泰山宫.mp3',
+    '于山': 'audio/19_于山风景区.mp3',
+    '西禅寺': 'audio/20_西禅寺.mp3',
+    '华林寺': 'audio/21_华林寺.mp3',
+    '福州文庙': 'audio/22_福州文庙.mp3',
+    '开元寺': 'audio/23_开元寺.mp3',
+    '闽王祠': 'audio/24_闽王祠.mp3',
+    '梁厝': 'audio/25_梁厝特色历史文化街区.mp3',
+    '船政博物馆': 'audio/26_中国船政文化博物馆.mp3',
+    '鼓岭': 'audio/27_鼓岭旅游度假区.mp3',
+    '严复翰墨馆': 'audio/28_严复翰墨馆.mp3',
+    '文儒坊': 'audio/29_文儒坊.mp3',
+    '光禄坊': 'audio/30_光禄坊.mp3',
+    '朱紫坊': 'audio/31_朱紫坊.mp3',
+    '乌山历史风貌区': 'audio/32_乌山历史风貌区.mp3',
+    '西湖公园': 'audio/33_西湖公园.mp3',
+    '左海公园': 'audio/34_左海公园.mp3',
+    '屏山公园': 'audio/35_屏山公园.mp3',
+    '福道': 'audio/36_福道.mp3',
+    '闽江公园': 'audio/37_闽江公园.mp3',
+    '上下杭历史文化街区': 'audio/38_上下杭历史文化街区.mp3',
+    '闽江夜游': 'audio/39_闽江夜游.mp3',
+    '花海公园': 'audio/40_花海公园.mp3',
+    '螺洲古镇': 'audio/41_螺洲古镇.mp3',
+    '林浦古村': 'audio/42_林浦古村.mp3',
+    '罗星塔公园': 'audio/43_罗星塔公园.mp3',
+    '金鸡山公园': 'audio/44_金鸡山公园.mp3',
+    '温泉公园': 'audio/45_温泉公园.mp3',
+    '福州国家森林公园': 'audio/46_福州国家森林公园.mp3'
+  };
+
+  // 获取景点的音频文件路径
+  function getAudioPath(spotName) {
+    // 先直接匹配
+    let path = AUDIO_MAP[spotName];
+    if (!path) {
+      // 尝试从别名映射
+      const alias = SPOT_PHOTO_ALIAS[spotName];
+      if (alias && AUDIO_MAP[alias]) path = AUDIO_MAP[alias];
+    }
+    if (!path && NARRATIONS[spotName]) {
+      // 尝试从讲解词库键名匹配
+      const name = NARRATIONS[spotName].name;
+      if (AUDIO_MAP[name]) path = AUDIO_MAP[name];
+    }
+    if (!path) return null;
+    // 使用绝对路径（相对于域名根目录），并编码中文文件名
+    return '/' + encodeURI(path);
+  }
 
   // 挑选最接近真人的中文音色：优先本地音色（断网也能读），其次神经网络自然音
   function pickNarrVoice() {
@@ -738,6 +809,12 @@
   function onNarrEnd() {
     narrPlaying = false;
     narrPageSpeaking = false;
+    audioPlaying = false;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
     const b1 = document.getElementById('narrPlayBtn');
     if (b1) b1.textContent = '▶';
     const st = document.getElementById('narrStatus');
@@ -752,6 +829,12 @@
     narrFailNotified = true;
     narrPlaying = false;
     narrPageSpeaking = false;
+    audioPlaying = false;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
     const b1 = document.getElementById('narrPlayBtn');
     if (b1) b1.textContent = '▶';
     const b2 = document.getElementById('narrSpeakBtn');
@@ -784,13 +867,55 @@
 
   // 朗读一段文本：首句在用户手势内同步发声（手机端要求），后续句子在上一句结束后续播
   function speakText(text) {
+    text = (text || '').trim();
+    if (!text) { showToast('该点位暂无讲解词'); return false; }
+
+    // 尝试播放音频文件
+    const spotName = currentSpotKey || (currentNarration() && currentNarration().name);
+    const audioPath = spotName ? getAudioPath(spotName) : null;
+
+    if (audioPath) {
+      // 使用音频播放
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      currentAudio = new Audio(audioPath);
+      audioPlaying = true;
+      narrPlaying = true;
+      narrPageSpeaking = true;
+
+      const b1 = document.getElementById('narrPlayBtn');
+      if (b1) b1.textContent = '❚❚';
+      const b2 = document.getElementById('narrSpeakBtn');
+      if (b2) b2.textContent = '暂停讲解';
+
+      currentAudio.onended = () => {
+        onNarrEnd();
+      };
+      currentAudio.onerror = () => {
+        showToast('音频加载失败，尝试语音朗读');
+        // 回退到语音合成
+        fallbackToSpeechSynthesis(text);
+      };
+      currentAudio.play().catch(() => {
+        showToast('音频播放失败，尝试语音朗读');
+        // 回退到语音合成
+        fallbackToSpeechSynthesis(text);
+      });
+      return true;
+    }
+
+    // 没有音频文件，使用语音合成
     if (!('speechSynthesis' in window)) {
       showToast('当前浏览器不支持语音朗读，请用 Safari / Chrome 打开');
       return false;
     }
-    text = (text || '').trim();
-    if (!text) { showToast('该点位暂无讲解词'); return false; }
+    return fallbackToSpeechSynthesis(text);
+  }
 
+  // 回退到语音合成
+  function fallbackToSpeechSynthesis(text) {
     const synth = window.speechSynthesis;
     const seq = ++narrSeq;
     if (synth.speaking || synth.pending) synth.cancel();
@@ -837,6 +962,12 @@
   function narrSpeak() { return speakBox('detailNarrScript'); }
   function narrCancel() {
     narrSeq++;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+      audioPlaying = false;
+    }
     if ('speechSynthesis' in window) speechSynthesis.cancel();
   }
 
@@ -851,12 +982,40 @@
     const vEl = document.getElementById('narrVideo');
     if (vBox) vBox.style.display = 'none';
     if (vEl) { vEl.pause(); vEl.removeAttribute('src'); vEl.load(); }
-    const ok = narrSpeak();
-    if (ok === false) { if (btn) btn.textContent = '▶'; return; }
+    // 优先播放音频文件
+    const spotName = currentSpotKey || (currentNarration() && currentNarration().name);
+    const audioPath = spotName ? getAudioPath(spotName) : null;
+    if (audioPath) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      currentAudio = new Audio(audioPath);
+      audioPlaying = true;
+      currentAudio.onended = () => {
+        onNarrEnd();
+      };
+      currentAudio.onerror = () => {
+        showToast('音频加载失败，尝试语音朗读');
+        fallbackToSpeechSynthesis(currentSpotScript());
+      };
+      currentAudio.play().catch(() => {
+        showToast('音频播放失败，尝试语音朗读');
+        fallbackToSpeechSynthesis(currentSpotScript());
+      });
+    } else {
+      // 没有音频文件，使用语音合成
+      const ok = narrSpeak();
+      if (ok === false) { if (btn) btn.textContent = '▶'; return; }
+    }
     // 手机浏览器会拦截无手势的自动播放：确认没读起来就把按钮状态还原成「可点击」
     setTimeout(() => {
       if (!narrPlaying) return;
-      if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+      if (audioPlaying && currentAudio && currentAudio.paused) {
+        narrPlaying = false;
+        if (btn) btn.textContent = '▶';
+        if (st) st.textContent = '点击 ▶ 开始收听讲解';
+      } else if (!audioPlaying && 'speechSynthesis' in window && !speechSynthesis.speaking && !speechSynthesis.pending) {
         narrPlaying = false;
         if (btn) btn.textContent = '▶';
         if (st) st.textContent = '点击 ▶ 开始收听讲解';
@@ -876,7 +1035,15 @@
     if (btn) btn.textContent = narrPlaying ? '❚❚' : '▶';
     if (st) st.textContent = narrPlaying ? '正在播放讲解…' : '已暂停';
     if (narrPlaying) {
-      if ('speechSynthesis' in window && speechSynthesis.paused) {
+      // 优先播放音频文件
+      const spotName = currentSpotKey || (currentNarration() && currentNarration().name);
+      const audioPath = spotName ? getAudioPath(spotName) : null;
+      if (audioPath && currentAudio && currentAudio.paused) {
+        currentAudio.play().catch(() => {
+          showToast('音频播放失败');
+        });
+        audioPlaying = true;
+      } else if ('speechSynthesis' in window && speechSynthesis.paused) {
         speechSynthesis.resume();
         // 部分手机浏览器 resume 无效，确认没恢复就从头重读
         setTimeout(() => { if (narrPlaying && !speechSynthesis.speaking) narrSpeak(); }, 400);
@@ -1037,7 +1204,15 @@
     narrPageSpeaking = !narrPageSpeaking;
     if (btn) btn.textContent = narrPageSpeaking ? '暂停朗读' : '听讲解（语音朗读）';
     if (narrPageSpeaking) {
-      if ('speechSynthesis' in window && speechSynthesis.paused) {
+      // 优先播放音频文件
+      const spotName = currentSpotKey || (currentNarration() && currentNarration().name);
+      const audioPath = spotName ? getAudioPath(spotName) : null;
+      if (audioPath && currentAudio && currentAudio.paused) {
+        currentAudio.play().catch(() => {
+          showToast('音频播放失败');
+        });
+        audioPlaying = true;
+      } else if ('speechSynthesis' in window && speechSynthesis.paused) {
         speechSynthesis.resume();
         setTimeout(() => { if (narrPageSpeaking && !speechSynthesis.speaking) speakText(currentSpotScript()); }, 400);
       } else if (speakText(currentSpotScript()) === false) {
