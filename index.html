@@ -13,10 +13,6 @@
       var vp = document.querySelector('meta[name="viewport"]');
       if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
     }
-    // 微信内：标记 html 类名，隐藏重复的返回键
-    if (/MicroMessenger/i.test(navigator.userAgent)) {
-      document.documentElement.className += ' in-wechat';
-    }
     // 检测是否为桌面端（非触屏 + 宽屏），标记类名供 CSS 使用
     if (!isTouch && window.innerWidth > 520) {
       document.documentElement.className += ' is-desktop';
@@ -232,6 +228,7 @@
       <!-- ===================== 搜索页 ===================== -->
       <div class="page" id="page-search">
         <div class="search-input-row">
+          <button class="back" onclick="goBack()">‹</button>
           <div class="search-input-wrap">
             <div class="s-icon" style="width:14px;height:14px;"></div>
             <input id="searchInput" placeholder="输入景点、公厕或小吃名称搜索" oninput="doSearch(this.value)" />

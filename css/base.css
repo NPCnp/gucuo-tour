@@ -67,8 +67,6 @@
     margin-left: -6px;
   }
   .nav-bar .back:active { opacity: .55; }
-  /* 微信内置浏览器自带顶部返回箭头，页面内不再重复显示 */
-  html.in-wechat .nav-bar .back { display: none; }
   .nav-bar .title {
     position: absolute;
     left: 50%; transform: translateX(-50%);
@@ -373,6 +371,16 @@
     border: none; outline: none; background: none;
     font-size: 14px; color: #1a1a1a;
   }
+  .search-input-row .back {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none;
+    color: #1a1a1a; font-size: 22px;
+    cursor: pointer;
+    margin-left: -8px;
+    flex-shrink: 0;
+  }
+  .search-input-row .back:active { opacity: .55; }
   .search-cancel {
     font-size: 14px; color: #666;
     background: none; border: none; cursor: pointer;
