@@ -2425,15 +2425,21 @@
     width: 100%;
     background: #fff;
     border-radius: 18px 18px 0 0;
-    padding: 20px 18px 18px;
+    padding: 8px 16px 18px;
     animation: mapSheetUp .22s ease;
   }
   @keyframes mapSheetUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
   }
-  .mapapp-title { font-size: 16px; font-weight: 600; color: #1a1a1a; text-align: center; }
+  .mapapp-grabber {
+    height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .mapapp-title { font-size: 16px; font-weight: 600; color: #1a1a1a; text-align: center; margin-bottom: 14px; }
   .mapapp-sub { font-size: 12px; color: #999; text-align: center; margin: 6px 0 16px; }
+  .mapapp-list { margin-bottom: 6px; }
   .mapapp-item {
     display: flex;
     align-items: center;
@@ -2442,35 +2448,119 @@
     height: 56px;
     padding: 0 14px;
     margin-bottom: 10px;
-    border: 1px solid #eee;
+    border: none;
     border-radius: 12px;
-    background: #fff;
+    background: #f7f8fa;
     cursor: pointer;
     text-align: left;
   }
-  .mapapp-item:active { background: #f7f7f7; }
+  .mapapp-item:last-child { margin-bottom: 0; }
+  .mapapp-item:active { background: #eef0f3; }
   .mapapp-logo {
-    width: 34px; height: 34px;
+    width: 36px; height: 36px;
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
     color: #fff;
     font-size: 16px;
     font-weight: 700;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
   }
-  .mapapp-logo.amap { background: #1677ff; }
-  .mapapp-logo.baidu { background: #2d63f5; }
+  .mapapp-logo.amap { background: linear-gradient(135deg, #1677ff, #0e5fe0); }
+  .mapapp-logo.baidu { background: linear-gradient(135deg, #2d63f5, #1a4fd6); }
+  .mapapp-logo.tencent { background: linear-gradient(135deg, #00c86b, #00a556); }
   .mapapp-name { flex: 1; font-size: 15px; font-weight: 600; color: #1a1a1a; }
-  .mapapp-arrow { color: #ccc; font-size: 18px; }
+  .mapapp-arrow { color: #c8c9cc; font-size: 18px; }
+  .mapapp-tip {
+    font-size: 11.5px;
+    color: #969799;
+    text-align: center;
+    margin: 12px 0 2px;
+  }
+  .mapapp-download,
+  .mapapp-wxguide {
+    margin: 12px 0 4px;
+    padding: 14px;
+    background: #f7f8fa;
+    border-radius: 12px;
+  }
+  .mapapp-dl-text,
+  .mapapp-wx-text {
+    font-size: 13px;
+    color: #323233;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .mapapp-wx-sub {
+    font-size: 11.5px;
+    color: #969799;
+    text-align: center;
+    margin-top: -8px;
+    margin-bottom: 12px;
+  }
+  .mapapp-dl-btns { display: flex; gap: 10px; }
+  .mapapp-dl-btn {
+    flex: 1;
+    height: 40px;
+    border: 1px solid #dcdee0;
+    border-radius: 20px;
+    background: #fff;
+    color: #323233;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .mapapp-dl-btn.primary {
+    background: #07c160;
+    border-color: #07c160;
+    color: #fff;
+    font-weight: 600;
+  }
   .mapapp-web {
     width: 100%;
     height: 44px;
     margin-top: 4px;
     border: none;
     background: none;
-    color: #999;
+    color: #969799;
     font-size: 13px;
     cursor: pointer;
+  }
+
+  /* ========== 微信内置浏览器引导遮罩 ========== */
+  .wx-guide-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-top: 60px;
+    padding-right: 30px;
+    cursor: pointer;
+  }
+  .wx-guide-arrow {
+    animation: wxArrowBounce 1.2s ease-in-out infinite;
+    margin-bottom: 12px;
+  }
+  @keyframes wxArrowBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .wx-guide-text {
+    text-align: right;
+    color: #fff;
+  }
+  .wx-guide-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
+  }
+  .wx-guide-sub {
+    font-size: 14px;
+    opacity: .85;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
   }
 
   /* ========== 真机（窄屏）适配：加大点按区域，导航更易操作 ========== */

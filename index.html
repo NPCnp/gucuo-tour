@@ -1086,21 +1086,45 @@
         <img id="previewImg" src="" alt="文创效果图预览" />
       </div>
 
-      <!-- 导航 App 选择弹层：手机端唤起高德/百度原生地图 -->
+      <!-- 导航 App 选择弹层：手机端唤起高德/腾讯/百度原生地图 -->
       <div class="mapapp-mask" id="mapAppMask" onclick="closeMapAppSheet()">
         <div class="mapapp-sheet" onclick="event.stopPropagation()">
-          <div class="mapapp-title">选择导航方式</div>
-          <div class="mapapp-sub">将直接打开手机里的地图 App</div>
-          <button class="mapapp-item" onclick="launchMapApp('amap')">
-            <span class="mapapp-logo amap">高</span>
-            <span class="mapapp-name">高德地图</span>
-            <span class="mapapp-arrow">›</span>
-          </button>
-          <button class="mapapp-item" onclick="launchMapApp('baidu')">
-            <span class="mapapp-logo baidu">百</span>
-            <span class="mapapp-name">百度地图</span>
-            <span class="mapapp-arrow">›</span>
-          </button>
+          <div class="mapapp-grabber" onclick="closeMapAppSheet()">
+            <svg width="20" height="10" viewBox="0 0 20 10"><path d="M2 2 L10 8 L18 2" stroke="#c8c9cc" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </div>
+          <div class="mapapp-title">选择要打开的方式</div>
+          <div class="mapapp-list" id="mapAppList">
+            <button class="mapapp-item" onclick="launchMapApp('qqmap')">
+              <span class="mapapp-logo tencent">腾</span>
+              <span class="mapapp-name">腾讯地图</span>
+              <span class="mapapp-arrow">›</span>
+            </button>
+            <button class="mapapp-item" onclick="launchMapApp('amap')">
+              <span class="mapapp-logo amap">高</span>
+              <span class="mapapp-name">高德地图</span>
+              <span class="mapapp-arrow">›</span>
+            </button>
+          </div>
+          <div class="mapapp-tip" id="mapAppTip">未安装对应地图时，将引导您前往下载</div>
+          <div class="mapapp-download" id="mapAppDownload" style="display:none;">
+            <div class="mapapp-dl-text">未检测到「<span id="mapAppDlName"></span>」App</div>
+            <div class="mapapp-dl-btns">
+              <button class="mapapp-dl-btn primary" id="mapAppDlBtn" onclick="launchMapDownload()">前往下载</button>
+              <button class="mapapp-dl-btn" onclick="resetMapAppSheet()">重新选择</button>
+            </div>
+          </div>
+          <div class="mapapp-wxguide" id="mapAppWxGuide" style="display:none;">
+            <div class="mapapp-wx-text">微信内置浏览器无法直接唤起「<span id="mapAppWxName"></span>」</div>
+            <div class="mapapp-wx-sub">请复制链接到浏览器打开，或前往下载App</div>
+            <div class="mapapp-dl-btns">
+              <button class="mapapp-dl-btn primary" onclick="copyCurrentUrl()">复制链接</button>
+              <button class="mapapp-dl-btn" onclick="showWxGuide()">在浏览器打开</button>
+            </div>
+            <div class="mapapp-dl-btns" style="margin-top:8px;">
+              <button class="mapapp-dl-btn" onclick="launchMapDownload()">前往下载App</button>
+              <button class="mapapp-dl-btn" onclick="resetMapAppSheet()">重新选择</button>
+            </div>
+          </div>
           <button class="mapapp-web" onclick="launchMapWeb()">使用网页版导航</button>
         </div>
       </div>
@@ -1127,6 +1151,19 @@
       <div id="qrShareBox" style="display:inline-block;padding:14px;background:#fff;border:1px solid #eee;border-radius:12px;margin:0 auto"></div>
       <div id="qrShareUrl" style="font-size:11px;color:#aaa;margin-top:10px;word-break:break-all;line-height:1.5"></div>
       <button onclick="closeShareQR()" style="margin-top:18px;width:100%;padding:11px;background:#222;color:#fff;border-radius:10px;border:none;font-size:14px;cursor:pointer">关闭</button>
+    </div>
+  </div>
+
+  <!-- 微信内置浏览器引导遮罩：提示在浏览器中打开 -->
+  <div id="wxGuideMask" class="wx-guide-mask" style="display:none;" onclick="hideWxGuide()">
+    <div class="wx-guide-arrow">
+      <svg width="60" height="80" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 75 L30 15 M30 15 L18 28 M30 15 L42 28" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="wx-guide-text">
+      <div class="wx-guide-title">请点击右上角「···」</div>
+      <div class="wx-guide-sub">选择「在浏览器中打开」</div>
     </div>
   </div>
 
