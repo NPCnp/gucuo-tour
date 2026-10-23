@@ -165,6 +165,12 @@
     }
     document.getElementById('routeSteps').innerHTML = html;
 
+    // 站点为空时导航按钮置灰；微信内浏览器显示限制提示
+    const navBtn = document.getElementById('routeNavBtn');
+    if (navBtn) navBtn.disabled = !currentPlan.spots.length;
+    const wxTip = document.getElementById('routeWxTip');
+    if (wxTip) wxTip.style.display = isWeChatBrowser() ? 'block' : 'none';
+
     // 同步高德地图（起终点优先使用已确认坐标）
     renderRouteOnMap(currentStart, currentEnd, currentPlan.spots, currentStartCoord, currentEndCoord)
       .catch(e => console.warn('map render failed', e));
@@ -537,8 +543,8 @@
     openAmapAppNav(coord, name, from, 'walk', from ? (currentStart || '我的位置') : null);
   }
 
-  // 一键导航：从起点全程步行导航至路线末站（路线已就近顺向排序）。
-  // 注：高德URI步行模式不支持逐站串联，故采用「全程直达末站 + 每站旁『导航』按钮分段接力」。
+  // 开始导航：不再直连高德URI，统一走地图App选择弹层（与景点详情页同一套方案）。
+  // 终点=路线最后一站，途经点=其余站点按 AI 规划顺序填入，起点=游客当前定位。
   function navigateRoute() {
     if (!currentPlan || !currentPlan.spots.length) {
       showToast('请先生成游览路线');
@@ -548,16 +554,21 @@
     const last = spots[spots.length - 1];
     const from = currentStartCoord || (typeof visitorCoord !== 'undefined' && visitorCoord ? visitorCoord : null);
 
-    // 用户明确要求：起点经纬度为空时禁止发起导航
+    // 起点坐标为空时禁止发起导航，提示先定位或手动填写起点
     if (!from || !from[0] || !from[1]) {
       showToast('请先获取当前位置或手动填写起点');
-      // 提示用户可点击定位按钮
       const locBtn = document.querySelector('#page-ai-route .locate-btn');
       if (locBtn) { locBtn.classList.add('pulse'); setTimeout(() => locBtn.classList.remove('pulse'), 1500); }
       return;
     }
 
-    openAmapAppNav(last.coord, last.name, from, 'walk', currentStart || '我的位置');
+    const via = spots.slice(0, spots.length - 1)
+      .filter(s => s.coord && s.coord[0] && s.coord[1])
+      .map(s => ({ coord: s.coord, name: s.name }));
+
+    // 多站用驾车模式（步行导航不支持途经点），单站沿用步行
+    const mode = via.length ? 'car' : 'walk';
+    openAmapAppNav(last.coord, last.name, from, mode, currentStart || '我的位置', via);
   }
 
   // 以当前 AI 路线作为打卡路线：同步数据后进入路线打卡页

@@ -59,9 +59,48 @@
     '福州芋泥': 'images/rank/yuni.jpg'
   };
 
+  // 搜索页商场/海边类 POI 实景图（每个地点 2 张，首张作列表缩略图与详情封面，其余进详情图集）
+  const POI_GALLERY = {
+    // —— 商场 ——
+    '东百中心':           ['images/poi/mall/dongbai_01.jpg', 'images/poi/mall/dongbai_02.jpg'],
+    '福州万象城':         ['images/poi/mall/wanxiang_01.jpg', 'images/poi/mall/wanxiang_02.jpg'],
+    '东二环泰禾广场':     ['images/poi/mall/taihe_01.jpg', 'images/poi/mall/taihe_02.jpg'],
+    '爱琴海购物公园':     ['images/poi/mall/aiqinhai_01.jpg', 'images/poi/mall/aiqinhai_02.jpg'],
+    '仓山万达广场':       ['images/poi/mall/wanda_01.jpg', 'images/poi/mall/wanda_02.jpg'],
+    '苏宁广场':           ['images/poi/mall/suning_01.jpg', 'images/poi/mall/suning_02.jpg'],
+    '世欧广场':           ['images/poi/mall/shiou_01.jpg', 'images/poi/mall/shiou_02.jpg'],
+    // —— 海边 ——
+    '平潭龙凤头海滨浴场': ['images/poi/beach/longfengtou_01.jpg', 'images/poi/beach/longfengtou_02.jpg'],
+    '长乐下沙海滩':       ['images/poi/beach/xiasha_01.jpg', 'images/poi/beach/xiasha_02.jpg'],
+    '琅岐岛沙滩':         ['images/poi/beach/langqi_01.jpg', 'images/poi/beach/langqi_02.jpg'],
+    '连江平流尾地质公园': ['images/poi/beach/pingliuwei_01.jpg', 'images/poi/beach/pingliuwei_02.jpg'],
+    '长乐南澳海滩':       ['images/poi/beach/nanao_01.jpg', 'images/poi/beach/nanao_02.jpg'],
+    '长乐象鼻澳海滩':     ['images/poi/beach/xiangbiaoa_01.jpg', 'images/poi/beach/xiangbiaoa_02.jpg'],
+    '平潭坛南湾':         ['images/poi/beach/tannanwan_01.jpg', 'images/poi/beach/tannanwan_02.jpg']
+  };
+
+  // 商场/海边等搜索 POI 的详细地址（详情页 POI 点位卡片与导航使用）
+  const SEARCH_POI_ADDR = {
+    '东百中心': '福州市鼓楼区八一七北路84号',
+    '福州万象城': '福州市台江区工业路378号',
+    '东二环泰禾广场': '福州市晋安区连江北路126号',
+    '爱琴海购物公园': '福州市仓山区浦上大道1号',
+    '仓山万达广场': '福州市仓山区浦上大道272号',
+    '苏宁广场': '福州市台江区八一七中路888号',
+    '世欧广场': '福州市晋安区福马路168号',
+    '平潭龙凤头海滨浴场': '平潭综合实验区龙凤头海滨浴场',
+    '长乐下沙海滩': '福州市长乐区江田镇下沙村',
+    '琅岐岛沙滩': '福州市马尾区琅岐镇',
+    '连江平流尾地质公园': '福州市连江县苔菉镇平流尾',
+    '长乐南澳海滩': '福州市长乐区湖南镇南澳',
+    '长乐象鼻澳海滩': '福州市长乐区漳港街道象鼻澳',
+    '平潭坛南湾': '平潭综合实验区坛南湾'
+  };
+
   // 搜索卡片配图：优先景点实景图，其次小吃图；都没有时回退 emoji 图标
   function poiPhoto(name) {
-    return spotPhoto(name) || POI_PHOTOS[name] || '';
+    const gallery = POI_GALLERY[name];
+    return spotPhoto(name) || (gallery && gallery[0]) || POI_PHOTOS[name] || '';
   }
 
   /* ========== 景点介绍视频（按「福州景点介绍视频清单」备注一一对应） ==========

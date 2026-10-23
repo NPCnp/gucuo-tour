@@ -548,6 +548,20 @@
     cursor: pointer;
     margin-bottom: 10px;
   }
+  .route-nav-btn:active { opacity: .85; }
+  .route-nav-btn:disabled {
+    border-color: #d9d9d9;
+    background: #d9d9d9;
+    color: #fff;
+    cursor: not-allowed;
+  }
+  .route-nav-hint {
+    margin: -4px 0 10px;
+    font-size: 10.5px;
+    color: #999;
+    line-height: 1.5;
+    text-align: center;
+  }
   .route-checkin-btn {
     width: 100%; height: 42px;
     border: 1.5px solid #1a1a1a;
@@ -2614,6 +2628,13 @@
     text-align: center;
     margin-top: -8px;
     margin-bottom: 12px;
+  }
+  .mapapp-wx-note {
+    margin-top: 10px;
+    font-size: 10.5px;
+    color: #b0b3b8;
+    text-align: center;
+    line-height: 1.5;
   }
   .mapapp-dl-btns { display: flex; gap: 10px; }
   .mapapp-dl-btn {

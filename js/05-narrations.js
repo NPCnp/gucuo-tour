@@ -813,11 +813,11 @@
     // 显示讲解员面板
     const panel = document.querySelector('#page-detail .narrator-panel');
     if (panel) panel.style.display = '';
-    // 封面：有实景图时替换占位
+    // 封面：有实景图时替换占位（商场/海边等搜索 POI 走自身图库）
     setCoverPhoto(
       document.getElementById('detailCoverImg'),
       document.querySelector('#page-detail .detail-cover'),
-      spotPhoto(n.name) || spotPhoto(currentSpotKey)
+      spotPhoto(n.name) || spotPhoto(currentSpotKey) || poiPhoto(n.name)
     );
     // 打卡操作区：仅 5 个打卡点位显示
     const area = document.getElementById('detailCheckinArea');
@@ -993,11 +993,11 @@
   function renderNarrIntroPanel() {
     const n = currentNarration();
     const meta = SPOT_META[currentSpotKey] || { address: '福州古厝文化街区', level: '文物保护单位' };
-    // 顶部标志性景点图：有实景图时替换占位
+    // 顶部标志性景点图：有实景图时替换占位（商场/海边等搜索 POI 走自身图库）
     setCoverPhoto(
       document.getElementById('spotCoverImg'),
       document.querySelector('#narrDetailView .spot-cover'),
-      spotPhoto(n.name) || spotPhoto(currentSpotKey)
+      spotPhoto(n.name) || spotPhoto(currentSpotKey) || poiPhoto(n.name)
     );
     document.getElementById('spotFrameTitle').textContent = n.name;
     document.getElementById('spotMeta').innerHTML =
@@ -1007,10 +1007,13 @@
     document.getElementById('spotHistory').innerHTML = n.script.map(p => `<p>${p}</p>`).join('');
 
     // 视频容器：设置当前古厝实景图作为视频封面背景
+    // 商场/海边有第二张实景图时优先用它，避免与上方封面重复；其它景点沿用原图
     const videoContainer = document.getElementById('spotVideoContainer');
     const videoCover = document.getElementById('spotVideoCover');
     const videoError = document.getElementById('spotVideoError');
-    const coverUrl = spotPhoto(n.name) || spotPhoto(currentSpotKey);
+    const coverUrl = spotPhoto(n.name) || spotPhoto(currentSpotKey) || poiPhoto(n.name);
+    const gallery = (typeof POI_GALLERY !== 'undefined' && POI_GALLERY[n.name]) ? POI_GALLERY[n.name] : [];
+    const videoCoverUrl = (!spotPhoto(n.name) && !spotPhoto(currentSpotKey) && gallery[1]) ? gallery[1] : coverUrl;
     if (videoContainer) {
       // 清理上一景点的播放状态
       videoContainer.classList.remove('video-playing');
@@ -1020,8 +1023,8 @@
       if (videoError) videoError.style.display = 'none';
     }
     if (videoCover) {
-      if (coverUrl) {
-        videoCover.style.backgroundImage = 'url("' + coverUrl + '")';
+      if (videoCoverUrl) {
+        videoCover.style.backgroundImage = 'url("' + videoCoverUrl + '")';
       } else {
         videoCover.style.backgroundImage = '';
       }
@@ -1153,7 +1156,17 @@
   function poiSpotInfo() {
     const n = currentNarration();
     const meta = SPOT_META[currentSpotKey] || SPOT_META[n.name] || {};
-    return { name: n.name, coord: meta.coord || null, address: meta.address || '' };
+    // 商场/海边等搜索 POI 不在 SPOT_META 中：取 searchPois 坐标 + 专属地址
+    let coord = meta.coord || null;
+    let address = meta.address || '';
+    if (!coord || !address) {
+      const poi = typeof searchPois !== 'undefined' ? searchPois.find(q => q.name === n.name) : null;
+      if (poi) {
+        coord = coord || poi.coord || null;
+        address = address || (typeof SEARCH_POI_ADDR !== 'undefined' && SEARCH_POI_ADDR[n.name]) || '';
+      }
+    }
+    return { name: n.name, coord, address };
   }
 
   // poimarker 组件链接（marker=纬度,经度,名称；addr=详细地址）

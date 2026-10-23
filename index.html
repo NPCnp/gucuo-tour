@@ -35,7 +35,7 @@
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=8">
-<link rel="stylesheet" href="css/pages.css?v=15">
+<link rel="stylesheet" href="css/pages.css?v=19">
 </head>
 <body>
   <div class="phone">
@@ -873,10 +873,6 @@
                 <span class="st-arrow" id="stationsArrow">收起 ▲</span>
               </button>
               <div class="stations-body">
-                <!-- 一键导航 -->
-                <button class="route-nav-btn" onclick="navigateRoute()">🧭 开始导航</button>
-                <button class="route-checkin-btn" onclick="gotoRouteCheckin()">✓ 沿这条路线去打卡（景点自动设为打卡点）</button>
-
                 <div class="route-summary" id="routeSummary">
                   🕐 预估总时长：约 7 小时　　🚶 交通建议：全程步行 + 巷内电瓶车<br/>
                   🚌 返程：可于南后街南口乘地铁 1 号线
@@ -885,6 +881,10 @@
                 <!-- 动态路线步骤容器 -->
                 <div id="routeSteps"></div>
 
+                <!-- 开始导航：站点清单下方通栏主按钮；点击不直连高德URI，统一走地图App选择弹层 -->
+                <button class="route-nav-btn" id="routeNavBtn" type="button" onclick="navigateRoute()">🧭 开始导航</button>
+                <p class="route-nav-hint" id="routeWxTip" style="display:none;">微信内置浏览器限制唤起第三方地图App，可复制导航链接到手机浏览器打开</p>
+                <button class="route-checkin-btn" onclick="gotoRouteCheckin()">✓ 沿这条路线去打卡（景点自动设为打卡点）</button>
                 <button class="save-route-btn" onclick="saveRoute()">保存路线（同步到个人中心）</button>
               </div>
             </div>
@@ -1163,7 +1163,7 @@
               <span class="mapapp-arrow">›</span>
             </button>
           </div>
-          <div class="mapapp-tip" id="mapAppTip">未安装对应地图时，将引导您前往下载</div>
+          <div class="mapapp-tip" id="mapAppTip">未安装对应地图时，将自动为您切换腾讯地图</div>
           <div class="mapapp-download" id="mapAppDownload" style="display:none;">
             <div class="mapapp-dl-text">未检测到「<span id="mapAppDlName"></span>」App</div>
             <div class="mapapp-dl-btns">
@@ -1172,16 +1172,13 @@
             </div>
           </div>
           <div class="mapapp-wxguide" id="mapAppWxGuide" style="display:none;">
-            <div class="mapapp-wx-text">微信内置浏览器无法直接唤起「<span id="mapAppWxName"></span>」</div>
-            <div class="mapapp-wx-sub">请复制链接到浏览器打开，或前往下载App</div>
+            <div class="mapapp-wx-text">微信内无法唤起系统地图选择面板</div>
+            <div class="mapapp-wx-sub">可复制导航链接，粘贴到手机自带浏览器打开</div>
             <div class="mapapp-dl-btns">
-              <button class="mapapp-dl-btn primary" onclick="copyCurrentUrl()">复制链接</button>
+              <button class="mapapp-dl-btn primary" onclick="copyNavLink()">复制导航链接</button>
               <button class="mapapp-dl-btn" onclick="showWxGuide()">在浏览器打开</button>
             </div>
-            <div class="mapapp-dl-btns" style="margin-top:8px;">
-              <button class="mapapp-dl-btn" onclick="launchMapDownload()">前往下载App</button>
-              <button class="mapapp-dl-btn" onclick="resetMapAppSheet()">重新选择</button>
-            </div>
+            <div class="mapapp-wx-note">微信内限制唤起第三方地图，建议复制链接到手机自带浏览器打开</div>
           </div>
           <button class="mapapp-web" onclick="launchMapWeb()">使用网页版导航</button>
         </div>
@@ -1190,13 +1187,13 @@
     </div>
   </div>
 
-  <script src="js/01-data.js?v=5"></script>
-  <script src="js/02-core.js?v=16"></script>
+  <script src="js/01-data.js?v=7"></script>
+  <script src="js/02-core.js?v=18"></script>
   <script src="js/03-checkin.js?v=6"></script>
   <script src="js/04-route.js"></script>
-  <script src="js/05-narrations.js?v=5"></script>
+  <script src="js/05-narrations.js?v=10"></script>
   <script src="js/06-narrator.js?v=4"></script>
-  <script src="js/07-nav.js?v=7"></script>
+  <script src="js/07-nav.js?v=8"></script>
   <script src="js/08-creative.js?v=6"></script>
   <script src="js/09-profile.js?v=2"></script>
   <script src="js/10-init.js?v=3"></script>

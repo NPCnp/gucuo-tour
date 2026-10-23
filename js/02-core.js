@@ -76,6 +76,10 @@
     if (p.start) url += 'from=' + p.start.lng + ',' + p.start.lat + ',' + encodeURIComponent(p.fromName) + '&';
     url += 'to=' + p.dest.lng + ',' + p.dest.lat + ',' + encodeURIComponent(p.toName) +
       '&mode=' + p.mode + '&coordinate=gaode&callnative=' + (callnative ? 1 : 0) + '&src=gucuo';
+    // 途经点：按游览顺序串联，格式 lng,lat,name|lng,lat,name
+    if (p.via && p.via.length && p.mode !== 'walk') {
+      url += '&via=' + p.via.map(v => v.lng + ',' + v.lat + ',' + encodeURIComponent(v.name)).join('|');
+    }
     return url;
   }
 
@@ -89,7 +93,8 @@
     return url;
   }
 
-  function openAmapAppNav(to, toName, from, mode, fromName) {
+  // via=途经点数组 [{coord:[lng,lat], name}]，按游览顺序传入
+  function openAmapAppNav(to, toName, from, mode, fromName, via) {
     if (!to || !to[0] || !to[1]) {
       showToast('目的地坐标缺失，无法发起导航');
       return;
@@ -99,7 +104,11 @@
       start: from && from[0] && from[1] ? { lng: Number(from[0]), lat: Number(from[1]) } : null,
       toName: toName || '目的地',
       fromName: fromName || '我的位置',
-      mode: mode || 'walk'
+      mode: mode || 'walk',
+      via: Array.isArray(via)
+        ? via.filter(v => v && v.coord && v.coord[0] && v.coord[1])
+             .map(v => ({ lng: Number(v.coord[0]), lat: Number(v.coord[1]), name: v.name || '途经点' }))
+        : []
     };
 
     // 桌面端没有原生地图 App，直接打开网页版
@@ -107,12 +116,13 @@
       window.open(amapWebNavUrl(params, true), '_blank');
       return;
     }
-    // 移动端（含微信内置浏览器）：弹出底部选择层，由用户挑选地图 App；
-    // 唤起失败（未安装/被拦截）时在同一弹层内引导下载或改用网页版
+    // 移动端：弹出地图 App 选择层，由游客挑选高德/腾讯，交手机系统分发
     mapAppPending = params;
     resetMapAppSheet();
     const mask = document.getElementById('mapAppMask');
     if (mask) mask.classList.add('show');
+    // 微信内置浏览器无法唤起系统选择面板：直接进入复制链接引导（分支B）
+    if (isWeChatBrowser()) showMapAppWxGuide('地图');
   }
 
   function closeMapAppSheet() {
@@ -171,6 +181,13 @@
       fallbackCopy(url, done);
     }
   }
+  // 复制导航链接（微信内兜底）：带 callnative=1，粘贴到手机浏览器打开即可唤起地图App
+  function copyNavLink() {
+    const p = mapAppPending;
+    const url = p ? amapWebNavUrl(p, true) : location.href;
+    copyUrlToClipboard(url, '导航链接已复制，请粘贴到手机浏览器打开');
+  }
+
   function fallbackCopy(text, cb) {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -248,10 +265,14 @@
       const fromPart = p.start
         ? '&from=' + encodeURIComponent(p.fromName) + '&fromcoord=' + p.start.lat + ',' + p.start.lng
         : '';
-      scheme = 'qqmap://map/routeplan?type=' + t + fromPart +
+      // 途经点：名称,纬度,经度，按游览顺序以 ; 分隔
+      const viaPart = (p.via && p.via.length && p.mode !== 'walk')
+        ? '&via=' + p.via.map(v => encodeURIComponent(v.name) + ',' + v.lat + ',' + v.lng).join(';')
+        : '';
+      scheme = 'qqmap://map/routeplan?type=' + t + fromPart + viaPart +
         '&to=' + encodeURIComponent(p.toName) + '&tocoord=' + p.dest.lat + ',' + p.dest.lng +
         '&referer=gucuo&coord_type=gcj02';
-      webUrl = 'https://apis.map.qq.com/uri/v1/routeplan?type=' + t + fromPart +
+      webUrl = 'https://apis.map.qq.com/uri/v1/routeplan?type=' + t + fromPart + viaPart +
         '&to=' + encodeURIComponent(p.toName) + '&tocoord=' + p.dest.lat + ',' + p.dest.lng +
         '&referer=gucuo&coord_type=gcj02';
       label = '腾讯地图';
@@ -273,6 +294,8 @@
       webUrl = amapWebNavUrl(p, true);
       label = '高德地图';
       downloadUrl = 'https://mobile.amap.com/download.html';
+      // 多点路线：原生 scheme 不支持途经点，改用带 via 的 URI（callnative=1）唤起App，保证途经点与顺序不丢
+      if (p.via && p.via.length && p.mode !== 'walk') scheme = webUrl;
     }
     p.app = app;
     p.webUrl = webUrl;
@@ -300,7 +323,13 @@
       document.removeEventListener('visibilitychange', onVis);
       // 页面已切到后台，说明 App 已成功唤起
       if (left || document.visibilityState !== 'visible') { closeMapAppSheet(); return; }
-      // 未能唤起（未安装）：弹层切换到下载引导
+      // 未能唤起（未安装）：高德失败时自动兜底尝试腾讯地图，其它情况进入下载引导
+      if (app === 'amap' && !p.qqFallbackTried) {
+        p.qqFallbackTried = true;
+        showToast('未检测到高德地图，已为您切换腾讯地图');
+        launchMapApp('qqmap');
+        return;
+      }
       showMapAppDownload(label);
     }, 1500);
   }
