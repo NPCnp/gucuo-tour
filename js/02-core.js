@@ -995,23 +995,35 @@
   }
 
   // 手机端设置 src 后立刻 play() 常被打断（AbortError）或无手势被拦截（NotAllowedError），
-  // 这两种都不算失败。等元数据就绪后再播；12 秒仍未就绪按「加载慢」提示，可再次点击重试。
+  // 这两种都不算失败。改为「手势内先调 play 占住用户激活令牌，未就绪时等 canplay 再补一次」，
+  // 12 秒仍未就绪按「加载慢」提示，可再次点击重试。
   function playVideoWhenReady(video, onFail) {
     if (!video) return;
     const token = (video._playToken || 0) + 1;
     video._playToken = token;
-    const start = () => {
+
+    const attempt = () => {
       if (video._playToken !== token) return;
-      const p = video.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(err => {
-          if (video._playToken !== token) return;
-          if (err && /AbortError|NotAllowedError/.test(err.name)) return;
-          if (onFail) onFail('error');
-        });
-      }
+      let p;
+      try { p = video.play(); } catch (e) { if (onFail) onFail('error'); return; }
+      if (!p || typeof p.catch !== 'function') return;
+      p.catch(err => {
+        if (video._playToken !== token) return;
+        const name = err && err.name;
+        if (name === 'AbortError') return;              // 切源/缓冲被打断，稍后补播
+        if (name === 'NotAllowedError') {               // 无手势自动播放被系统拦截
+          if (onFail) onFail('blocked');
+          return;
+        }
+        if (onFail) onFail('error');
+      });
     };
-    if (video.readyState >= 2) { start(); return; }
+
+    // 关键：在点击手势的同步栈内先调一次 play()，iOS/微信才不会判定为「自动播放」
+    attempt();
+
+    if (video.readyState >= 2) return;
+
     let fired = false;
     const cleanup = () => {
       video.removeEventListener('canplay', onReady);
@@ -1021,7 +1033,7 @@
       if (fired) return;
       fired = true;
       cleanup();
-      start();
+      attempt();
     };
     video.addEventListener('canplay', onReady);
     video.addEventListener('loadedmetadata', onReady);
@@ -1082,6 +1094,7 @@
     }
     enterVideoPlaying();
     playVideoWhenReady(video, kind => {
+      if (kind === 'blocked') { showToast('请点击视频播放按钮开始播放'); return; }
       exitVideoPlaying();
       if (errEl) errEl.style.display = 'block';
       showToast(kind === 'slow' ? '视频加载较慢，请检查网络后重试' : '视频加载失败，请检查网络后重试');
@@ -1122,6 +1135,7 @@
       video.load();
     }
     playVideoWhenReady(video, kind => {
+      if (kind === 'blocked') { showToast('请点击视频播放按钮开始播放'); return; }
       showToast(kind === 'slow' ? '视频加载较慢，请检查网络后重试' : '视频加载失败，请检查网络后重试');
     });
     box.scrollIntoView({ behavior: 'smooth', block: 'center' });
