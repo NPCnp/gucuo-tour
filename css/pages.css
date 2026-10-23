@@ -1474,6 +1474,123 @@
     cursor: pointer;
   }
   .narr-func-btn:active { background: #f0f0f0; }
+
+  /* ===== 腾讯POI：详情页一行式导航入口 + 全屏位置页 ===== */
+  .txp-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+    width: 100%;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .txp-entry:active { background: #f7f9ff; }
+  .txp-entry-ico { font-size: 20px; line-height: 1; }
+  .txp-entry-txt { flex: 1; font-size: 15px; font-weight: 700; color: #3777ff; }
+  .txp-entry-arrow { font-size: 18px; color: #c0c4cc; }
+  .txp-hint-entry { margin: 8px 2px 12px; }
+
+  /* 全屏位置页（图一）：z-index 低于定位权限弹窗(200)与地图选择弹层(3000) */
+  .txp-view {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: #eef1f4;
+    flex-direction: column;
+  }
+  .txp-view.show { display: flex; }
+  .txp-view-back {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 5;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+    font-size: 20px;
+    line-height: 1;
+    color: #333;
+    cursor: pointer;
+  }
+  .txp-view-back:active { background: #fff; }
+  .txp-view-mapwrap { position: relative; flex: 1; min-height: 0; }
+  .txp-view-map {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #eef1f4;
+  }
+  .txp-map-fb {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 16px;
+    font-size: 12px;
+    color: #999;
+    background: #f5f6f8;
+  }
+  .txp-view-panel {
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    margin-top: -16px;
+    position: relative;
+    z-index: 2;
+    padding: 16px 16px 10px;
+  }
+  .txp-name { font-size: 18px; font-weight: 700; color: #1a1a1a; line-height: 1.4; }
+  .txp-addr { margin-top: 5px; font-size: 13px; color: #666; line-height: 1.5; }
+  .txp-dist { margin-top: 3px; font-size: 12px; color: #2e7d32; }
+  .txp-actions {
+    display: flex;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .txp-act {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 0;
+    background: none;
+    border: none;
+    font-size: 11px;
+    color: #555;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .txp-ico { font-size: 22px; line-height: 1; }
+  .txp-act.nav { color: #3777ff; font-weight: 600; }
+  .txp-act:active { opacity: .7; }
+  .txp-hint {
+    margin: 8px 14px 12px;
+    font-size: 10px;
+    color: #999;
+    line-height: 1.6;
+  }
+  .txp-empty {
+    margin: 16px 0 8px;
+    padding: 28px 0;
+    text-align: center;
+    font-size: 13px;
+    color: #999;
+    background: #fafafa;
+    border-radius: 12px;
+  }
   .navigate-btn {
     display: block;
     width: calc(100% - 32px);

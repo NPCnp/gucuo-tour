@@ -290,9 +290,8 @@
     }
     spotList.forEach((s, i) => {
       const isFood = s.kind === 'food';
-      const isFacility = s.kind === 'facility';
-      const stepIcon = isFood ? '🍜' : (isFacility ? '🚻' : (startIndex + i + 1));
-      const stepKind = isFood ? '用餐' : (isFacility ? '休整' : '游玩');
+      const stepIcon = isFood ? '🍜' : (startIndex + i + 1);
+      const stepKind = isFood ? '用餐' : '游玩';
       html += `
         <div class="route-step">
           <div class="step-num">${stepIcon}</div>

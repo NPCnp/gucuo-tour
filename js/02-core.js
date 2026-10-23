@@ -428,6 +428,8 @@
   }
 
   function showScreen(id, fromTab) {
+    // 标记是否为主动进入搜索页（返回键回退时该标记为 false，恢复离开前状态）
+    searchFreshEntry = (id === 'search');
     paintScreen(id);
 
     if (fromTab) {
@@ -457,9 +459,10 @@
 
   // 仅负责渲染页面与执行页面钩子
   function paintScreen(id) {
-    // 离开详情页时停止语音朗读与视频播放
-    if (typeof narrPlaying !== 'undefined' && narrPlaying) narrPlaying = false;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    // 离开页面时停止所有音频（MP3 + 语音合成）与视频播放
+    narrCancel();
+    narrPlaying = false;
+    narrPageSpeaking = false;
     const nv = document.getElementById('narrVideo');
     if (nv && !nv.paused) nv.pause();
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -484,10 +487,21 @@
     if (id === 'history') renderHistory();
     if (id === 'orders') renderOrders();
     if (id === 'favorites') renderFavorites();
-    if (id === 'search') resetSearchBar();
+    if (id === 'search') {
+      if (searchFreshEntry) {
+        searchFreshEntry = false;
+        resetSearchBar();
+      } else {
+        restoreSearchBar();
+      }
+    }
+    if (id === 'home') maybeStartupLocate();
     if (id === 'settings-manage') syncSettingsUI();
     if (id === 'account') syncAccountUI();
-    if (id === 'detail') { renderDetail(); startNarratorAutoplay(); }
+    if (id === 'detail') {
+      renderDetail();
+      startNarratorAutoplay();
+    }
     if (id === 'narrator') { resetNarrIntroCollapse(); renderNarratorPage(); }
     if (id === 'navigate') renderNavigatePage();
     if (id === 'checkin') renderCheckinPage();
@@ -570,9 +584,67 @@
     });
   }
 
+  /* ========== 启动时一次性定位授权（进入首页弹出一次，结果全站复用） ========== */
+  let visitorLocState = 'idle';   // idle / pending / locating / granted / declined / fail
+  const visitorLocWaiters = [];   // 等待启动定位结束的回调（搜索页等复用结果，不重复申请）
+
+  // 进入首页后弹一次定位说明；此后各模块直接复用结果
+  function maybeStartupLocate() {
+    if (visitorLocState !== 'idle') return;
+    visitorLocState = 'pending';
+    setTimeout(() => {
+      const mask = document.getElementById('locPermitMask');
+      if (mask) mask.classList.add('show');
+      else startupLocateChoice(false);  // 弹窗缺失时按拒绝处理，走参考点
+    }, 700);
+  }
+
+  // 统一授权弹窗按钮（07-nav.js 的 closeLocPermit 处理路线页场景；这里并行服务启动场景）
+  function startupLocateChoice(allow) {
+    if (visitorLocState !== 'pending') return;
+    if (!allow) {
+      visitorLocState = 'declined';
+      window.__LOC_PERM = 'declined';   // 通知路线规划页等不再自动弹窗
+      useFallbackLocation();
+      flushVisitorLocWaiters();
+      return;
+    }
+    visitorLocState = 'locating';
+    window.__LOC_PERM = 'granted';
+    const status = document.getElementById('searchLocStatus');
+    if (status) { status.style.display = 'block'; status.textContent = '📍 正在获取您的位置…'; }
+    locateVisitor(9000).then(res => {
+      if (res && res.coord) {
+        searchLoc = res.coord;
+        visitorCoord = res.coord;
+        searchLocFallback = false;
+        visitorLocState = 'granted';
+      } else {
+        visitorLocState = 'fail';
+        useFallbackLocation();
+      }
+      updateLocStatus();
+      renderSearchResults();
+      flushVisitorLocWaiters();
+    });
+  }
+
+  function flushVisitorLocWaiters() {
+    while (visitorLocWaiters.length) { try { visitorLocWaiters.shift()(); } catch (e) {} }
+  }
+
+  // 绑定统一授权弹窗按钮（DOM 已就绪：脚本位于 body 底部）
+  (function bindStartupLocateBtns() {
+    const allowBtn = document.querySelector('#locPermitMask .loc-permit-btn.allow');
+    const denyBtn = document.querySelector('#locPermitMask .loc-permit-btn.deny');
+    if (allowBtn) allowBtn.addEventListener('click', () => startupLocateChoice(true));
+    if (denyBtn) denyBtn.addEventListener('click', () => startupLocateChoice(false));
+  })();
+
   /* ========== 搜索（高德定位 · 按距离就近排序） ========== */
-  let searchCat = 'near';       // near / toilet / snack（无「全部」；输入关键词时自动跨全部分类检索）
+  let searchCat = 'near';       // near / mall / beach / snack（无「全部」；输入关键词时自动跨全部分类检索）
   let searchKeyword = '';
+  let searchFreshEntry = true;  // 是否为新进入搜索页（ true=重置为默认；false=返回恢复离开时的分类/关键词）
   let searchLoc = null;         // 游客当前位置 [lng,lat]
   let searchLocFallback = false;// 是否使用了兜底参考点
 
@@ -607,28 +679,27 @@
     if (input) setTimeout(() => input.focus(), 100);
   }
 
-  // 调用浏览器定位（高德地图同样基于设备定位能力）；失败/拒绝时以三坊七巷为兜底参考点
+  // 从详情等页面返回搜索页：保留离开时的分类与关键词
+  function restoreSearchBar() {
+    const input = document.getElementById('searchInput');
+    if (input) input.value = searchKeyword;
+    document.querySelectorAll('#searchCatBar .cat-chip').forEach(c => c.classList.toggle('active', c.dataset.cat === searchCat));
+    requestSearchLocation();
+    renderSearchResults();
+  }
+
+  // 获取游客位置：优先复用启动时一次性授权的结果，不再重复向游客申请
   function requestSearchLocation() {
     const status = document.getElementById('searchLocStatus');
     if (searchLoc) { updateLocStatus(); return; }
     if (status) { status.style.display = 'block'; status.textContent = '📍 正在获取您的位置，按距离就近排序…'; }
-    if (!navigator.geolocation) {
-      useFallbackLocation();
+    // 启动定位进行中：等待结束后复用结果（不重复申请）
+    if (visitorLocState === 'pending' || visitorLocState === 'locating') {
+      visitorLocWaiters.push(() => renderSearchResults());
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lng = Number(pos.coords.longitude), lat = Number(pos.coords.latitude);
-        if (isNaN(lng) || isNaN(lat)) { useFallbackLocation(); return; }
-        searchLoc = [lng, lat];
-        visitorCoord = [lng, lat];   // 同步给 AI 路线地图展示「我的位置」
-        searchLocFallback = false;
-        updateLocStatus();
-        renderSearchResults();
-      },
-      () => useFallbackLocation(),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-    );
+    // 启动定位被拒/失败：不再打扰，直接用参考点
+    useFallbackLocation();
   }
 
   function useFallbackLocation() {
@@ -768,8 +839,8 @@
       if (AUDIO_MAP[name]) path = AUDIO_MAP[name];
     }
     if (!path) return null;
-    // 使用绝对路径（相对于域名根目录），并编码中文文件名
-    return '/' + encodeURI(path);
+    // 使用相对路径，兼容子路径部署与 file:// 协议
+    return encodeURI(path);
   }
 
   // 挑选最接近真人的中文音色：优先本地音色（断网也能读），其次神经网络自然音
@@ -894,14 +965,12 @@
         onNarrEnd();
       };
       currentAudio.onerror = () => {
-        showToast('音频加载失败，尝试语音朗读');
-        // 回退到语音合成
-        fallbackToSpeechSynthesis(text);
+        showToast('音频加载失败');
+        onNarrEnd();
       };
       currentAudio.play().catch(() => {
-        showToast('音频播放失败，尝试语音朗读');
-        // 回退到语音合成
-        fallbackToSpeechSynthesis(text);
+        showToast('音频播放失败');
+        onNarrEnd();
       });
       return true;
     }
@@ -996,12 +1065,12 @@
         onNarrEnd();
       };
       currentAudio.onerror = () => {
-        showToast('音频加载失败，尝试语音朗读');
-        fallbackToSpeechSynthesis(currentSpotScript());
+        showToast('音频加载失败');
+        onNarrEnd();
       };
       currentAudio.play().catch(() => {
-        showToast('音频播放失败，尝试语音朗读');
-        fallbackToSpeechSynthesis(currentSpotScript());
+        showToast('音频播放失败');
+        onNarrEnd();
       });
     } else {
       // 没有音频文件，使用语音合成

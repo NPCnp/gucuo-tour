@@ -176,7 +176,7 @@
     while (k.length >= 2) {
       const hit = SPOTS.find(s => s.name.indexOf(k) !== -1 || k.indexOf(s.name) !== -1)
                || FOODS.find(f => f.name.indexOf(k) !== -1 || k.indexOf(f.name) !== -1)
-               || searchPois.find(p => (p.cat === 'snack' || p.cat === 'toilet')
+               || searchPois.find(p => (p.cat === 'snack' || p.cat === 'mall' || p.cat === 'beach')
                     && (p.name.indexOf(k) !== -1 || k.indexOf(p.name) !== -1));
       if (hit) return hit;
       k = k.slice(0, -1);
@@ -184,26 +184,27 @@
     return null;
   }
 
-  // 把搜索 POI（小吃/公厕）统一为路线站点结构
+  // 把搜索 POI（小吃/商场/海边）统一为路线站点结构
   function normalizeSpot(spot) {
     if (spot.duration !== undefined) return spot;
     return {
       name: spot.name,
       coord: spot.coord,
-      duration: spot.cat === 'toilet' ? 10 : 25,
-      kind: spot.cat === 'toilet' ? 'facility' : 'food',
+      duration: spot.cat === 'snack' ? 25 : (spot.cat === 'mall' ? 45 : 60),
+      kind: spot.cat === 'snack' ? 'food' : 'scenic',
       desc: (spot.tags || []).join(' · ')
     };
   }
 
-  /* ========== 表单：搜索联想（景点 / 小吃 / 公厕 / 常用地点） ========== */
+  /* ========== 表单：搜索联想（景点 / 小吃 / 商场 / 海边 / 常用地点） ========== */
   function buildSuggestPool() {
     if (window.__suggestPool) return window.__suggestPool;
     const pool = [];
     SPOTS.forEach(s => pool.push({ name: s.name, coord: s.coord, cat: '景点' }));
     FOODS.forEach(f => pool.push({ name: f.name, coord: f.coord, cat: '小吃' }));
     searchPois.forEach(p => {
-      if (p.cat === 'toilet') pool.push({ name: p.name, coord: p.coord, cat: '公厕' });
+      if (p.cat === 'mall') pool.push({ name: p.name, coord: p.coord, cat: '商场' });
+      if (p.cat === 'beach') pool.push({ name: p.name, coord: p.coord, cat: '海边' });
     });
     Object.keys(KNOWN_POINTS).forEach(n => {
       if (!pool.some(p => p.name === n)) pool.push({ name: n, coord: KNOWN_POINTS[n], cat: '地点' });
@@ -277,6 +278,9 @@
 
   // 进入路线规划页：首次进入自动弹一次友好提示（已允许/已拒绝不再打扰）
   function maybePromptLocateOnEnter() {
+    // 启动时已统一授权/拒绝：同步状态，不再重复弹窗
+    if (window.__LOC_PERM === 'granted') locPermitGranted = true;
+    if (window.__LOC_PERM === 'declined') locPermitDeclined = true;
     if (locEnterPrompted || locPermitGranted || locPermitDeclined) return;
     if (currentPlan && currentPlan.spots.length) return; // 已有路线时直接看结果
     locEnterPrompted = true;
@@ -332,6 +336,7 @@
 
   // 定位入口：未授权先弹说明；允许后执行定位；拒绝则转手动填写
   function locateToInput(inputId, btn) {
+    if (window.__LOC_PERM === 'granted') locPermitGranted = true;  // 启动时已授权，直接定位
     if (locPermitGranted) { runLocateToInput(inputId, btn); return; }
     askLocPermit().then(ok => {
       if (!ok) {
@@ -562,7 +567,7 @@
       return;
     }
     syncCheckinFromPlan();
-    const scenicCount = currentPlan.spots.filter(s => s.kind !== 'food' && s.kind !== 'facility').length;
+    const scenicCount = currentPlan.spots.filter(s => s.kind !== 'food').length;
     openCheckinPage();
     setTimeout(() => showToast(`已按「${currentPlan.label}」生成 ${scenicCount} 个打卡目标，可定位或拍照打卡`), 350);
   }

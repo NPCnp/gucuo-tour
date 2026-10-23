@@ -25,12 +25,17 @@
   window._AMapSecurityConfig = { securityJsCode: 'c31603b7e17903803ca4a1409e4fa0a1' };
 </script>
 <script src="https://webapi.amap.com/loader.js"></script>
+<!-- 腾讯位置服务（LBS）配置：https://lbs.qq.com/ 申请开发密钥，用于景点详情页 POI 点位卡片 -->
+<script>
+  window.TENCENT_LBS_KEY = '';               // TODO：替换为项目申请好的腾讯LBS开发key
+  window.TENCENT_LBS_REFERER = '福州古厝文旅'; // 项目名称
+</script>
 <!-- 凭证保存为图片 -->
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=8">
-<link rel="stylesheet" href="css/pages.css?v=13">
+<link rel="stylesheet" href="css/pages.css?v=15">
 </head>
 <body>
   <div class="phone">
@@ -252,13 +257,14 @@
           <button class="back" onclick="goBack()">‹</button>
           <div class="search-input-wrap">
             <div class="s-icon" style="width:14px;height:14px;"></div>
-            <input id="searchInput" placeholder="输入景点、公厕或小吃名称搜索" oninput="doSearch(this.value)" />
+            <input id="searchInput" placeholder="输入景点、商场、海边或小吃名称搜索" oninput="doSearch(this.value)" />
           </div>
           <button class="search-cancel" onclick="goBack()">取消</button>
         </div>
         <div class="search-cat-bar" id="searchCatBar">
           <button class="cat-chip active" data-cat="near">周边景点</button>
-          <button class="cat-chip" data-cat="toilet">公共厕所</button>
+          <button class="cat-chip" data-cat="mall">商场</button>
+          <button class="cat-chip" data-cat="beach">海边</button>
           <button class="cat-chip" data-cat="snack">特色小吃</button>
         </div>
         <div class="search-loc" id="searchLocStatus">📍 正在获取您的位置，按距离就近排序…</div>
@@ -898,20 +904,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 定位权限说明弹窗：游客点「允许」后才真正申请手机定位 -->
-        <div class="loc-permit-mask" id="locPermitMask">
-          <div class="loc-permit-card">
-            <div class="loc-permit-ico">◎</div>
-            <div class="loc-permit-title">定位权限说明</div>
-            <p class="loc-permit-text">需要获取您当前位置，用于规划前往古厝的游览路线，定位信息仅本次使用，不会上传或保存</p>
-            <p class="loc-permit-note">点击「允许」后才发起定位申请；拒绝时自动切换为手动填写起点</p>
-            <div class="loc-permit-actions">
-              <button class="loc-permit-btn deny" type="button" onclick="closeLocPermit(false)">暂不</button>
-              <button class="loc-permit-btn allow" type="button" onclick="closeLocPermit(true)">允许</button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ===================== 文创生成 ===================== -->
@@ -991,8 +983,14 @@
               <button class="narr-func-btn" onclick="favoriteNarration()">收藏讲解</button>
               <button class="narr-func-btn" onclick="cycleRate()">语速调节：<span id="rateLabel">标准</span></button>
             </div>
-            <!-- 导航到此 -->
-            <button class="navigate-btn" onclick="showScreen('navigate')">导航到此景点</button>
+            <!-- 腾讯POI导航入口：一行式入口，点击进入全屏位置页看地图，再点导航唤起地图App选择 -->
+            <div class="txp-entry" id="tencentPoiEntry" onclick="poiOpenMapView()">
+              <span class="txp-entry-ico">🧭</span>
+              <span class="txp-entry-txt">导航</span>
+              <span class="txp-entry-arrow">›</span>
+            </div>
+            <p class="txp-hint txp-hint-entry">导航将唤起本机地图应用，您可以自由选择高德、腾讯地图等软件</p>
+            <div class="txp-empty" id="poiEmpty" style="display:none">暂无地图点位信息</div>
 
             <!-- 景点评论区（对应当前选择的景点） -->
             <div class="comment-section">
@@ -1095,6 +1093,55 @@
       <div class="preview-mask" id="previewMask" onclick="closePreview()">
         <button class="preview-close" onclick="closePreview()">✕</button>
         <img id="previewImg" src="" alt="文创效果图预览" />
+      </div>
+
+      <!-- 导航定位权限说明（详情页POI卡片专用，全局层）：游客点「导航」后才弹出，允许后才申请定位；拒绝仍可打开地图手动设起点 -->
+      <div class="loc-permit-mask" id="poiNavPermitMask">
+        <div class="loc-permit-card">
+          <div class="loc-permit-ico">◎</div>
+          <div class="loc-permit-title">定位权限说明</div>
+          <p class="loc-permit-text">需要获取您当前位置，用于导航前往该古厝，定位信息仅本次临时使用，不会保存、上传</p>
+          <p class="loc-permit-note">点击「允许」后才发起定位申请；拒绝定位仍可打开地图，由您在地图App内手动设置起点</p>
+          <div class="loc-permit-actions">
+            <button class="loc-permit-btn deny" type="button" onclick="poiPermitChoose(false)">暂不</button>
+            <button class="loc-permit-btn allow" type="button" onclick="poiPermitChoose(true)">允许</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 定位权限说明弹窗（全局层）：启动/路线页共用，游客点「允许」后才真正申请手机定位 -->
+      <div class="loc-permit-mask" id="locPermitMask">
+        <div class="loc-permit-card">
+          <div class="loc-permit-ico">◎</div>
+          <div class="loc-permit-title">定位权限说明</div>
+          <p class="loc-permit-text">需要获取您当前位置，用于推荐附近景点、按距离排序、路线规划与导航打卡，定位信息仅本次临时使用，不会保存、上传</p>
+          <p class="loc-permit-note">点击「允许」后才发起定位申请；拒绝时自动切换为手动填写起点</p>
+          <div class="loc-permit-actions">
+            <button class="loc-permit-btn deny" type="button" onclick="closeLocPermit(false)">暂不</button>
+            <button class="loc-permit-btn allow" type="button" onclick="closeLocPermit(true)">允许</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 腾讯POI位置页（全屏，图一）：上方简易地图+定位标记，下方名称/地址/距离+操作按钮；页内点「导航」再弹地图App选择 -->
+      <div class="txp-view" id="poiMapMask">
+        <button class="txp-view-back" type="button" onclick="closePoiMapView()">‹</button>
+        <div class="txp-view-mapwrap">
+          <iframe id="poiMapIframe" class="txp-view-map" frameborder="0" scrolling="no" src="about:blank" title="景点位置地图"></iframe>
+          <div class="txp-map-fb" id="poiMapFallback" style="display:none;"></div>
+        </div>
+        <div class="txp-view-panel">
+          <div class="txp-name" id="poiName"></div>
+          <div class="txp-addr" id="poiAddr"></div>
+          <div class="txp-dist" id="poiDist"></div>
+          <div class="txp-actions">
+            <button class="txp-act nav" type="button" onclick="poiStartNav()"><span class="txp-ico">🧭</span><span>导航</span></button>
+            <button class="txp-act" type="button" onclick="poiCallCar()"><span class="txp-ico">🚕</span><span>打车</span></button>
+            <button class="txp-act" type="button" onclick="favoriteNarration()"><span class="txp-ico">⭐</span><span>收藏</span></button>
+            <button class="txp-act" type="button" onclick="poiMore()"><span class="txp-ico">⋯</span><span>更多</span></button>
+          </div>
+          <p class="txp-hint">导航将唤起本机地图应用，您可以自由选择高德、腾讯地图等软件</p>
+        </div>
       </div>
 
       <!-- 导航 App 选择弹层：手机端唤起高德/腾讯/百度原生地图 -->

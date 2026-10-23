@@ -623,17 +623,18 @@
       };
       return extraNarrations[k];
     }
-    // 搜索 POI（公厕/小吃等便民地点）：合成简版介绍
+    // 搜索 POI（商场/海边/小吃等地点）：合成简版介绍
     const poi = searchPois.find(q => q.name === k);
     if (poi) {
-      const typeText = poi.cat === 'toilet' ? '公共便民设施' : (poi.cat === 'snack' ? '福州特色风味' : '周边景点');
+      const typeText = poi.cat === 'mall' ? '购物休闲场所' : (poi.cat === 'beach' ? '滨海风光景点' : (poi.cat === 'snack' ? '福州特色风味' : '周边景点'));
+      const descText = poi.desc || poi.tags.join(' · ');
       extraNarrations[k] = {
         name: poi.name,
         duration: '02:00',
-        desc: poi.tags.join(' · ') + '。' + typeText + '，可在搜索页查看实时距离并一键地图导航前往。',
+        desc: descText + '（' + typeText + '）',
         script: [
-          '这里是' + poi.name + '，标签：' + poi.tags.join('、') + '。',
-          '返回搜索页可查看距您的实时距离，点击「地图导航」即可唤起高德地图步行前往。'
+          '这里是' + poi.name + '。' + descText,
+          '它是一处' + typeText + '，返回搜索页可查看距您的实时距离，点击「地图导航」即可一键前往。'
         ]
       };
       return extraNarrations[k];
@@ -643,7 +644,7 @@
 
   // 进入某景点详情（联动讲解上下文）
   function gotoDetail(name) {
-    // 公厕/小吃等便民 POI 使用自身名称（避免「三通桥旁公厕」被模糊匹配到「三通桥」）
+    // 商场/海边/小吃等搜索 POI 使用自身名称（避免「三通桥」被模糊匹配干扰）
     const poi = searchPois.find(q => q.name === name);
     const key = (!poi || poi.cat === 'near') ? getNarrKey(name) : null;
     currentSpotKey = key || name;
@@ -715,8 +716,39 @@
     '三坊七巷沉浸式演出': ['实景演出', '穿越古厝', '互动体验', '夜间文旅']
   };
 
+  // 搜索 POI（商场/海边）详情页专属标签
+  const SEARCH_POI_DETAIL_TAGS = {
+    // 商场
+    '东百中心': ['购物地标', '三坊七巷旁', '餐饮观景', '老牌商圈'],
+    '福州万象城': ['潮流购物', '万宝商圈', '美妆服饰', '美食集合'],
+    '东二环泰禾广场': ['城市综合体', '亲子娱乐', '影城剧院', '主题街区'],
+    '爱琴海购物公园': ['艺术购物', '夜景美食', '空间格调', '聚会打卡'],
+    '仓山万达广场': ['金山商圈', '亲子游乐', '业态齐全', '家庭消费'],
+    '苏宁广场': ['万宝商圈', '时尚零售', '特色餐饮', '交通便捷'],
+    '世欧广场': ['晋安商圈', '青年潮流', '网红餐饮', '夜间人气'],
+    // 海边
+    '平潭龙凤头海滨浴场': ['蓝眼泪', '细白沙滩', '海滨浴场', '观星看海'],
+    '长乐下沙海滩': ['海滨度假', '日出观赏', '踏浪戏水', '老牌胜地'],
+    '琅岐岛沙滩': ['生态海岛', '赶海拾贝', '滩涂风光', '环岛骑行'],
+    '连江平流尾地质公园': ['海蚀地貌', '观海胜地', '摄影打卡', '滨海栈道'],
+    '长乐南澳海滩': ['天然海湾', '赶海挖贝', '海鲜排挡', '半日度假'],
+    '长乐象鼻澳海滩': ['小众清净', '彩色堤坝', '摄影打卡', '蔚蓝海面'],
+    '平潭坛南湾': ['露营胜地', '风平浪静', '篝火晚会', '蓝眼泪'],
+    // 特色小吃
+    '佛跳墙': ['闽菜之首', '非遗名菜', '山珍海味', '滋补汤品'],
+    '福州鱼丸': ['闽味小吃', 'Q弹爆汁', '百年工艺', '街边美食'],
+    '同利肉燕': ['非遗美食', '百年老店', '皮薄如纸', '太平燕'],
+    '永和鱼丸': ['老字号鱼丸', '汤鲜弹牙', '非遗技艺', '街头风味'],
+    '花生汤': ['古早甜品', '花生绵软', '暖心暖胃', '福州甜点'],
+    '锅边糊': ['福州早餐', '传统小吃', '配海蛎饼', '米浆爽滑'],
+    '荔枝肉': ['经典闽菜', '酸甜口感', '形似荔枝', '家常名菜'],
+    '福州芋泥': ['传统甜品', '槟榔芋香', '宴席甜点', '绵密细腻']
+  };
+
   // 获取景点的详情页标签（丰富多样）
   function getRankingSpotTags(spotName) {
+    // 商场/海边等搜索 POI 专属标签（避免落入古厝兜底文案）
+    if (SEARCH_POI_DETAIL_TAGS[spotName]) return SEARCH_POI_DETAIL_TAGS[spotName];
     // 先尝试直接匹配
     if (DETAIL_SPOT_TAGS[spotName]) return DETAIL_SPOT_TAGS[spotName];
     // 尝试别名匹配
@@ -776,7 +808,11 @@
     if (tagsContainer) {
       const tags = getRankingSpotTags(n.name);
       tagsContainer.innerHTML = tags.map(t => `<span class="detail-tag">${t}</span>`).join('');
+      tagsContainer.style.display = '';
     }
+    // 显示讲解员面板
+    const panel = document.querySelector('#page-detail .narrator-panel');
+    if (panel) panel.style.display = '';
     // 封面：有实景图时替换占位
     setCoverPhoto(
       document.getElementById('detailCoverImg'),
@@ -930,6 +966,7 @@
     document.getElementById('narrFilterBar').style.display = 'none';
     // 显示后再填充内容（封面背景、视频标签等依赖容器可见）
     renderNarrIntroPanel();
+    renderPoiCard();
     renderComments();
     resetNarrIntroCollapse();
   }
@@ -1104,4 +1141,137 @@
   // 打开高德导航：手机端优先唤起高德 App
   function openAmapNav(from, dest, destName) {
     openAmapAppNav(dest, destName, from || null, 'car');
+  }
+
+  /* ============================================================
+     腾讯POI点位卡片（poimarker 组件接入）
+     地图：iframe 加载 apis.map.qq.com/tools/poimarker（lat/lng/name/address）
+     导航：点击「导航」先弹隐私说明，允许后才申请定位，再由统一
+           地图选择弹层唤起本机地图App（腾讯/高德，未装引导下载）
+     ============================================================ */
+  // 当前详情景点的点位信息（coord 为高德 [lng,lat]，与腾讯同为 GCJ-02 坐标系，可直接混用）
+  function poiSpotInfo() {
+    const n = currentNarration();
+    const meta = SPOT_META[currentSpotKey] || SPOT_META[n.name] || {};
+    return { name: n.name, coord: meta.coord || null, address: meta.address || '' };
+  }
+
+  // poimarker 组件链接（marker=纬度,经度,名称；addr=详细地址）
+  function poiMapUrl(lat, lng, name, address) {
+    return 'https://apis.map.qq.com/tools/poimarker?type=0'
+      + '&marker=' + lat + ',' + lng + ',' + encodeURIComponent(name)
+      + '&addr=' + encodeURIComponent(address)
+      + '&key=' + (window.TENCENT_LBS_KEY || '')
+      + '&referer=' + encodeURIComponent(window.TENCENT_LBS_REFERER || '福州古厝文旅');
+  }
+
+  // 渲染详情页导航入口：缺经纬度/地址时隐藏入口，仅显示提示文字
+  function renderPoiCard() {
+    const entry = document.getElementById('tencentPoiEntry');
+    if (!entry) return;
+    const empty = document.getElementById('poiEmpty');
+    const info = poiSpotInfo();
+
+    // 异常兜底：缺少经纬度或地址 → 隐藏入口，仅显示提示文字
+    if (!info.coord || !info.coord[0] || !info.coord[1] || !info.address) {
+      entry.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    entry.style.display = 'flex';
+    if (empty) empty.style.display = 'none';
+  }
+
+  // 打开全屏位置页（图一）：游客先看地方在哪；iframe 首次打开时才加载 poimarker
+  function poiOpenMapView() {
+    const info = poiSpotInfo();
+    if (!info.coord || !info.address) { showToast('暂无地图点位信息'); return; }
+    const mask = document.getElementById('poiMapMask');
+    if (!mask) return;
+
+    const lng = Number(info.coord[0]), lat = Number(info.coord[1]);
+    document.getElementById('poiName').textContent = info.name;
+    document.getElementById('poiAddr').textContent = info.address;
+
+    // 距离：定位成功用当前位置，未授权时以三坊七巷游客中心为参考点
+    let distText = '';
+    try {
+      const origin = (typeof searchLoc !== 'undefined' && searchLoc) || (typeof SEARCH_FALLBACK_COORD !== 'undefined' ? SEARCH_FALLBACK_COORD : null);
+      if (origin && typeof distanceMeters === 'function') {
+        const m = distanceMeters(origin, [lng, lat]);
+        if (isFinite(m)) {
+          distText = '距您约 ' + (m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(1) + ' km');
+        }
+      }
+    } catch (e) {}
+    document.getElementById('poiDist').textContent = distText;
+
+    // 地图区域：未配置密钥时友好提示，不阻塞页面其他内容浏览
+    const iframe = document.getElementById('poiMapIframe');
+    const fallback = document.getElementById('poiMapFallback');
+    if (!window.TENCENT_LBS_KEY) {
+      iframe.style.display = 'none';
+      fallback.style.display = 'flex';
+      fallback.textContent = '地图加载失败：请先在 index.html 顶部配置腾讯LBS密钥（lbs.qq.com 免费申请）';
+    } else {
+      iframe.style.display = 'block';
+      fallback.style.display = 'none';
+      if (iframe.src === '' || iframe.src.indexOf('about:blank') > -1) {
+        iframe.src = poiMapUrl(lat, lng, info.name, info.address);
+      }
+    }
+    mask.classList.add('show');
+  }
+
+  // 关闭全屏位置页，返回景点详情
+  function closePoiMapView() {
+    const mask = document.getElementById('poiMapMask');
+    if (mask) mask.classList.remove('show');
+  }
+
+  // 点击「导航」：先弹定位隐私说明（此时才可能申请定位），不自动取位置
+  let poiNavPending = null;
+  function poiStartNav() {
+    const info = poiSpotInfo();
+    if (!info.coord) { showToast('暂无地图点位信息'); return; }
+    poiNavPending = info;
+    const mask = document.getElementById('poiNavPermitMask');
+    if (mask) mask.classList.add('show');
+    else poiPermitChoose(true); // 弹窗缺失时直接按允许处理
+  }
+
+  // 隐私弹窗选择：允许→申请定位后唤起地图选择；拒绝→仍打开地图，游客在App内手动设起点
+  function poiPermitChoose(allow) {
+    const mask = document.getElementById('poiNavPermitMask');
+    if (mask) mask.classList.remove('show');
+    const dest = poiNavPending;
+    poiNavPending = null;
+    if (!dest || !dest.coord) return;
+    if (!allow) {
+      openAmapAppNav(dest.coord, dest.name, null, 'car');
+      return;
+    }
+    // 优先复用启动时一次性授权拿到的真实位置，避免重复申请定位
+    const useCache = window.__LOC_PERM === 'granted'
+      && typeof visitorCoord !== 'undefined' && visitorCoord
+      && typeof searchLocFallback !== 'undefined' && !searchLocFallback;
+    const locating = useCache ? Promise.resolve({ coord: visitorCoord }) : locateVisitor(8000);
+    locating.then(res => {
+      openAmapAppNav(dest.coord, dest.name, (res && res.coord) ? res.coord : null, 'car');
+    });
+  }
+
+  // 打车：唤起腾讯地图（内置打车入口），游客可在应用内直接叫车
+  function poiCallCar() {
+    const info = poiSpotInfo();
+    if (!info.coord) { showToast('暂无地图点位信息'); return; }
+    showToast('已为您打开地图，可在应用内直接打车');
+    openAmapAppNav(info.coord, info.name, null, 'car');
+  }
+
+  // 更多：新窗口打开腾讯地图 POI 页面（周边/街景/详情）
+  function poiMore() {
+    const info = poiSpotInfo();
+    if (!info.coord) { showToast('暂无地图点位信息'); return; }
+    window.open(poiMapUrl(Number(info.coord[1]), Number(info.coord[0]), info.name, info.address), '_blank');
   }
