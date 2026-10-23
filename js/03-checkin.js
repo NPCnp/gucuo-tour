@@ -198,7 +198,7 @@
     completeCheckin(id);
   }
 
-  // 去导航：唤起手机高德 App（步行路线）；拿不到当前位置时只打开点位
+  // 去导航：打开高德网页版步行导航；拿不到当前位置时只打开点位
   function navigateToPoint(pointId) {
     const p = checkinPoints.find(x => x.id === pointId);
     if (!p) return;
@@ -206,10 +206,10 @@
     locateVisitor(8000).then(res => {
       if (!res.coord) {
         showToast('未获取到定位，已打开点位地图');
-        openAmapAppMarker(p.coord, p.name);
+        openAmapWebMarker(p.coord, p.name);
         return;
       }
-      openAmapAppNav(p.coord, p.name, res.coord, 'walk');
+      openAmapWebNav(p.coord, p.name, res.coord, 'walk');
     });
   }
 

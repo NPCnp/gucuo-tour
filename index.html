@@ -35,7 +35,7 @@
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=8">
-<link rel="stylesheet" href="css/pages.css?v=19">
+<link rel="stylesheet" href="css/pages.css?v=20">
 </head>
 <body>
   <div class="phone">
@@ -881,9 +881,9 @@
                 <!-- 动态路线步骤容器 -->
                 <div id="routeSteps"></div>
 
-                <!-- 开始导航：站点清单下方通栏主按钮；点击不直连高德URI，统一走地图App选择弹层 -->
+                <!-- 开始导航：站点清单下方通栏主按钮；点击直接跳转高德网页导航 -->
                 <button class="route-nav-btn" id="routeNavBtn" type="button" onclick="navigateRoute()">🧭 开始导航</button>
-                <p class="route-nav-hint" id="routeWxTip" style="display:none;">微信内置浏览器限制唤起第三方地图App，可复制导航链接到手机浏览器打开</p>
+                <p class="route-nav-hint" id="routeWxTip">网页导航，可在导航页内打开高德App</p>
                 <button class="route-checkin-btn" onclick="gotoRouteCheckin()">✓ 沿这条路线去打卡（景点自动设为打卡点）</button>
                 <button class="save-route-btn" onclick="saveRoute()">保存路线（同步到个人中心）</button>
               </div>
@@ -983,13 +983,13 @@
               <button class="narr-func-btn" onclick="favoriteNarration()">收藏讲解</button>
               <button class="narr-func-btn" onclick="cycleRate()">语速调节：<span id="rateLabel">标准</span></button>
             </div>
-            <!-- 腾讯POI导航入口：一行式入口，点击进入全屏位置页看地图，再点导航唤起地图App选择 -->
+            <!-- 腾讯POI导航入口：一行式入口，点击进入全屏位置页看地图，再点导航打开高德网页版 -->
             <div class="txp-entry" id="tencentPoiEntry" onclick="poiOpenMapView()">
               <span class="txp-entry-ico">🧭</span>
               <span class="txp-entry-txt">导航</span>
               <span class="txp-entry-arrow">›</span>
             </div>
-            <p class="txp-hint txp-hint-entry">导航将唤起本机地图应用，您可以自由选择高德、腾讯地图等软件</p>
+            <p class="txp-hint txp-hint-entry">网页导航，可在导航页内打开高德App</p>
             <div class="txp-empty" id="poiEmpty" style="display:none">暂无地图点位信息</div>
 
             <!-- 景点评论区（对应当前选择的景点） -->
@@ -1020,6 +1020,7 @@
           </div>
           <div class="nav-status" id="navStatus">点击下方按钮，申请获取您的当前位置后开始导航</div>
           <button class="generate-btn" id="navStartBtn" onclick="startNavigation()">获取当前位置并导航</button>
+          <p class="settings-note">网页导航，可在导航页内打开高德App</p>
           <p class="settings-note">仅本次导航使用您的位置信息，不会上传或保存</p>
         </div>
       </div>
@@ -1101,7 +1102,7 @@
           <div class="loc-permit-ico">◎</div>
           <div class="loc-permit-title">定位权限说明</div>
           <p class="loc-permit-text">需要获取您当前位置，用于导航前往该古厝，定位信息仅本次临时使用，不会保存、上传</p>
-          <p class="loc-permit-note">点击「允许」后才发起定位申请；拒绝定位仍可打开地图，由您在地图App内手动设置起点</p>
+          <p class="loc-permit-note">点击「允许」后才发起定位申请；拒绝定位仍可打开网页导航，在导航页手动设置起点</p>
           <div class="loc-permit-actions">
             <button class="loc-permit-btn deny" type="button" onclick="poiPermitChoose(false)">暂不</button>
             <button class="loc-permit-btn allow" type="button" onclick="poiPermitChoose(true)">允许</button>
@@ -1123,7 +1124,7 @@
         </div>
       </div>
 
-      <!-- 腾讯POI位置页（全屏，图一）：上方简易地图+定位标记，下方名称/地址/距离+操作按钮；页内点「导航」再弹地图App选择 -->
+      <!-- 腾讯POI位置页（全屏，图一）：上方简易地图+定位标记，下方名称/地址/距离+操作按钮；页内点「导航」打开高德网页导航 -->
       <div class="txp-view" id="poiMapMask">
         <button class="txp-view-back" type="button" onclick="closePoiMapView()">‹</button>
         <div class="txp-view-mapwrap">
@@ -1140,63 +1141,23 @@
             <button class="txp-act" type="button" onclick="favoriteNarration()"><span class="txp-ico">⭐</span><span>收藏</span></button>
             <button class="txp-act" type="button" onclick="poiMore()"><span class="txp-ico">⋯</span><span>更多</span></button>
           </div>
-          <p class="txp-hint">导航将唤起本机地图应用，您可以自由选择高德、腾讯地图等软件</p>
-        </div>
-      </div>
-
-      <!-- 导航 App 选择弹层：手机端唤起高德/腾讯/百度原生地图 -->
-      <div class="mapapp-mask" id="mapAppMask" onclick="closeMapAppSheet()">
-        <div class="mapapp-sheet" onclick="event.stopPropagation()">
-          <div class="mapapp-grabber" onclick="closeMapAppSheet()">
-            <svg width="20" height="10" viewBox="0 0 20 10"><path d="M2 2 L10 8 L18 2" stroke="#c8c9cc" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          </div>
-          <div class="mapapp-title">选择要打开的方式</div>
-          <div class="mapapp-list" id="mapAppList">
-            <button class="mapapp-item" onclick="launchMapApp('qqmap')">
-              <span class="mapapp-logo tencent">腾</span>
-              <span class="mapapp-name">腾讯地图</span>
-              <span class="mapapp-arrow">›</span>
-            </button>
-            <button class="mapapp-item" onclick="launchMapApp('amap')">
-              <span class="mapapp-logo amap">高</span>
-              <span class="mapapp-name">高德地图</span>
-              <span class="mapapp-arrow">›</span>
-            </button>
-          </div>
-          <div class="mapapp-tip" id="mapAppTip">未安装对应地图时，将自动为您切换腾讯地图</div>
-          <div class="mapapp-download" id="mapAppDownload" style="display:none;">
-            <div class="mapapp-dl-text">未检测到「<span id="mapAppDlName"></span>」App</div>
-            <div class="mapapp-dl-btns">
-              <button class="mapapp-dl-btn primary" id="mapAppDlBtn" onclick="launchMapDownload()">前往下载</button>
-              <button class="mapapp-dl-btn" onclick="resetMapAppSheet()">重新选择</button>
-            </div>
-          </div>
-          <div class="mapapp-wxguide" id="mapAppWxGuide" style="display:none;">
-            <div class="mapapp-wx-text">微信内无法唤起系统地图选择面板</div>
-            <div class="mapapp-wx-sub">可复制导航链接，粘贴到手机自带浏览器打开</div>
-            <div class="mapapp-dl-btns">
-              <button class="mapapp-dl-btn primary" onclick="copyNavLink()">复制导航链接</button>
-              <button class="mapapp-dl-btn" onclick="showWxGuide()">在浏览器打开</button>
-            </div>
-            <div class="mapapp-wx-note">微信内限制唤起第三方地图，建议复制链接到手机自带浏览器打开</div>
-          </div>
-          <button class="mapapp-web" onclick="launchMapWeb()">使用网页版导航</button>
+          <p class="txp-hint">网页导航，可在导航页内打开高德App</p>
         </div>
       </div>
 
     </div>
   </div>
 
-  <script src="js/01-data.js?v=7"></script>
-  <script src="js/02-core.js?v=18"></script>
-  <script src="js/03-checkin.js?v=6"></script>
+  <script src="js/01-data.js?v=8"></script>
+  <script src="js/02-core.js?v=22"></script>
+  <script src="js/03-checkin.js?v=7"></script>
   <script src="js/04-route.js"></script>
-  <script src="js/05-narrations.js?v=10"></script>
+  <script src="js/05-narrations.js?v=13"></script>
   <script src="js/06-narrator.js?v=4"></script>
-  <script src="js/07-nav.js?v=8"></script>
+  <script src="js/07-nav.js?v=9"></script>
   <script src="js/08-creative.js?v=6"></script>
   <script src="js/09-profile.js?v=2"></script>
-  <script src="js/10-init.js?v=3"></script>
+  <script src="js/10-init.js?v=4"></script>
 
   <!-- 分享二维码弹层 -->
   <div id="qrShareMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:24px;" onclick="closeShareQR(event)">
@@ -1209,18 +1170,7 @@
     </div>
   </div>
 
-  <!-- 微信内置浏览器引导遮罩：提示在浏览器中打开 -->
-  <div id="wxGuideMask" class="wx-guide-mask" style="display:none;" onclick="hideWxGuide()">
-    <div class="wx-guide-arrow">
-      <svg width="60" height="80" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M30 75 L30 15 M30 15 L18 28 M30 15 L42 28" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <div class="wx-guide-text">
-      <div class="wx-guide-title">请点击右上角「···」</div>
-      <div class="wx-guide-sub">选择「在浏览器中打开」</div>
-    </div>
-  </div>
+  <!-- 微信内置浏览器无需强制引导：直接使用同一套网页导航链接 -->
 
 </body>
 </html>

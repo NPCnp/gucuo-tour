@@ -105,7 +105,7 @@
 
   /* ========== 景点介绍视频（按「福州景点介绍视频清单」备注一一对应） ==========
      no = 清单序号（与图库编号一致）；title = 清单视频标题；link = 抖音分享链接
-     本地视频文件路径：视频/{no}_{景点名称}.mp4（已放置在项目 视频/ 目录） */
+     本地视频文件路径：视频/{no}_{景点名称}.mp4；海边点位使用 dir 指定为 景点介绍视频/ */
   const SPOT_VIDEOS = {
     '严复故居':           { no: '01', title: '严复故居讲解',           link: 'https://www.iesdouyin.com/share/video/7564713907543035193' },
     '林则徐纪念馆':       { no: '02', title: '林则徐纪念馆讲解',       link: 'https://www.iesdouyin.com/share/video/7565077233976167717' },
@@ -152,7 +152,16 @@
     '上下杭三通桥':       { no: '43', title: '三通桥上下杭地标',       link: 'https://www.iesdouyin.com/share/video/7682727473053870961' },
     '螺洲陈氏五楼':       { no: '44', title: '陈氏五楼陈宝琛故居',     link: 'https://www.iesdouyin.com/share/video/7213674343593790778' },
     '林浦泰山宫':         { no: '45', title: '林浦泰山宫南宋行宫',     link: 'https://www.iesdouyin.com/share/video/7148808407758277901' },
-    '严复翰墨馆':         { no: '46', title: '严复翰墨馆',             link: '' }
+    '严复翰墨馆':         { no: '46', title: '严复翰墨馆',             link: '' },
+
+    // 海边点位介绍视频（文件位于 景点介绍视频/ 目录）
+    '长乐南澳海滩':       { no: '01', title: '长乐南澳海滩',           link: '', dir: '景点介绍视频' },
+    '长乐象鼻澳海滩':     { no: '02', title: '长乐象鼻澳海滩',         link: '', dir: '景点介绍视频' },
+    '长乐下沙海滩':       { no: '03', title: '长乐下沙海滩',           link: '', dir: '景点介绍视频' },
+    '琅岐岛沙滩':         { no: '04', title: '琅岐岛沙滩',             link: '', dir: '景点介绍视频' },
+    '连江平流尾地质公园': { no: '05', title: '连江平流尾地质公园',     link: '', dir: '景点介绍视频' },
+    '平潭龙凤头海滨浴场': { no: '06', title: '平潭龙凤头海滨浴场',     link: '', dir: '景点介绍视频' },
+    '平潭坛南湾':         { no: '07', title: '平潭坛南湾',             link: '', dir: '景点介绍视频' }
   };
 
   // 名称归一：先直接匹配，再走别名，最后剥离「·」前缀重试（如 三坊七巷·水榭戏台 → 水榭戏台）
@@ -173,7 +182,7 @@
     const key = normalizeSpotName(name);
     const v = key && SPOT_VIDEOS[key];
     if (!v) return null;
-    return { name: key, no: v.no, title: v.title, link: v.link, local: '视频/' + v.no + '_' + key + '.mp4' };
+    return { name: key, no: v.no, title: v.title, link: v.link, local: (v.dir || '视频') + '/' + v.no + '_' + key + '.mp4' };
   }
 
   // 封面图：有实景图时铺满并隐藏占位图标与文字，无图时恢复占位

@@ -165,11 +165,9 @@
     }
     document.getElementById('routeSteps').innerHTML = html;
 
-    // 站点为空时导航按钮置灰；微信内浏览器显示限制提示
+    // 站点为空时导航按钮置灰；网页导航提示常显（微信与手机浏览器统一）
     const navBtn = document.getElementById('routeNavBtn');
     if (navBtn) navBtn.disabled = !currentPlan.spots.length;
-    const wxTip = document.getElementById('routeWxTip');
-    if (wxTip) wxTip.style.display = isWeChatBrowser() ? 'block' : 'none';
 
     // 同步高德地图（起终点优先使用已确认坐标）
     renderRouteOnMap(currentStart, currentEnd, currentPlan.spots, currentStartCoord, currentEndCoord)
@@ -531,7 +529,7 @@
     if (chat) chat.classList.toggle('show', show);
   }
 
-  /* ========== 导航：统一高德URI步行导航（方案B，callnative=1优先唤起App） ========== */
+  /* ========== 导航：统一高德网页版（uri.amap.com），不在页面内唤起 App ========== */
 
   // 导航到单个景点/点位
   function navigateToSpot(coord, name) {
@@ -540,10 +538,10 @@
       return;
     }
     const from = currentStartCoord || (typeof visitorCoord !== 'undefined' && visitorCoord ? visitorCoord : null);
-    openAmapAppNav(coord, name, from, 'walk', from ? (currentStart || '我的位置') : null);
+    openAmapWebNav(coord, name, from, 'walk', from ? (currentStart || '我的位置') : null);
   }
 
-  // 开始导航：不再直连高德URI，统一走地图App选择弹层（与景点详情页同一套方案）。
+  // 开始导航：直接打开高德网页版导航。
   // 终点=路线最后一站，途经点=其余站点按 AI 规划顺序填入，起点=游客当前定位。
   function navigateRoute() {
     if (!currentPlan || !currentPlan.spots.length) {
@@ -568,7 +566,7 @@
 
     // 多站用驾车模式（步行导航不支持途经点），单站沿用步行
     const mode = via.length ? 'car' : 'walk';
-    openAmapAppNav(last.coord, last.name, from, mode, currentStart || '我的位置', via);
+    openAmapWebNav(last.coord, last.name, from, mode, currentStart || '我的位置', via);
   }
 
   // 以当前 AI 路线作为打卡路线：同步数据后进入路线打卡页
@@ -704,7 +702,7 @@
       return { text: '已压缩节奏：保留核心点位，' + estimateHours(currentPlan ? currentPlan.spots.slice(0, Math.max(2, (currentPlan.spots.length - 2))) : []) + '，动线仍顺向不折返。', changed: false };
     }
     if (/交通|地铁|公交|打车|车/.test(q)) {
-      return { text: '全程步行可达；每站旁有「导航」按钮，可分段唤起高德。', changed: false };
+      return { text: '全程步行可达；每站旁有「导航」按钮，可分段打开高德网页导航。', changed: false };
     }
     return {
       text: '收到！试试说：「还想去烟台山」「中途想吃鱼丸」「不去二梅书屋」，我会就近插入并重排路线。',

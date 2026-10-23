@@ -13,5 +13,3 @@
   // 扫码入口（?spot=景点名&src=qr）：直达景点详情，并隔离上一位游客
   // 非扫码进入时才恢复离开前的页面（从高德等外部应用返回）
   if (!initScanEntry()) restoreSessionState();
-  // 检测微信内置浏览器，显示「在浏览器打开」引导层
-  checkWxGuide();

@@ -12,7 +12,7 @@
     setTimeout(() => t.remove(), 1800);
   }
 
-  /* ========== 唤起高德：手机端优先原生 App，未装/未唤起再退网页版 ========== */
+  /* ========== 设备 / 环境判断 & 微信引导 ========== */
   function isMobileDevice() {
     return /Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(navigator.userAgent)
       || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
@@ -21,61 +21,14 @@
     return /MicroMessenger/i.test(navigator.userAgent);
   }
 
-  /* ========== 微信内置浏览器引导遮罩 ========== */
-  function showWxGuide() {
-    const mask = document.getElementById('wxGuideMask');
-    if (mask) mask.style.display = 'flex';
-  }
-
-  function hideWxGuide() {
-    const mask = document.getElementById('wxGuideMask');
-    if (mask) mask.style.display = 'none';
-  }
-
-  // 页面加载时检测是否在微信内置浏览器中，是则显示引导层
-  function checkWxGuide() {
-    if (isWeChatBrowser()) {
-      showWxGuide();
-    }
-  }
-
-  // 网页版高德（兜底）
-  function openAmapUri(url) {
-    if (isMobileDevice()) {
-      window.location.href = url;
-    } else {
-      window.open(url, '_blank');
-    }
-  }
-
-  // 先用 App scheme 唤起高德；1.5 秒后页面仍可见说明没唤起成功，退回网页版
-  // skipWebFallback：微信内会拦外链，退网页版只会进到网页高德，改为提示用户在浏览器打开
-  function jumpToAmapApp(scheme, webUrl, skipWebFallback) {
-    let leftPage = false;
-    const onVis = () => { if (document.visibilityState === 'hidden') leftPage = true; };
-    document.addEventListener('visibilitychange', onVis);
-    try { window.location.href = scheme; } catch (e) { /* 忽略，走兜底 */ }
-    setTimeout(() => {
-      document.removeEventListener('visibilitychange', onVis);
-      if (leftPage || document.visibilityState !== 'visible') return;
-      if (skipWebFallback) {
-        showToast('请点右上角「···」→「在浏览器打开」，即可直接跳转高德App');
-      } else {
-        window.location.href = webUrl;
-      }
-    }, 1500);
-  }
-
-  /* ========== 路线导航：手机端唤起高德/百度原生 App ========== */
-  // to=目的地坐标[lng,lat]，toName=目的地名，from=起点坐标[lng,lat]（可选，缺省用当前位置）
-  // fromName=起点名（可选），mode=walk/car/bus
-  let mapAppPending = null;
-
-  function amapWebNavUrl(p, callnative) {
+  /* ========== 导航：统一高德网页版（uri.amap.com），不唤起任何 App ========== */
+  // to=目的地坐标[lng,lat]，toName=目的地名，from=起点坐标[lng,lat]（可选）
+  // fromName=起点名，mode=walk/car/bus，via=途经点 [{coord:[lng,lat], name}] 按游览顺序
+  function amapWebNavUrl(p) {
     let url = 'https://uri.amap.com/navigation?';
     if (p.start) url += 'from=' + p.start.lng + ',' + p.start.lat + ',' + encodeURIComponent(p.fromName) + '&';
     url += 'to=' + p.dest.lng + ',' + p.dest.lat + ',' + encodeURIComponent(p.toName) +
-      '&mode=' + p.mode + '&coordinate=gaode&callnative=' + (callnative ? 1 : 0) + '&src=gucuo';
+      '&mode=' + p.mode + '&coordinate=gaode&src=gucuo';
     // 途经点：按游览顺序串联，格式 lng,lat,name|lng,lat,name
     if (p.via && p.via.length && p.mode !== 'walk') {
       url += '&via=' + p.via.map(v => v.lng + ',' + v.lat + ',' + encodeURIComponent(v.name)).join('|');
@@ -83,18 +36,17 @@
     return url;
   }
 
-  // 百度地图网页版路线（无 App 时的兜底）
-  function baiduWebNavUrl(p) {
-    const mode = p.mode === 'car' ? 'driving' : p.mode === 'bus' ? 'transit' : 'walking';
-    let url = 'https://api.map.baidu.com/direction?';
-    if (p.start) url += 'origin=latlng:' + p.start.lat + ',' + p.start.lng + '|name:' + encodeURIComponent(p.fromName) + '&';
-    url += 'destination=latlng:' + p.dest.lat + ',' + p.dest.lng + '|name:' + encodeURIComponent(p.toName) +
-      '&mode=' + mode + '&coord_type=gcj02&output=html&src=webapp.gucuo';
-    return url;
+  // 打开网页链接：手机端当前窗口跳转，桌面端新窗口
+  function openNavWebPage(url) {
+    if (isMobileDevice()) {
+      window.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
   }
 
   // via=途经点数组 [{coord:[lng,lat], name}]，按游览顺序传入
-  function openAmapAppNav(to, toName, from, mode, fromName, via) {
+  function openAmapWebNav(to, toName, from, mode, fromName, via) {
     if (!to || !to[0] || !to[1]) {
       showToast('目的地坐标缺失，无法发起导航');
       return;
@@ -110,247 +62,18 @@
              .map(v => ({ lng: Number(v.coord[0]), lat: Number(v.coord[1]), name: v.name || '途经点' }))
         : []
     };
+    openNavWebPage(amapWebNavUrl(params));
+  }
 
-    // 桌面端没有原生地图 App，直接打开网页版
-    if (!isMobileDevice()) {
-      window.open(amapWebNavUrl(params, true), '_blank');
+  // 只看点位（不带路线规划）：同样走网页版
+  function openAmapWebMarker(coord, name) {
+    if (!coord || !coord[0] || !coord[1]) {
+      showToast('点位坐标缺失，无法打开地图');
       return;
     }
-    // 移动端：弹出地图 App 选择层，由游客挑选高德/腾讯，交手机系统分发
-    mapAppPending = params;
-    resetMapAppSheet();
-    const mask = document.getElementById('mapAppMask');
-    if (mask) mask.classList.add('show');
-    // 微信内置浏览器无法唤起系统选择面板：直接进入复制链接引导（分支B）
-    if (isWeChatBrowser()) showMapAppWxGuide('地图');
-  }
-
-  function closeMapAppSheet() {
-    const mask = document.getElementById('mapAppMask');
-    if (mask) mask.classList.remove('show');
-    resetMapAppSheet();
-  }
-
-  // 弹层恢复到「选择地图」初始态
-  function resetMapAppSheet() {
-    const list = document.getElementById('mapAppList');
-    const tip = document.getElementById('mapAppTip');
-    const dl = document.getElementById('mapAppDownload');
-    const wxg = document.getElementById('mapAppWxGuide');
-    if (list) list.style.display = 'block';
-    if (tip) tip.style.display = 'block';
-    if (dl) dl.style.display = 'none';
-    if (wxg) wxg.style.display = 'none';
-  }
-
-  // 唤起失败后切换到「引导下载」态
-  function showMapAppDownload(label) {
-    const list = document.getElementById('mapAppList');
-    const tip = document.getElementById('mapAppTip');
-    const dl = document.getElementById('mapAppDownload');
-    const wxg = document.getElementById('mapAppWxGuide');
-    const nameEl = document.getElementById('mapAppDlName');
-    if (nameEl) nameEl.textContent = label || '地图';
-    if (list) list.style.display = 'none';
-    if (tip) tip.style.display = 'none';
-    if (dl) dl.style.display = 'block';
-    if (wxg) wxg.style.display = 'none';
-  }
-
-  // 微信内置浏览器：切换到「复制链接/浏览器打开」引导态，不再尝试 scheme
-  function showMapAppWxGuide(label) {
-    const list = document.getElementById('mapAppList');
-    const tip = document.getElementById('mapAppTip');
-    const dl = document.getElementById('mapAppDownload');
-    const wxg = document.getElementById('mapAppWxGuide');
-    const nameEl = document.getElementById('mapAppWxName');
-    if (nameEl) nameEl.textContent = label || '地图';
-    if (list) list.style.display = 'none';
-    if (tip) tip.style.display = 'none';
-    if (dl) dl.style.display = 'none';
-    if (wxg) wxg.style.display = 'block';
-  }
-
-  // 复制当前页面链接到剪贴板
-  function copyCurrentUrl() {
-    const url = location.href;
-    const done = () => showToast('链接已复制，请粘贴到浏览器打开');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
-    } else {
-      fallbackCopy(url, done);
-    }
-  }
-  // 复制导航链接（微信内兜底）：带 callnative=1，粘贴到手机浏览器打开即可唤起地图App
-  function copyNavLink() {
-    const p = mapAppPending;
-    const url = p ? amapWebNavUrl(p, true) : location.href;
-    copyUrlToClipboard(url, '导航链接已复制，请粘贴到手机浏览器打开');
-  }
-
-  function fallbackCopy(text, cb) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (cb) cb();
-  }
-
-  // 跳转对应地图的官方下载页（应用商店页也属外链，微信内会引导至浏览器/应用宝）
-  // 微信内改为复制链接，避免触发「将要访问」中转页
-  function launchMapDownload() {
-    const p = mapAppPending;
-    if (!p || !p.downloadUrl) { closeMapAppSheet(); return; }
-    if (isWeChatBrowser()) {
-      copyUrlToClipboard(p.downloadUrl, '下载链接已复制，请粘贴到浏览器打开');
-      return;
-    }
-    closeMapAppSheet();
-    window.location.href = p.downloadUrl;
-  }
-
-  // 使用网页版导航（兜底）
-  // 微信内改为复制链接，避免触发「将要访问」中转页
-  function launchMapWeb() {
-    const p = mapAppPending;
-    if (!p) { closeMapAppSheet(); return; }
-    const url = p.webUrl || amapWebNavUrl(p, false);
-    if (isWeChatBrowser()) {
-      copyUrlToClipboard(url, '网页版链接已复制，请粘贴到浏览器打开');
-      return;
-    }
-    closeMapAppSheet();
-    window.location.href = url;
-  }
-
-  // 复制指定链接到剪贴板（微信内替代直接跳转，避免中转页）
-  function copyUrlToClipboard(url, tip) {
-    const done = () => {
-      showToast(tip || '链接已复制，请粘贴到浏览器打开');
-      showWxGuide();
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopyUrl(url, done));
-    } else {
-      fallbackCopyUrl(url, done);
-    }
-  }
-  function fallbackCopyUrl(text, cb) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (cb) cb();
-  }
-
-  // 选择高德/腾讯/百度后，用原生 scheme 唤起 App；1.5 秒内未离开页面则引导下载
-  function launchMapApp(app) {
-    const p = mapAppPending;
-    if (!p) { closeMapAppSheet(); return; }
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    let scheme;
-    let label;
-    let webUrl;
-    let downloadUrl;
-    if (app === 'qqmap') {
-      const t = p.mode === 'car' ? 'drive' : p.mode === 'bus' ? 'bus' : 'walk';
-      const fromPart = p.start
-        ? '&from=' + encodeURIComponent(p.fromName) + '&fromcoord=' + p.start.lat + ',' + p.start.lng
-        : '';
-      // 途经点：名称,纬度,经度，按游览顺序以 ; 分隔
-      const viaPart = (p.via && p.via.length && p.mode !== 'walk')
-        ? '&via=' + p.via.map(v => encodeURIComponent(v.name) + ',' + v.lat + ',' + v.lng).join(';')
-        : '';
-      scheme = 'qqmap://map/routeplan?type=' + t + fromPart + viaPart +
-        '&to=' + encodeURIComponent(p.toName) + '&tocoord=' + p.dest.lat + ',' + p.dest.lng +
-        '&referer=gucuo&coord_type=gcj02';
-      webUrl = 'https://apis.map.qq.com/uri/v1/routeplan?type=' + t + fromPart + viaPart +
-        '&to=' + encodeURIComponent(p.toName) + '&tocoord=' + p.dest.lat + ',' + p.dest.lng +
-        '&referer=gucuo&coord_type=gcj02';
-      label = '腾讯地图';
-      downloadUrl = 'https://map.qq.com/mobile/';
-    } else if (app === 'baidu') {
-      const mode = p.mode === 'car' ? 'driving' : p.mode === 'bus' ? 'transit' : 'walking';
-      scheme = 'baidumap://map/direction?coord_type=gcj02&src=webapp.gucuo&mode=' + mode;
-      if (p.start) scheme += '&origin=latlng:' + p.start.lat + ',' + p.start.lng + '|name:' + encodeURIComponent(p.fromName);
-      scheme += '&destination=latlng:' + p.dest.lat + ',' + p.dest.lng + '|name:' + encodeURIComponent(p.toName);
-      webUrl = baiduWebNavUrl(p);
-      label = '百度地图';
-      downloadUrl = 'https://map.baidu.com/mobile/';
-    } else {
-      const m = p.mode === 'car' ? 0 : p.mode === 'bus' ? 1 : 2;
-      scheme = (isIOS ? 'iosamap://route' : 'androidamap://route') +
-        '?sourceApplication=gucuo&dev=0&m=' + m + '&t=0';
-      if (p.start) scheme += '&slat=' + p.start.lat + '&slon=' + p.start.lng + '&sname=' + encodeURIComponent(p.fromName);
-      scheme += '&dlat=' + p.dest.lat + '&dlon=' + p.dest.lng + '&dname=' + encodeURIComponent(p.toName);
-      webUrl = amapWebNavUrl(p, true);
-      label = '高德地图';
-      downloadUrl = 'https://mobile.amap.com/download.html';
-      // 多点路线：原生 scheme 不支持途经点，改用带 via 的 URI（callnative=1）唤起App，保证途经点与顺序不丢
-      if (p.via && p.via.length && p.mode !== 'walk') scheme = webUrl;
-    }
-    p.app = app;
-    p.webUrl = webUrl;
-    p.downloadUrl = downloadUrl;
-
-    // 微信内置浏览器：scheme 唤起会被拦截为"将要访问"中转页，体验极差，
-    // 直接切换到引导态，让用户复制链接到浏览器或下载 App
-    if (isWeChatBrowser()) {
-      showMapAppWxGuide(label);
-      return;
-    }
-
-    // 非微信环境：用隐藏 iframe 触发 scheme；若 1.5s 内未切后台说明唤起失败
-    let left = false;
-    const onVis = () => { if (document.visibilityState === 'hidden') left = true; };
-    document.addEventListener('visibilitychange', onVis);
-
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'display:none;width:0;height:0;border:0';
-    document.body.appendChild(iframe);
-    try { iframe.src = scheme; } catch (e) {}
-
-    setTimeout(() => {
-      try { iframe.remove(); } catch (e) {}
-      document.removeEventListener('visibilitychange', onVis);
-      // 页面已切到后台，说明 App 已成功唤起
-      if (left || document.visibilityState !== 'visible') { closeMapAppSheet(); return; }
-      // 未能唤起（未安装）：高德失败时自动兜底尝试腾讯地图，其它情况进入下载引导
-      if (app === 'amap' && !p.qqFallbackTried) {
-        p.qqFallbackTried = true;
-        showToast('未检测到高德地图，已为您切换腾讯地图');
-        launchMapApp('qqmap');
-        return;
-      }
-      showMapAppDownload(label);
-    }, 1500);
-  }
-
-  // 只看点位（不带路线规划）
-  function openAmapAppMarker(coord, name) {
     const lng = Number(coord[0]), lat = Number(coord[1]);
-    const web = 'https://uri.amap.com/marker?position=' + lng + ',' + lat +
-      '&name=' + encodeURIComponent(name || '目标点位') + '&src=gucuo&coordinate=gaode&callnative=1';
-    if (!isMobileDevice()) { window.open(web, '_blank'); return; }
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const scheme = (isIOS ? 'iosamap://viewMap' : 'androidamap://viewMap') +
-      '?sourceApplication=gucuo&poiname=' + encodeURIComponent(name || '目标点位') +
-      '&lat=' + lat + '&lon=' + lng + '&dev=0';
-    // 微信内置浏览器：scheme 跳转会触发"将要访问"中转页，体验差，
-    // 直接显示全屏引导层让用户复制链接到浏览器打开
-    if (isWeChatBrowser()) {
-      showWxGuide();
-      return;
-    }
-    jumpToAmapApp(scheme, web, false);
+    openNavWebPage('https://uri.amap.com/marker?position=' + lng + ',' + lat +
+      '&name=' + encodeURIComponent(name || '目标点位') + '&src=gucuo&coordinate=gaode');
   }
 
   /* ========== 横向卡片：支持手指滑动 + 鼠标拖拽 ========== */
@@ -494,6 +217,8 @@
     narrPageSpeaking = false;
     const nv = document.getElementById('narrVideo');
     if (nv && !nv.paused) nv.pause();
+    // 导览详情页视频（含海边介绍视频）：离开页面时停止播放并复位封面
+    stopAllVideos();
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + id);
     if (target) target.classList.add('active');
@@ -558,6 +283,8 @@
   }
 
   function goBack() {
+    // 返回前先停掉视频，避免回退过程中视频继续出声
+    if (typeof stopAllVideos === 'function') stopAllVideos();
     // 有上一层：用浏览器历史回退，保证每次只退一层（微信返回键同样走这条链路）
     if (pageStack.length > 1) {
       try { history.back(); return; } catch (e) { /* 环境不支持时走下面的兜底 */ }
@@ -850,7 +577,16 @@
     '罗星塔公园': 'audio/43_罗星塔公园.mp3',
     '金鸡山公园': 'audio/44_金鸡山公园.mp3',
     '温泉公园': 'audio/45_温泉公园.mp3',
-    '福州国家森林公园': 'audio/46_福州国家森林公园.mp3'
+    '福州国家森林公园': 'audio/46_福州国家森林公园.mp3',
+
+    // 海边讲解音频（文件位于 海边音频文件/ 目录）
+    '长乐南澳海滩': '海边音频文件/01_长乐南澳海滩.mp3',
+    '长乐象鼻澳海滩': '海边音频文件/02_长乐象鼻澳海滩.mp3',
+    '长乐下沙海滩': '海边音频文件/03_长乐下沙海滩.mp3',
+    '琅岐岛沙滩': '海边音频文件/04_琅岐岛沙滩.mp3',
+    '连江平流尾地质公园': '海边音频文件/05_连江平流尾地质公园.mp3',
+    '平潭龙凤头海滨浴场': '海边音频文件/06_平潭龙凤头海滨浴场.mp3',
+    '平潭坛南湾': '海边音频文件/07_平潭坛南湾.mp3'
   };
 
   // 获取景点的音频文件路径
@@ -1070,6 +806,12 @@
   }
 
   function startNarratorAutoplay() {
+    // 商场类地点不提供讲解：不自动播放、不朗读
+    const poiNow = searchPois.find(q => q.name === currentSpotKey);
+    if (poiNow && poiNow.cat === 'mall') {
+      narrCancel();
+      return;
+    }
     narrPlaying = true;
     const btn = document.getElementById('narrPlayBtn');
     const st = document.getElementById('narrStatus');
@@ -1174,6 +916,29 @@
     if (v) { try { v.pause(); } catch(e){} v.removeAttribute('src'); v.load(); }
     if (c) c.classList.remove('video-playing');
   }
+
+  // 全量停止页面内所有视频：导览详情视频、详情页内嵌视频（含微信原生全屏播放）
+  // 手机微信里单靠 pause() 有时仍会留声，这里统一 pause + 清空 src + load 彻底释放
+  function stopAllVideos() {
+    document.querySelectorAll('video').forEach(v => {
+      try {
+        v.pause();
+        v.currentTime = 0;
+        if (v.hasAttribute('src')) { v.removeAttribute('src'); v.load(); }
+      } catch (e) {}
+    });
+    const c = document.getElementById(VIDEO_CONTAINER_ID);
+    if (c) c.classList.remove('video-playing');
+    const box = document.getElementById('narrVideoBox');
+    if (box) box.style.display = 'none';
+  }
+
+  // 兜底：切到后台 / 关闭页面 / 手机返回键导致页面隐藏时，同样停止视频
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopAllVideos();
+  });
+  window.addEventListener('pagehide', stopAllVideos);
+  window.addEventListener('beforeunload', stopAllVideos);
 
   // 给 video 元素绑定一次事件（ended/pause 后恢复封面）
   let videoEventsBound = false;

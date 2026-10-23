@@ -498,7 +498,8 @@
   const NARR_GROUPS = [
     { title: '三坊七巷片区', keys: ['严复故居', '萨镇冰故居', '南后街', '小黄楼', '衣锦坊', '沈葆桢故居', '林觉民故居', '冰心故居', '文儒坊', '光禄坊', '朱紫坊'] },
     { title: '城市历史风貌区', keys: ['林则徐纪念馆', '烟台山', '三通桥', '泛船浦天主教堂', '福建博物院', '乌山历史风貌区', '西湖公园', '左海公园', '屏山公园'] },
-    { title: '闽都古迹点位', keys: ['鼓山', '水榭戏台', '二梅书屋', '陈氏五楼', '泰山宫', '于山', '西禅寺', '华林寺', '福州文庙', '开元寺', '闽王祠', '梁厝', '船政博物馆', '鼓岭', '福道', '闽江公园', '上下杭历史文化街区', '闽江夜游', '花海公园', '螺洲古镇', '林浦古村', '罗星塔公园', '金鸡山公园', '温泉公园', '福州国家森林公园'] }
+    { title: '闽都古迹点位', keys: ['鼓山', '水榭戏台', '二梅书屋', '陈氏五楼', '泰山宫', '于山', '西禅寺', '华林寺', '福州文庙', '开元寺', '闽王祠', '梁厝', '船政博物馆', '鼓岭', '福道', '闽江公园', '上下杭历史文化街区', '闽江夜游', '花海公园', '螺洲古镇', '林浦古村', '罗星塔公园', '金鸡山公园', '温泉公园', '福州国家森林公园'] },
+    { title: '滨海风光', keys: ['平潭龙凤头海滨浴场', '长乐下沙海滩', '琅岐岛沙滩', '连江平流尾地质公园', '长乐南澳海滩', '长乐象鼻澳海滩', '平潭坛南湾'] }
   ];
 
   // 景点元信息：地址 / 保护级别 / 高德坐标 [lng, lat]
@@ -810,9 +811,11 @@
       tagsContainer.innerHTML = tags.map(t => `<span class="detail-tag">${t}</span>`).join('');
       tagsContainer.style.display = '';
     }
-    // 显示讲解员面板
+    // 讲解员面板：商场类地点不提供讲解，直接隐藏
+    const poiNow = searchPois.find(q => q.name === n.name);
+    const noNarr = !!(poiNow && poiNow.cat === 'mall');
     const panel = document.querySelector('#page-detail .narrator-panel');
-    if (panel) panel.style.display = '';
+    if (panel) panel.style.display = noNarr ? 'none' : '';
     // 封面：有实景图时替换占位（商场/海边等搜索 POI 走自身图库）
     setCoverPhoto(
       document.getElementById('detailCoverImg'),
@@ -849,7 +852,7 @@
   };
 
   /* ========== 讲解库：搜索 + 兴趣筛选 + 双列卡片网格 ========== */
-  const FILTER_TAGS = ['历史文化街区', '登山观景', '明清古建', '万国建筑', '天然氧吧', '古典园林', '名人故居', '宗教古迹', '公园园林', '文化场馆', '夜游娱乐', '亲子游'];
+  const FILTER_TAGS = ['历史文化街区', '登山观景', '明清古建', '万国建筑', '天然氧吧', '古典园林', '名人故居', '宗教古迹', '公园园林', '海边', '文化场馆', '夜游娱乐', '亲子游'];
   const SPOT_TAGS = {
     // 三坊七巷区域
     '严复故居': ['历史文化街区', '名人故居'], '萨镇冰故居': ['历史文化街区', '名人故居'],
@@ -890,7 +893,13 @@
     '陈氏五楼': ['明清古建', '名人故居'],
 
     // 夜游娱乐
-    '闽江夜游': ['夜游娱乐', '古典园林']
+    '闽江夜游': ['夜游娱乐', '古典园林'],
+
+    // 海边
+    '平潭龙凤头海滨浴场': ['海边', '夜游娱乐'], '长乐下沙海滩': ['海边', '亲子游'],
+    '琅岐岛沙滩': ['海边', '亲子游'],           '连江平流尾地质公园': ['海边', '登山观景'],
+    '长乐南澳海滩': ['海边', '亲子游'],         '长乐象鼻澳海滩': ['海边', '亲子游'],
+    '平潭坛南湾': ['海边', '夜游娱乐']
   };
   let selectedFilterTags = [];
 
@@ -935,14 +944,17 @@
     grid.innerHTML = list.map(k => {
       const n = currentNarration(k);
       const heard = 300 + (k.length * 137) % 1700; // 模拟“N+人听过”
-      const photo = spotPhoto(n.name) || spotPhoto(k);
+      const photo = poiPhoto(n.name) || spotPhoto(k);
+      const photoStyle = photo
+        ? ` style="background-image:url('${photo}');background-size:cover;background-position:center;"`
+        : '';
       // 有实景图：用图片铺满卡片图区；无图：保留图标 + 占位提示
       const imgInner = photo
         ? `<span class="narr-card-flag">AI 讲解</span>`
         : `<span class="narr-card-emoji">${SPOT_ICONS[k] || '🏛️'}</span><span class="narr-card-img-note">实景图（占位）</span><span class="narr-card-flag">AI 讲解</span>`;
       return `
         <div class="narr-card" onclick="openNarrDetail('${k}')">
-          <div class="narr-card-img"${spotPhotoStyle(n.name) || spotPhotoStyle(k)}>${imgInner}</div>
+          <div class="narr-card-img"${photoStyle}>${imgInner}</div>
           <div class="narr-card-info">
             <div class="narr-card-title-row"><span class="narr-card-badge">讲解</span><span class="narr-card-name">${n.name}</span></div>
             <div class="narr-card-meta"><span class="narr-card-price">⏱ ${n.duration}</span><span class="narr-card-sold">${heard}+人听过</span></div>
@@ -974,6 +986,8 @@
   // 返回景点列表（保留筛选条件与搜索词，恢复滚动位置）
   function backToNarrGrid() {
     if (typeof stopNarrSpeak === 'function') stopNarrSpeak();
+    // 离开景点详情前先停掉正在播放的介绍视频（含微信原生播放器残留）
+    if (typeof stopAllVideos === 'function') stopAllVideos();
     document.getElementById('narrDetailView').style.display = 'none';
     document.getElementById('narrFilterBar').style.display = 'block';
     renderNarrGrid();
@@ -984,6 +998,7 @@
   // 列表视图态：隐藏详情、显示网格（进入页面时调用）
   function showNarrListView() {
     if (typeof stopNarrSpeak === 'function') stopNarrSpeak();
+    if (typeof stopAllVideos === 'function') stopAllVideos();
     document.getElementById('narrDetailView').style.display = 'none';
     document.getElementById('narrFilterBar').style.display = 'block';
     renderNarrGrid();
@@ -992,7 +1007,12 @@
   // 右栏景点介绍面板：渲染详情卡片（嵌入讲解页右栏，可折叠）
   function renderNarrIntroPanel() {
     const n = currentNarration();
-    const meta = SPOT_META[currentSpotKey] || { address: '福州古厝文化街区', level: '文物保护单位' };
+    const meta = SPOT_META[currentSpotKey] || SPOT_META[n.name] || {};
+    // 海边等搜索 POI 不在 SPOT_META 中：地址取专属地址表，保护级别标注为滨海风光
+    const poiNow = searchPois.find(q => q.name === n.name);
+    const poiAddr = (!meta.address && typeof SEARCH_POI_ADDR !== 'undefined') ? (SEARCH_POI_ADDR[n.name] || '') : '';
+    const metaAddr = meta.address || poiAddr || '福州古厝文化街区';
+    const metaLevel = meta.level || (poiNow && poiNow.cat === 'beach' ? '滨海风光' : '文物保护单位');
     // 顶部标志性景点图：有实景图时替换占位（商场/海边等搜索 POI 走自身图库）
     setCoverPhoto(
       document.getElementById('spotCoverImg'),
@@ -1001,8 +1021,8 @@
     );
     document.getElementById('spotFrameTitle').textContent = n.name;
     document.getElementById('spotMeta').innerHTML =
-      `<div><span class="dot">●</span>地址：${meta.address}</div>` +
-      `<div><span class="dot">●</span>保护级别：${meta.level}</div>`;
+      `<div><span class="dot">●</span>地址：${metaAddr}</div>` +
+      `<div><span class="dot">●</span>保护级别：${metaLevel}</div>`;
     document.getElementById('spotIntro').textContent = n.desc;
     document.getElementById('spotHistory').innerHTML = n.script.map(p => `<p>${p}</p>`).join('');
 
@@ -1102,19 +1122,23 @@
   // 导航页：渲染目的地信息
   function renderNavigatePage() {
     const n = currentNarration();
-    const meta = SPOT_META[currentSpotKey] || {};
+    const info = poiSpotInfo();
     document.getElementById('navDestName').textContent = n.name;
-    document.getElementById('navDestAddr').textContent = meta.address || '福州古厝文化街区';
+    document.getElementById('navDestAddr').textContent = info.address || '福州古厝文化街区';
     document.getElementById('navStatus').textContent = '点击下方按钮，申请获取您的当前位置后开始导航';
     const btn = document.getElementById('navStartBtn');
-    btn.disabled = false;
-    btn.textContent = '获取当前位置并导航';
+    // 兜底：坐标缺失时按钮置灰并提示点位信息不全
+    const hasCoord = !!(info.coord && info.coord[0] && info.coord[1]);
+    btn.disabled = !hasCoord;
+    btn.textContent = hasCoord ? '获取当前位置并导航' : '点位信息不全';
+    if (!hasCoord) {
+      document.getElementById('navStatus').textContent = '该点位缺少坐标信息，暂时无法导航';
+    }
   }
 
-  // 申请定位并拉起高德导航
+  // 申请定位并打开高德网页版导航
   function startNavigation() {
-    const meta = SPOT_META[currentSpotKey] || {};
-    const destCoord = meta.coord;
+    const destCoord = poiSpotInfo().coord;
     const n = currentNarration();
     const status = document.getElementById('navStatus');
     const btn = document.getElementById('navStartBtn');
@@ -1128,12 +1152,12 @@
     status.textContent = '正在申请获取您的当前位置…';
     locateVisitor(8000).then(res => {
       if (res.coord) {
-        status.textContent = '已获取位置，请选择导航方式…';
+        status.textContent = '已获取位置，正在打开高德网页导航…';
         openAmapNav(res.coord, destCoord, n.name);
       } else {
         status.textContent = window.isSecureContext === false
-          ? '当前网页无法精确定位（需 HTTPS），请手动选择导航方式'
-          : '定位失败，请手动选择导航方式';
+          ? '当前网页无法精确定位（需 HTTPS），已打开网页导航，可在导航页手动设置起点'
+          : '定位失败，已打开网页导航，可在导航页手动设置起点';
         openAmapNav(null, destCoord, n.name);
       }
       btn.textContent = '重新导航';
@@ -1141,16 +1165,16 @@
     });
   }
 
-  // 打开高德导航：手机端优先唤起高德 App
+  // 打开高德网页版导航：微信内与手机浏览器共用同一链接，不唤起 App
   function openAmapNav(from, dest, destName) {
-    openAmapAppNav(dest, destName, from || null, 'car');
+    openAmapWebNav(dest, destName, from || null, 'car');
   }
 
   /* ============================================================
      腾讯POI点位卡片（poimarker 组件接入）
      地图：iframe 加载 apis.map.qq.com/tools/poimarker（lat/lng/name/address）
-     导航：点击「导航」先弹隐私说明，允许后才申请定位，再由统一
-           地图选择弹层唤起本机地图App（腾讯/高德，未装引导下载）
+     导航：点击「导航」先弹隐私说明，允许后才申请定位，再打开高德网页版
+           导航页（uri.amap.com），游客可在导航页内自行选择打开高德App
      ============================================================ */
   // 当前详情景点的点位信息（coord 为高德 [lng,lat]，与腾讯同为 GCJ-02 坐标系，可直接混用）
   function poiSpotInfo() {
@@ -1253,7 +1277,7 @@
     else poiPermitChoose(true); // 弹窗缺失时直接按允许处理
   }
 
-  // 隐私弹窗选择：允许→申请定位后唤起地图选择；拒绝→仍打开地图，游客在App内手动设起点
+  // 隐私弹窗选择：允许→申请定位后打开网页导航；拒绝→不带起点打开，游客在导航页手动设置
   function poiPermitChoose(allow) {
     const mask = document.getElementById('poiNavPermitMask');
     if (mask) mask.classList.remove('show');
@@ -1261,7 +1285,7 @@
     poiNavPending = null;
     if (!dest || !dest.coord) return;
     if (!allow) {
-      openAmapAppNav(dest.coord, dest.name, null, 'car');
+      openAmapWebNav(dest.coord, dest.name, null, 'car');
       return;
     }
     // 优先复用启动时一次性授权拿到的真实位置，避免重复申请定位
@@ -1270,16 +1294,16 @@
       && typeof searchLocFallback !== 'undefined' && !searchLocFallback;
     const locating = useCache ? Promise.resolve({ coord: visitorCoord }) : locateVisitor(8000);
     locating.then(res => {
-      openAmapAppNav(dest.coord, dest.name, (res && res.coord) ? res.coord : null, 'car');
+      openAmapWebNav(dest.coord, dest.name, (res && res.coord) ? res.coord : null, 'car');
     });
   }
 
-  // 打车：唤起腾讯地图（内置打车入口），游客可在应用内直接叫车
+  // 打车：打开高德网页版驾车导航，可在导航页内跳转高德App叫车
   function poiCallCar() {
     const info = poiSpotInfo();
     if (!info.coord) { showToast('暂无地图点位信息'); return; }
-    showToast('已为您打开地图，可在应用内直接打车');
-    openAmapAppNav(info.coord, info.name, null, 'car');
+    showToast('正在打开高德网页导航，可在导航页内打车');
+    openAmapWebNav(info.coord, info.name, null, 'car');
   }
 
   // 更多：新窗口打开腾讯地图 POI 页面（周边/街景/详情）
