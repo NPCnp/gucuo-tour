@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
@@ -25,17 +25,12 @@
   window._AMapSecurityConfig = { securityJsCode: 'c31603b7e17903803ca4a1409e4fa0a1' };
 </script>
 <script src="https://webapi.amap.com/loader.js"></script>
-<!-- 腾讯位置服务（LBS）配置：https://lbs.qq.com/ 申请开发密钥，用于景点详情页 POI 点位卡片 -->
-<script>
-  window.TENCENT_LBS_KEY = '';               // TODO：替换为项目申请好的腾讯LBS开发key
-  window.TENCENT_LBS_REFERER = '福州古厝文旅'; // 项目名称
-</script>
 <!-- 凭证保存为图片 -->
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=11">
-<link rel="stylesheet" href="css/pages.css?v=23">
+<link rel="stylesheet" href="css/pages.css?v=24">
 </head>
 <body>
   <div class="phone">
@@ -1018,7 +1013,7 @@
               <button class="narr-func-btn" onclick="favoriteNarration()">收藏讲解</button>
               <button class="narr-func-btn" onclick="cycleRate()">语速调节：<span id="rateLabel">标准</span></button>
             </div>
-            <!-- 腾讯POI导航入口：一行式入口，点击进入全屏位置页看地图，再点导航打开高德网页版 -->
+            <!-- POI导航入口：一行式入口，点击进入全屏位置页看地图，再点导航打开高德网页版 -->
             <div class="txp-entry" id="tencentPoiEntry" onclick="poiOpenMapView()">
               <span class="txp-entry-ico">🧭</span>
               <span class="txp-entry-txt">导航</span>
@@ -1159,11 +1154,25 @@
         </div>
       </div>
 
-      <!-- 腾讯POI位置页（全屏，图一）：上方简易地图+定位标记，下方名称/地址/距离+操作按钮；页内点「导航」打开高德网页导航 -->
+      <!-- 位置页（全屏）：上方高德瓦片地图+点位标记，下方名称/地址/距离+操作按钮；页内点「导航」打开高德网页导航 -->
       <div class="txp-view" id="poiMapMask">
         <button class="txp-view-back" type="button" onclick="closePoiMapView()">‹</button>
         <div class="txp-view-mapwrap">
-          <iframe id="poiMapIframe" class="txp-view-map" frameborder="0" scrolling="no" src="about:blank" title="景点位置地图"></iframe>
+          <div class="txp-view-map" id="poiMapCanvas">
+            <div class="poi-map-layer" id="poiMapLayer">
+              <div class="poi-map-pin" id="poiMapPin">
+                <svg width="28" height="36" viewBox="0 0 28 36" aria-hidden="true">
+                  <path d="M14 1C7.4 1 2 6.4 2 13c0 9 12 22 12 22s12-13 12-22C26 6.4 20.6 1 14 1z" fill="#e6432d" stroke="#fff" stroke-width="2"/>
+                  <circle cx="14" cy="13" r="5" fill="#fff"/>
+                </svg>
+              </div>
+            </div>
+            <div class="poi-map-ctrl">
+              <button type="button" onclick="poiMapZoom(1)" aria-label="放大">＋</button>
+              <button type="button" onclick="poiMapZoom(-1)" aria-label="缩小">－</button>
+            </div>
+            <div class="poi-map-brand">高德地图</div>
+          </div>
           <div class="txp-map-fb" id="poiMapFallback" style="display:none;"></div>
         </div>
         <div class="txp-view-panel">
@@ -1174,7 +1183,6 @@
             <button class="txp-act nav" type="button" onclick="poiStartNav()"><span class="txp-ico">🧭</span><span>导航</span></button>
             <button class="txp-act" type="button" onclick="poiCallCar()"><span class="txp-ico">🚕</span><span>打车</span></button>
             <button class="txp-act" type="button" onclick="favoriteNarration()"><span class="txp-ico">⭐</span><span>收藏</span></button>
-            <button class="txp-act" type="button" onclick="poiMore()"><span class="txp-ico">⋯</span><span>更多</span></button>
           </div>
           <p class="txp-hint">网页导航，可在导航页内打开高德App</p>
         </div>
@@ -1187,7 +1195,7 @@
   <script src="js/02-core.js?v=25"></script>
   <script src="js/03-checkin.js?v=10"></script>
   <script src="js/04-route.js"></script>
-  <script src="js/05-narrations.js?v=13"></script>
+  <script src="js/05-narrations.js?v=14"></script>
   <script src="js/06-narrator.js?v=4"></script>
   <script src="js/07-nav.js?v=9"></script>
   <script src="js/08-creative.js?v=7"></script>

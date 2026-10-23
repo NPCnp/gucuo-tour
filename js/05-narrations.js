@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    05-narrations.js  ·  数字人讲解词库 NARRATIONS / 分组 / SPOT_META
    由原 index.html 内联脚本拆分，文件按序号顺序加载（普通脚本，共享全局作用域）
    ============================================================ */
@@ -1193,13 +1193,162 @@
     return { name: n.name, coord, address };
   }
 
-  // poimarker 组件链接（marker=纬度,经度,名称；addr=详细地址）
-  function poiMapUrl(lat, lng, name, address) {
-    return 'https://apis.map.qq.com/tools/poimarker?type=0'
-      + '&marker=' + lat + ',' + lng + ',' + encodeURIComponent(name)
-      + '&addr=' + encodeURIComponent(address)
-      + '&key=' + (window.TENCENT_LBS_KEY || '')
-      + '&referer=' + encodeURIComponent(window.TENCENT_LBS_REFERER || '福州古厝文旅');
+  /* ============================================================
+     全屏位置页地图：高德栅格瓦片（无需申请密钥，坐标同为 GCJ-02）
+     支持拖动、双指缩放、＋/－ 缩放，点位用自绘图钉标出
+     ============================================================ */
+  const POI_MAP = { lng: 0, lat: 0, markLng: 0, markLat: 0, zoom: 16, tiles: new Map(), loaded: 0, errors: 0, bound: false };
+
+  function poiTileUrl(x, y, z) {
+    const sub = 1 + ((x + y) % 4);          // 1~4 轮询，规避单域名并发限制
+    return 'https://webrd0' + sub + '.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x=' + x + '&y=' + y + '&z=' + z;
+  }
+
+  // 经纬度 → 世界像素（Web 墨卡托，256 像素/瓦片）
+  function poiWorldPx(lng, lat, z) {
+    const size = 256 * Math.pow(2, z);
+    const s = Math.sin(Math.max(-85, Math.min(85, lat)) * Math.PI / 180);
+    return {
+      x: (lng + 180) / 360 * size,
+      y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * size
+    };
+  }
+  // 世界像素 → 经纬度
+  function poiPxLngLat(x, y, z) {
+    const size = 256 * Math.pow(2, z);
+    const n = Math.PI - 2 * Math.PI * y / size;
+    return {
+      lng: x / size * 360 - 180,
+      lat: 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))
+    };
+  }
+
+  // 按当前缩放/中心铺瓦片（同一 z_x_y 复用 img，拖动时不重建、不闪烁）
+  function poiMapRender() {
+    const canvas = document.getElementById('poiMapCanvas');
+    const layer = document.getElementById('poiMapLayer');
+    if (!canvas || !layer) return;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;                    // 页面未显示时尺寸为 0，显示后再画
+    const z = POI_MAP.zoom;
+    const c = poiWorldPx(POI_MAP.lng, POI_MAP.lat, z);
+    const ox = c.x - w / 2, oy = c.y - h / 2;
+    const max = Math.pow(2, z);
+
+    const x0 = Math.floor(ox / 256), x1 = Math.floor((ox + w) / 256);
+    const y0 = Math.max(0, Math.floor(oy / 256)), y1 = Math.min(max - 1, Math.floor((oy + h) / 256));
+    const need = new Set();
+
+    for (let ty = y0; ty <= y1; ty++) {
+      for (let tx = x0; tx <= x1; tx++) {
+        const wx = ((tx % max) + max) % max;  // 东西方向环绕
+        const key = z + '_' + wx + '_' + ty;
+        need.add(key);
+        let img = POI_MAP.tiles.get(key);
+        if (!img) {
+          img = document.createElement('img');
+          img.className = 'poi-map-tile';
+          img.alt = '';
+          img.draggable = false;
+          img.decoding = 'async';
+          img.onload = () => {
+            POI_MAP.loaded++;
+            const fb = document.getElementById('poiMapFallback');
+            if (fb) fb.style.display = 'none';
+          };
+          img.onerror = () => { POI_MAP.errors++; poiMapCheckFail(); };
+          img.src = poiTileUrl(wx, ty, z);
+          POI_MAP.tiles.set(key, img);
+          layer.appendChild(img);
+        }
+        img.style.left = (tx * 256 - ox) + 'px';
+        img.style.top = (ty * 256 - oy) + 'px';
+      }
+    }
+    POI_MAP.tiles.forEach((img, key) => {
+      if (!need.has(key)) { img.remove(); POI_MAP.tiles.delete(key); }
+    });
+
+    const pin = document.getElementById('poiMapPin');
+    if (pin) {
+      const m = poiWorldPx(POI_MAP.markLng, POI_MAP.markLat, z);
+      pin.style.left = (m.x - ox) + 'px';
+      pin.style.top = (m.y - oy) + 'px';
+    }
+  }
+
+  function poiMapCheckFail() {
+    const fb = document.getElementById('poiMapFallback');
+    if (!fb || POI_MAP.loaded > 0) return;
+    if (POI_MAP.errors >= 3) {
+      fb.style.display = 'flex';
+      fb.textContent = '地图加载失败，请检查网络后重试';
+    }
+  }
+
+  function poiMapZoom(delta) {
+    POI_MAP.zoom = Math.max(3, Math.min(18, POI_MAP.zoom + delta));
+    poiMapRender();
+  }
+
+  // 拖拽 / 双指缩放（pointer 事件同时兼容触屏与鼠标）
+  function poiMapBind() {
+    const canvas = document.getElementById('poiMapCanvas');
+    if (!canvas || POI_MAP.bound) return;
+    POI_MAP.bound = true;
+
+    const pts = new Map();
+    let drag = null, pinch = null, frame = 0;
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; poiMapRender(); });
+    };
+
+    canvas.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      if (pts.size === 1) {
+        drag = { x: e.clientX, y: e.clientY, lng: POI_MAP.lng, lat: POI_MAP.lat };
+        pinch = null;
+      } else if (pts.size === 2) {
+        const p = [...pts.values()];
+        pinch = { d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1, zoom: POI_MAP.zoom };
+        drag = null;
+      }
+    });
+
+    canvas.addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size >= 2 && pinch) {
+        const p = [...pts.values()];
+        const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1;
+        const nz = Math.max(3, Math.min(18, Math.round(pinch.zoom + Math.log2(d / pinch.d))));
+        if (nz !== POI_MAP.zoom) { POI_MAP.zoom = nz; schedule(); }
+        return;
+      }
+      if (!drag) return;
+      const z = POI_MAP.zoom;
+      const base = poiWorldPx(drag.lng, drag.lat, z);
+      const p = poiPxLngLat(base.x - (e.clientX - drag.x), base.y - (e.clientY - drag.y), z);
+      POI_MAP.lng = p.lng;
+      POI_MAP.lat = Math.max(-85, Math.min(85, p.lat));
+      schedule();
+    });
+
+    const end = e => {
+      pts.delete(e.pointerId);
+      if (pts.size < 2) pinch = null;
+      if (pts.size === 0) drag = null;
+    };
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
+
+    window.addEventListener('resize', () => {
+      const mask = document.getElementById('poiMapMask');
+      if (mask && mask.classList.contains('show')) poiMapRender();
+    });
   }
 
   // 渲染详情页导航入口：缺经纬度/地址时隐藏入口，仅显示提示文字
@@ -1243,21 +1392,26 @@
     } catch (e) {}
     document.getElementById('poiDist').textContent = distText;
 
-    // 地图区域：未配置密钥时友好提示，不阻塞页面其他内容浏览
-    const iframe = document.getElementById('poiMapIframe');
+    // 地图区域：每次打开都复位到该景点，重新铺瓦片
+    POI_MAP.lng = lng;
+    POI_MAP.lat = lat;
+    POI_MAP.markLng = lng;
+    POI_MAP.markLat = lat;
+    POI_MAP.zoom = 16;
+    POI_MAP.loaded = 0;
+    POI_MAP.errors = 0;
+    POI_MAP.tiles.forEach(img => img.remove());
+    POI_MAP.tiles.clear();
     const fallback = document.getElementById('poiMapFallback');
-    if (!window.TENCENT_LBS_KEY) {
-      iframe.style.display = 'none';
-      fallback.style.display = 'flex';
-      fallback.textContent = '地图加载失败：请先在 index.html 顶部配置腾讯LBS密钥（lbs.qq.com 免费申请）';
-    } else {
-      iframe.style.display = 'block';
-      fallback.style.display = 'none';
-      if (iframe.src === '' || iframe.src.indexOf('about:blank') > -1) {
-        iframe.src = poiMapUrl(lat, lng, info.name, info.address);
-      }
-    }
+    if (fallback) { fallback.style.display = 'none'; fallback.textContent = ''; }
+
     mask.classList.add('show');
+    poiMapBind();
+    // 显示后容器才有尺寸，下一帧再铺瓦片
+    requestAnimationFrame(() => {
+      poiMapRender();
+      setTimeout(poiMapCheckFail, 8000);
+    });
   }
 
   // 关闭全屏位置页，返回景点详情
@@ -1306,9 +1460,3 @@
     openAmapWebNav(info.coord, info.name, null, 'car');
   }
 
-  // 更多：新窗口打开腾讯地图 POI 页面（周边/街景/详情）
-  function poiMore() {
-    const info = poiSpotInfo();
-    if (!info.coord) { showToast('暂无地图点位信息'); return; }
-    window.open(poiMapUrl(Number(info.coord[1]), Number(info.coord[0]), info.name, info.address), '_blank');
-  }
