@@ -532,24 +532,24 @@
     '梁厝':           { address: '仓山区城门镇梁厝村',         level: '历史文化名村',         coord: [119.358601, 25.991201] },
     '船政博物馆':     { address: '马尾区昭忠路7号',            level: '全国重点文物保护单位', coord: [119.453101, 25.994601] },
     '鼓岭':           { address: '晋安区鼓岭旅游度假区',       level: '国家级旅游度假区',     coord: [119.394401, 26.074701] },
-    '文儒坊':         { address: '鼓楼区三坊七巷文儒坊',       level: '历史文化街区',         coord: [119.295531, 26.081245] },
-    '光禄坊':         { address: '鼓楼区三坊七巷光禄坊',       level: '历史文化街区',         coord: [119.296388, 26.080511] },
-    '朱紫坊':         { address: '鼓楼区朱紫坊历史文化街区',   level: '历史文化街区',         coord: [119.298500, 26.078600] },
-    '乌山历史风貌区': { address: '鼓楼区乌山路',               level: '历史风貌保护区',       coord: [119.303512, 26.076401] },
-    '西湖公园':       { address: '鼓楼区湖滨路70号',           level: '城市公园',             coord: [119.286501, 26.086301] },
-    '左海公园':       { address: '鼓楼区西二环北路',           level: '城市公园',             coord: [119.282401, 26.066801] },
-    '屏山公园':       { address: '鼓楼区屏山路',               level: '城市公园',             coord: [119.289601, 26.085501] },
-    '福道':           { address: '鼓楼区金牛山体育公园',       level: '城市步道',             coord: [119.296952, 26.077855] },
-    '闽江公园':       { address: '台江区江滨西大道',           level: '城市公园',             coord: [119.302101, 26.083001] },
-    '上下杭历史文化街区': { address: '台江区上下杭路',         level: '历史文化街区',         coord: [119.302100, 26.056100] },
-    '闽江夜游':       { address: '台江区台江码头',             level: '旅游景点',             coord: [119.300601, 26.082701] },
-    '花海公园':       { address: '仓山区南江滨东大道',         level: '城市公园',             coord: [119.358601, 25.991201] },
+    '文儒坊':         { address: '鼓楼区三坊七巷文儒坊',       level: '历史文化街区',         coord: [119.295851, 26.080513] },
+    '光禄坊':         { address: '鼓楼区三坊七巷光禄坊',       level: '历史文化街区',         coord: [119.295372, 26.079812] },
+    '朱紫坊':         { address: '鼓楼区朱紫坊历史文化街区',   level: '历史文化街区',         coord: [119.298211, 26.078455] },
+    '乌山历史风貌区': { address: '鼓楼区乌山路',               level: '历史风貌保护区',       coord: [119.294312, 26.077512] },
+    '西湖公园':       { address: '鼓楼区湖滨路70号',           level: '城市公园',             coord: [119.288501, 26.087101] },
+    '左海公园':       { address: '鼓楼区西二环北路',           level: '城市公园',             coord: [119.283301, 26.093701] },
+    '屏山公园':       { address: '鼓楼区屏山路',               level: '城市公园',             coord: [119.289401, 26.098401] },
+    '福道':           { address: '鼓楼区金牛山体育公园',       level: '城市步道',             coord: [119.272201, 26.073801] },
+    '闽江公园':       { address: '台江区江滨西大道',           level: '城市公园',             coord: [119.296201, 26.067501] },
+    '上下杭历史文化街区': { address: '台江区上下杭路',         level: '历史文化街区',         coord: [119.301801, 26.055601] },
+    '闽江夜游':       { address: '台江区台江码头',             level: '旅游景点',             coord: [119.310201, 26.061801] },
+    '花海公园':       { address: '仓山区南江滨东大道',         level: '城市公园',             coord: [119.344201, 26.038801] },
     '螺洲古镇':       { address: '仓山区螺洲镇',               level: '历史文化名镇',         coord: [119.330101, 26.013701] },
     '林浦古村':       { address: '仓山区城门镇林浦村',         level: '历史文化名村',         coord: [119.344701, 26.025801] },
-    '罗星塔公园':     { address: '马尾区罗星塔路',             level: '城市公园',             coord: [119.453101, 25.994601] },
-    '金鸡山公园':     { address: '晋安区金鸡山路',             level: '城市公园',             coord: [119.394401, 26.074701] },
-    '温泉公园':       { address: '鼓楼区温泉公园路',           level: '城市公园',             coord: [119.296194, 26.081932] },
-    '福州国家森林公园': { address: '晋安区新店镇赤桥村',       level: '国家级森林公园',       coord: [119.296420, 26.081560] }
+    '罗星塔公园':     { address: '马尾区罗星塔路',             level: '城市公园',             coord: [119.458301, 25.984701] },
+    '金鸡山公园':     { address: '晋安区金鸡山路',             level: '城市公园',             coord: [119.315601, 26.085301] },
+    '温泉公园':       { address: '鼓楼区温泉公园路',           level: '城市公园',             coord: [119.308701, 26.088301] },
+    '福州国家森林公园': { address: '晋安区新店镇赤桥村',       level: '国家级森林公园',       coord: [119.286901, 26.135701] }
   };
 
   /* ========== 排行榜详情补齐：为榜单内全部景点生成详情数据 ========== */
@@ -1176,21 +1176,69 @@
      导航：点击「导航」先弹隐私说明，允许后才申请定位，再打开高德网页版
            导航页（uri.amap.com），游客可在导航页内自行选择打开高德App
      ============================================================ */
-  // 当前详情景点的点位信息（coord 为高德 [lng,lat]，与腾讯同为 GCJ-02 坐标系，可直接混用）
-  function poiSpotInfo() {
-    const n = currentNarration();
-    const meta = SPOT_META[currentSpotKey] || SPOT_META[n.name] || {};
-    // 商场/海边等搜索 POI 不在 SPOT_META 中：取 searchPois 坐标 + 专属地址
-    let coord = meta.coord || null;
-    let address = meta.address || '';
-    if (!coord || !address) {
-      const poi = typeof searchPois !== 'undefined' ? searchPois.find(q => q.name === n.name) : null;
-      if (poi) {
-        coord = coord || poi.coord || null;
-        address = address || (typeof SEARCH_POI_ADDR !== 'undefined' && SEARCH_POI_ADDR[n.name]) || '';
+  // 当前详情景点的点位信息（coord 为高德 [lng,lat]，统一 GCJ-02 坐标系）
+  // 名称可能有多种写法（朱紫坊·萨镇冰故居 / 萨镇冰故居 / 烟台山历史风貌区 / 烟台山），
+  // 逐级用别名、去前缀、SPOTS/searchPois 兜底，保证每个景点都能拿到坐标
+  const POI_NAME_ALIAS = {
+    '烟台山历史风貌区': '烟台山', '鼓山风景区': '鼓山', '于山风景区': '于山',
+    '梁厝特色历史文化街区': '梁厝', '中国船政文化博物馆': '船政博物馆',
+    '鼓岭旅游度假区': '鼓岭', '朱紫坊·萨镇冰故居': '萨镇冰故居',
+    '三坊七巷·严复故居': '严复故居', '上下杭·三通桥': '三通桥',
+    '螺洲·陈氏五楼': '陈氏五楼', '林浦·泰山宫': '泰山宫',
+    '三坊七巷·水榭戏台': '水榭戏台', '三坊七巷·二梅书屋': '二梅书屋'
+  };
+  function poiNameVariants() {
+    const out = [];
+    const push = v => { if (v && out.indexOf(v) < 0) out.push(v); };
+    const list = [];
+    if (typeof currentSpotKey !== 'undefined' && currentSpotKey) list.push(currentSpotKey);
+    try { list.push(currentNarration().name); } catch (e) {}
+    list.forEach(name => {
+      push(name);
+      push(POI_NAME_ALIAS[name]);
+      if (name.indexOf('·') > -1) {
+        const short = name.split('·').pop().trim();
+        push(short);
+        push(POI_NAME_ALIAS[short]);
       }
+    });
+    return out;
+  }
+  function poiSpotInfo() {
+    const names = poiNameVariants();
+    const n = currentNarration();
+    let coord = null, address = '';
+
+    names.forEach(nm => {
+      const m = SPOT_META[nm];
+      if (!m) return;
+      if (!coord && m.coord) coord = m.coord;
+      if (!address && m.address) address = m.address;
+    });
+    if (!coord || !address) {
+      names.forEach(nm => {
+        const poi = typeof searchPois !== 'undefined' ? searchPois.find(q => q.name === nm) : null;
+        if (poi) {
+          if (!coord && poi.coord) coord = poi.coord;
+          if (!address && typeof SEARCH_POI_ADDR !== 'undefined' && SEARCH_POI_ADDR[poi.name]) {
+            address = SEARCH_POI_ADDR[poi.name];
+          }
+        }
+        if (!address && typeof SEARCH_POI_ADDR !== 'undefined' && SEARCH_POI_ADDR[nm]) address = SEARCH_POI_ADDR[nm];
+      });
     }
-    return { name: n.name, coord, address };
+    if (!coord) {
+      names.forEach(nm => {
+        const sp = typeof SPOTS !== 'undefined' ? SPOTS.find(s => s.name === nm) : null;
+        if (!coord && sp && sp.coord) coord = sp.coord;
+      });
+    }
+
+    const lng = coord ? Number(coord[0]) : NaN;
+    const lat = coord ? Number(coord[1]) : NaN;
+    const valid = isFinite(lng) && isFinite(lat) && !(lng === 0 && lat === 0)
+      && Math.abs(lng) <= 180 && Math.abs(lat) <= 90;
+    return { name: n.name, coord: valid ? [lng, lat] : null, address };
   }
 
   /* ============================================================
@@ -1282,8 +1330,16 @@
     if (!fb || POI_MAP.loaded > 0) return;
     if (POI_MAP.errors >= 3) {
       fb.style.display = 'flex';
-      fb.textContent = '地图加载失败，请检查网络后重试';
+      fb.innerHTML = '<div class="poi-map-fb-txt">地图加载失败，请检查网络后重试</div>'
+        + '<button type="button" class="poi-map-fb-btn" onclick="poiOpenInAmap()">在高德地图中打开</button>';
     }
+  }
+
+  // 瓦片加载不出来时，退化为直接打开高德网页点位页
+  function poiOpenInAmap() {
+    const info = poiSpotInfo();
+    if (!info.coord) return;
+    openAmapWebMarker(info.coord, info.name);
   }
 
   function poiMapZoom(delta) {
@@ -1351,15 +1407,14 @@
     });
   }
 
-  // 渲染详情页导航入口：缺经纬度/地址时隐藏入口，仅显示提示文字
+  // 渲染详情页导航入口：只要有有效坐标就显示入口（地址缺失不影响看地图）
   function renderPoiCard() {
     const entry = document.getElementById('tencentPoiEntry');
     if (!entry) return;
     const empty = document.getElementById('poiEmpty');
     const info = poiSpotInfo();
 
-    // 异常兜底：缺少经纬度或地址 → 隐藏入口，仅显示提示文字
-    if (!info.coord || !info.coord[0] || !info.coord[1] || !info.address) {
+    if (!info.coord) {
       entry.style.display = 'none';
       if (empty) empty.style.display = 'block';
       return;
@@ -1368,16 +1423,17 @@
     if (empty) empty.style.display = 'none';
   }
 
-  // 打开全屏位置页（图一）：游客先看地方在哪；iframe 首次打开时才加载 poimarker
+  // 打开全屏位置页（图一）：游客先看地方在哪
   function poiOpenMapView() {
     const info = poiSpotInfo();
-    if (!info.coord || !info.address) { showToast('暂无地图点位信息'); return; }
+    if (!info.coord) { showToast('暂无地图点位信息'); return; }
     const mask = document.getElementById('poiMapMask');
     if (!mask) return;
 
     const lng = Number(info.coord[0]), lat = Number(info.coord[1]);
+    const address = info.address || ('福州市' + info.name);
     document.getElementById('poiName').textContent = info.name;
-    document.getElementById('poiAddr').textContent = info.address;
+    document.getElementById('poiAddr').textContent = address;
 
     // 距离：定位成功用当前位置，未授权时以三坊七巷游客中心为参考点
     let distText = '';
