@@ -739,10 +739,22 @@
         onNarrEnd();
       };
       currentAudio.onerror = () => {
-        showToast('音频加载失败');
-        onNarrEnd();
+        // 音频文件加载失败（弱网/被拦截）：改用本机语音朗读，避免完全没声音
+        currentAudio = null;
+        audioPlaying = false;
+        const canTts = 'speechSynthesis' in window;
+        if (!canTts || !fallbackToSpeechSynthesis(text)) showToast('音频加载失败，请检查网络后重试');
       };
-      currentAudio.play().catch(() => {
+      currentAudio.play().then(() => {}).catch(err => {
+        // 手机浏览器/微信会拦截无手势的自动播放，属正常限制，不提示失败
+        if (err && err.name === 'NotAllowedError') {
+          audioPlaying = false;
+          narrPlaying = false;
+          narrPageSpeaking = false;
+          if (b1) b1.textContent = '▶';
+          if (b2) b2.textContent = '播放讲解';
+          return;
+        }
         showToast('音频播放失败');
         onNarrEnd();
       });
@@ -845,10 +857,25 @@
         onNarrEnd();
       };
       currentAudio.onerror = () => {
-        showToast('音频加载失败');
-        onNarrEnd();
+        // 音频文件加载失败（弱网/被拦截）：改用本机语音朗读，避免完全没声音
+        currentAudio = null;
+        audioPlaying = false;
+        const scriptTxt = currentSpotScript();
+        const canTts = 'speechSynthesis' in window;
+        if (!canTts || !fallbackToSpeechSynthesis(scriptTxt)) {
+          if (st) st.textContent = '点击 ▶ 重试播放';
+          showToast('音频加载失败，请检查网络后重试');
+        }
       };
-      currentAudio.play().catch(() => {
+      currentAudio.play().catch(err => {
+        // 无手势的自动播放被手机浏览器/微信拦截，属正常限制：不弹失败提示，等游客点 ▶
+        if (err && err.name === 'NotAllowedError') {
+          audioPlaying = false;
+          narrPlaying = false;
+          if (btn) btn.textContent = '▶';
+          if (st) st.textContent = '点击 ▶ 开始收听讲解';
+          return;
+        }
         showToast('音频播放失败');
         onNarrEnd();
       });
@@ -967,6 +994,44 @@
     videoEventsBound = true;
   }
 
+  // 手机端设置 src 后立刻 play() 常被打断（AbortError）或无手势被拦截（NotAllowedError），
+  // 这两种都不算失败。等元数据就绪后再播；12 秒仍未就绪按「加载慢」提示，可再次点击重试。
+  function playVideoWhenReady(video, onFail) {
+    if (!video) return;
+    const token = (video._playToken || 0) + 1;
+    video._playToken = token;
+    const start = () => {
+      if (video._playToken !== token) return;
+      const p = video.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(err => {
+          if (video._playToken !== token) return;
+          if (err && /AbortError|NotAllowedError/.test(err.name)) return;
+          if (onFail) onFail('error');
+        });
+      }
+    };
+    if (video.readyState >= 2) { start(); return; }
+    let fired = false;
+    const cleanup = () => {
+      video.removeEventListener('canplay', onReady);
+      video.removeEventListener('loadedmetadata', onReady);
+    };
+    const onReady = () => {
+      if (fired) return;
+      fired = true;
+      cleanup();
+      start();
+    };
+    video.addEventListener('canplay', onReady);
+    video.addEventListener('loadedmetadata', onReady);
+    setTimeout(() => {
+      if (fired || video._playToken !== token) return;
+      cleanup();
+      if (onFail) onFail('slow');
+    }, 12000);
+  }
+
   // 播放视频（核心逻辑：有本地 mp4 直接站内播放，无则提示加载失败）
   // 用 video error 事件代替 fetch HEAD，兼容 file:// 本地协议
   function playSpotVideo(name) {
@@ -997,10 +1062,12 @@
     if (!video.dataset.errBound) {
       video.dataset.errBound = '1';
       video.addEventListener('error', function() {
+        // 只有真实的解码/网络错误才提示；切换 src 导致的中止不提示
+        if (!video.error) return;
         const e = document.getElementById(VIDEO_ERROR_ID);
         if (e) e.style.display = 'block';
         exitVideoPlaying();
-        showToast('视频加载失败');
+        showToast('视频加载失败，请检查网络后重试');
       });
     }
 
@@ -1008,19 +1075,17 @@
     const cover = spotPhoto(v.name) || spotPhoto(name);
     if (cover) video.poster = cover;
 
-    // 设置 src 并进入播放状态
-    if (video.getAttribute('src') !== v.local) video.src = v.local;
-    enterVideoPlaying();
-
-    // 播放：失败则恢复封面
-    const playPromise = video.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch(() => {
-        exitVideoPlaying();
-        if (errEl) errEl.style.display = 'block';
-        showToast('视频加载失败');
-      });
+    // 设置 src 并进入播放状态（先 load，等可播再 play）
+    if (video.getAttribute('src') !== v.local) {
+      video.src = v.local;
+      video.load();
     }
+    enterVideoPlaying();
+    playVideoWhenReady(video, kind => {
+      exitVideoPlaying();
+      if (errEl) errEl.style.display = 'block';
+      showToast(kind === 'slow' ? '视频加载较慢，请检查网络后重试' : '视频加载失败，请检查网络后重试');
+    });
   }
 
   // 古厝导览页「视频介绍」块点击播放
@@ -1044,16 +1109,20 @@
     if (!video.dataset.errBound) {
       video.dataset.errBound = '1';
       video.addEventListener('error', function() {
-        showToast('视频加载失败');
+        if (!video.error) return;  // 切换 src 引起的中止，不算失败
+        showToast('视频加载失败，请检查网络后重试');
       });
     }
 
     box.style.display = 'block';
     const dCover = spotPhoto(name);
     if (dCover) video.poster = dCover;
-    if (video.getAttribute('src') !== v.local) video.src = v.local;
-    video.play().catch(function() {
-      showToast('视频加载失败');
+    if (video.getAttribute('src') !== v.local) {
+      video.src = v.local;
+      video.load();
+    }
+    playVideoWhenReady(video, kind => {
+      showToast(kind === 'slow' ? '视频加载较慢，请检查网络后重试' : '视频加载失败，请检查网络后重试');
     });
     box.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }

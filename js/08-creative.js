@@ -169,6 +169,37 @@
   if (_ta) _ta.addEventListener('input', autoResizePrompt);
 
   /* ========== AI 生成文创效果图 ========== */
+  // 单张加载：10s 超时；识别服务端占位图（1832×1832 英文「图片生成中」）视为未出图
+  function loadWorkImage(url) {
+    return new Promise(resolve => {
+      const img = new Image();
+      let done = false;
+      const timer = setTimeout(() => { if (!done) { done = true; resolve(null); } }, 10000);
+      img.onload = () => {
+        if (done) return;
+        done = true; clearTimeout(timer);
+        resolve(isT2iPlaceholder(img) ? null : url);
+      };
+      img.onerror = () => { if (!done) { done = true; clearTimeout(timer); resolve(null); } };
+      img.src = url;
+    });
+  }
+
+  // 通道繁忙时的国风示意 SVG，避免出现英文占位图或空白
+  function creativeFallback(cat) {
+    const icon = CAT_ICON[cat] || '🎁';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+      <rect width="400" height="400" fill="#f2f2f2"/>
+      <rect x="20" y="20" width="360" height="360" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="8 6" rx="12"/>
+      <text x="200" y="170" font-size="120" text-anchor="middle">${icon}</text>
+      <text x="200" y="230" font-size="22" font-family="sans-serif" text-anchor="middle" fill="#1a1a1a" font-weight="bold">古厝元素·${cat}</text>
+      <text x="200" y="265" font-size="14" font-family="sans-serif" text-anchor="middle" fill="#888">福州古厝国风文创</text>
+      <text x="200" y="320" font-size="12" font-family="sans-serif" text-anchor="middle" fill="#aaa">（示意图 · AI 出图通道繁忙，可点重新生成）</text>
+      <path d="M60 350 Q100 320 140 340 Q180 315 220 340 Q260 315 300 340 Q340 320 340 350" fill="none" stroke="#1a1a1a" stroke-width="2" opacity="0.3"/>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
   async function generateWork() {
     const ta = document.getElementById('culturalPrompt');
     const btn = document.getElementById('culturalBtn');
@@ -190,34 +221,33 @@
     // 拼装文生图提示词：锁定产品实物形态，古厝元素仅作表面纹样
     const typeEn = CAT_EN[currentCat] || 'souvenir';
     const imgPrompt = `product photography of ${typeEn}, the ancient house elements (swallow-tail ridge, horse-saddle wall, grey tile, banyan tree) are decorative patterns on the product surface only, NOT the product shape, chinese guofeng style, ${prompt}, elegant minimalist design, clean solid white background, e-commerce studio shot, high detail, sharp focus`;
-    const imgUrl = t2i(imgPrompt, CAT_IMG_SIZE[currentCat] || 'square');
+    const baseUrl = t2i(imgPrompt, CAT_IMG_SIZE[currentCat] || 'square');
+
+    // 文生图接口异步出图：先等 1.2s，再每 3s 带时间戳重试（绕过缓存），最多 8 次
+    const maxAttempts = 8;
+    let finalUrl = null;
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(r => setTimeout(r, i === 0 ? 1200 : 3000));
+      const txt = previewArea.querySelector('.loading-state .text');
+      if (txt) txt.textContent = 'AI正在绘制古厝文创，请稍候（' + (i + 1) + '/' + maxAttempts + '）';
+      const sep = baseUrl.includes('?') ? '&' : '?';
+      finalUrl = await loadWorkImage(baseUrl + sep + '_t=' + Date.now());
+      if (finalUrl) break;
+    }
 
     const work = {
       id: Date.now(),
       cat: currentCat,
       prompt: prompt,
-      img: imgUrl,
+      img: finalUrl || creativeFallback(currentCat),
       name: '古厝元素·' + currentCat
     };
     works.unshift(work);
     const statEl = document.getElementById('statWorks');
     if (statEl) statEl.textContent = works.length;
 
-    // 最短模拟耗时 1.8s，图片就绪即渲染
-    const start = Date.now();
-    const minDelay = 1800;
-    const img = new Image();
-    img.onload = img.onerror = () => {
-      const elapsed = Date.now() - start;
-      const wait = Math.max(0, minDelay - elapsed);
-      setTimeout(() => renderWork(work), wait);
-    };
-    img.src = imgUrl;
-
-    // 兜底：15 秒后无论如何渲染（走 SVG 占位）
-    setTimeout(() => {
-      if (previewArea.querySelector('.loading-state')) renderWork(work);
-    }, 15000);
+    renderWork(work);
+    if (!finalUrl) showToast('AI出图通道繁忙，已展示示意效果，可点「重新生成」再试');
   }
 
   /* ========== 渲染单个作品卡片 ========== */
@@ -244,17 +274,6 @@
     const btn = document.getElementById('culturalBtn');
     btn.disabled = false;
     btn.textContent = 'AI生成文创效果图';
-
-    // 文生图 API 异步生成，首次可能返回占位图，定时刷新绕过缓存拿真图
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts++;
-      const imgEl = document.getElementById('workImg' + work.id);
-      if (!imgEl || attempts > 12) { clearInterval(timer); return; }
-      // 加时间戳绕过缓存，重新请求真图
-      const sep = work.img.includes('?') ? '&' : '?';
-      imgEl.src = work.img + sep + '_t=' + Date.now();
-    }, 3000);
   }
 
   /* ========== 预览大图 ========== */

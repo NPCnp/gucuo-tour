@@ -500,6 +500,11 @@
   function t2i(prompt, size) {
     return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=' + encodeURIComponent(prompt) + '&image_size=' + (size || 'square');
   }
+  // 文生图服务在排队/未出图时会返回一张固定的英文占位图（1832×1832，含 "The image is generating"），
+  // 真实出图统一为 1024×1024 等常规尺寸。用它来识别「还没出图」，避免把占位图当成品展示。
+  function isT2iPlaceholder(imgEl) {
+    return !!imgEl && imgEl.naturalWidth === 1832 && imgEl.naturalHeight === 1832;
+  }
   // 字段：cat 品类 / price 价格 / rate 好评率 / stat 互动数据 / soldText 已售文案 / salesNum 销量(排序用) / date 上新日期(排序用) / promos 促销标签
   const OFFICIAL_GOODS = [
     { id: 'of1', cat: '书签',   name: '【三坊七巷官方】古厝燕尾脊鎏金金属书签礼盒', price: 39, rate: '好评率98.5%', stat: '600+人加购',    soldText: '2000+', salesNum: 2000, date: '2026-09-12', promos: ['满150减5会员券', '运费险', '180天内发货'], img: t2i('elegant brass metal bookmark inspired by Fuzhou ancient house swallow tail ridge roof silhouette, gold finish, luxury gift box, product photography, clean white background, e-commerce studio shot') },

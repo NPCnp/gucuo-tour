@@ -2065,8 +2065,9 @@
         img.onload = () => {
           if (!done) {
             done = true; clearTimeout(timeout);
-            // naturalWidth > 0 确认是真图（非占位文本）
-            resolve({ ok: img.naturalWidth > 0, url: url });
+            // naturalWidth > 0 且不是服务端占位图（1832×1832 的英文「图片生成中」）
+            const isPlaceholder = img.naturalWidth === 1832 && img.naturalHeight === 1832;
+            resolve({ ok: img.naturalWidth > 0 && !isPlaceholder, url: url });
           }
         };
         img.onerror = () => {
@@ -2086,16 +2087,19 @@
     const maxAttempts = 10;
 
     async function poll() {
+      const txt = document.querySelector('#previewArea .loading-state .text');
       await new Promise(r => setTimeout(r, 1500));
       while (attempts < maxAttempts) {
         attempts++;
+        if (txt) txt.textContent = 'AI正在绘制古厝文创，请稍候（' + attempts + '/' + maxAttempts + '）';
         const tsUrl = baseUrl + '&_t=' + Date.now();
         const result = await loadImage(tsUrl);
         if (result.ok) { finalImg = result.url; finish(); return; }
         await new Promise(r => setTimeout(r, 3000));
       }
-      // 超限用兜底 SVG（绝对不会空白）
+      // 超限用兜底 SVG（绝对不会空白），并提示可重新生成
       finalImg = fallback; finish();
+      showToast('AI出图通道繁忙，已展示示意效果，可点「重新生成」再试');
     }
 
     poll();
@@ -2194,9 +2198,41 @@
   })();
 
   /* ========== 初始化：自适应提示词高度 ========== */
+  // 文生图商品图兜底：接口未出图时会返回 1832×1832 的英文占位图，统一替换为中文提示图
+  function t2iBusyImg(label) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+      <rect width="400" height="400" fill="#f3f1ec"/>
+      <rect x="16" y="16" width="368" height="368" fill="none" stroke="#d8d2c6" stroke-width="1.5" rx="10"/>
+      <text x="200" y="196" font-size="17" font-family="sans-serif" text-anchor="middle" fill="#8a8073">${label}</text>
+      <text x="200" y="230" font-size="14" font-family="sans-serif" text-anchor="middle" fill="#aaa298">图片生成中，可稍后刷新</text>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+  function watchT2iImages() {
+    const guard = el => {
+      if (!el || el.dataset.t2iGuarded || !/text_to_image/.test(el.src || '')) return;
+      el.dataset.t2iGuarded = '1';
+      const fix = () => {
+        if (el.naturalWidth === 1832 && el.naturalHeight === 1832) {
+          el.src = t2iBusyImg(el.alt || '古厝文创');
+        }
+      };
+      if (el.complete) fix(); else el.addEventListener('load', fix, { once: true });
+    };
+    document.querySelectorAll('img').forEach(guard);
+    new MutationObserver(muts => {
+      muts.forEach(m => m.addedNodes && m.addedNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        if (n.tagName === 'IMG') guard(n);
+        else if (n.querySelectorAll) n.querySelectorAll('img').forEach(guard);
+      }));
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
   (function init() {
     // 默认进入「官方文创」Tab 并渲染商品列表
     switchTab('official');
+    watchT2iImages();
     const ta = $('culturalPrompt');
     ta.style.height = 'auto';
     ta.offsetHeight;
