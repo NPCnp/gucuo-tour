@@ -32,7 +32,23 @@
     width: 100%; height: 100%;
     position: relative;
     overflow: hidden;
-    background: #fff;
+    background: #f7f1e6;
+  }
+
+  /* ========== 全站水墨古厝背景 ========== */
+  .app-bg {
+    position: absolute;
+    inset: 0;
+    background: url('../images/bg/app-bg.jpg') center center / cover no-repeat;
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* 轻薄暖色纱罩：保证文字对比度，同时保留水墨层次 */
+  .app-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 252, 245, 0.30);
   }
 
   /* ========== 屏幕容器 ========== */
@@ -42,7 +58,8 @@
     width: 100%; height: 100%;
     display: none;
     flex-direction: column;
-    background: #f5f5f5;
+    background: transparent;
+    z-index: 1;
   }
   .page.active { display: flex; }
 
@@ -52,8 +69,10 @@
     display: flex;
     align-items: center;
     padding: 0 12px;
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
+    background: rgba(255, 253, 246, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(224, 216, 200, 0.7);
     position: relative;
     flex-shrink: 0;
   }
@@ -89,8 +108,10 @@
   .tab-bar {
     height: calc(60px + env(safe-area-inset-bottom, 0px));
     display: flex;
-    background: #fff;
-    border-top: 1px solid #e0e0e0;
+    background: rgba(255, 253, 246, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(224, 216, 200, 0.7);
     flex-shrink: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -146,7 +167,7 @@
 
   /* ========== 首页 ========== */
   .home-header {
-    background: #fff;
+    background: transparent;
     padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 22px;
   }
   .app-name-row {
@@ -157,8 +178,9 @@
   .app-sub { font-size: 11px; color: #888; margin-top: 2px; }
   .search-bar {
     height: 40px;
-    background: #f5f5f5;
-    border: 1px solid #eee;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 10px rgba(120, 100, 70, 0.08);
     border-radius: 20px;
     display: flex; align-items: center;
     padding: 0 14px;
@@ -195,9 +217,9 @@
     gap: 12px;
   }
   .feature-card {
-    background: #fff;
-    border: 1px solid #f0f0f0;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(226, 214, 194, 0.85);
+    border-radius: 14px;
     padding: 18px 12px;
     display: flex;
     flex-direction: column;
@@ -205,18 +227,21 @@
     gap: 10px;
     cursor: pointer;
     transition: transform 0.1s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 16px rgba(120, 100, 70, 0.07);
   }
   .feature-card:active { transform: scale(0.96); }
   .feature-card.center { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 12px; padding: 14px; }
   .feature-icon {
     width: 46px; height: 46px;
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    background: #f2f2f2;
+    background: linear-gradient(150deg, #fffdf8 0%, #f4ebdb 100%);
+    border: 1px solid rgba(214, 196, 168, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 6px rgba(120, 100, 70, 0.08);
   }
-  .feature-card.center .feature-icon { width: 40px; height: 40px; font-size: 18px; }
+  .feature-icon svg { display: block; width: 28px; height: 28px; }
+  .feature-card.center .feature-icon { width: 40px; height: 40px; }
+  .feature-card.center .feature-icon svg { width: 24px; height: 24px; }
   .feature-label { font-size: 13px; font-weight: 700; color: #1a1a1a; text-align: center; }
   .feature-card.center .feature-label { font-size: 14px; text-align: left; }
   .feature-desc { font-size: 11px; color: #aaa; text-align: center; line-height: 1.4; }
@@ -423,7 +448,7 @@
   }
 
   /* 搜索结果：横向卡片列表，宽松留白 */
-  .search-content { background: #f5f5f5; }
+  .search-content { background: transparent; }
   #searchResults { padding: 14px 14px 22px; }
   .poi-card {
     display: flex; align-items: center; gap: 12px;
@@ -518,14 +543,8 @@
   .detail-desc { font-size: 13px; color: #444; line-height: 1.8; }
 
   /* ========== 启动欢迎页 ========== */
-  #page-splash { background: #fff; }
-  .splash-bg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-  }
+  #page-splash { background: transparent; }
+  .splash-bg { display: none; }
   .splash-body {
     flex: 1;
     display: flex;
@@ -568,13 +587,14 @@
   }
   .splash-logo {
     width: 92px; height: 92px;
-    border: 1.5px solid #1a1a1a;
+    border: 1px solid rgba(140, 118, 92, 0.25);
     border-radius: 22px;
-    background: #f5f5f5;
+    background: url('../images/bg/app-icon.jpg') center / cover no-repeat;
     display: flex; align-items: center; justify-content: center;
-    font-size: 42px;
     position: relative;
     z-index: 1;
+    box-shadow: 0 8px 20px rgba(96, 76, 50, 0.18);
+    overflow: hidden;
   }
   .splash-title { font-size: 27px; font-weight: 800; color: #1a1a1a; letter-spacing: 2px; margin-bottom: 12px; }
   .splash-sub { font-size: 13px; color: #888; letter-spacing: 1px; margin-bottom: 34px; }

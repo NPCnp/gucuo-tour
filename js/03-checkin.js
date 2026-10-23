@@ -320,7 +320,7 @@
     showToast('正在生成凭证图片…');
     html2canvas(card, { backgroundColor: '#fff', scale: 2, useCORS: true, allowTaint: false }).then(canvas => {
       const link = document.createElement('a');
-      link.download = '福见闽都古厝游览纪念凭证.png';
+      link.download = '福程智遇古厝游览纪念凭证.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
       showToast('凭证图片已保存到手机');
@@ -377,9 +377,10 @@
     const btn = document.getElementById('saveSettingsBtn');
     const val = input.value.trim();
     let msg = '';
-    if (val.length === 0) {
-      msg = '请输入昵称';
-    } else if (val.length < 2 || val.length > 10) {
+    // 留空视为使用「游客」占位昵称，不拦截保存
+    if (val.length > 10) {
+      msg = '昵称长度需2~10个字';
+    } else if (val.length === 1) {
       msg = '昵称长度需2~10个字';
     } else if (/[^\u4e00-\u9fa5A-Za-z0-9]/.test(val)) {
       msg = '昵称仅支持中英文与数字，请勿输入特殊符号';
@@ -395,7 +396,7 @@
     return !msg;
   }
 
-  // 跳过：首次打开时不存任何信息、直接进首页（下次打开仍会弹出）；从个人中心进入则返回上一页
+  // 跳过：不保存昵称与头像、直接进首页
   function skipSettings() {
     if (settingsFirstOpen) {
       settingsFirstOpen = false;
@@ -405,10 +406,11 @@
     goBack();
   }
 
-  // 保存：扫码游客写入会话缓存，普通用户写入本机缓存（下次打开不再弹出本页）
+  // 保存：扫码游客写入会话缓存，普通用户写入本机缓存（昵称与头像一起保存）
   function saveSettings() {
     if (!validateName(true)) return;
-    const name = document.getElementById('setName').value.trim() || '游客';
+    const name = document.getElementById('setName').value.trim()
+      || readCachedNickname() || '游客';
     applyNickname(name);
     // 扫码游客：昵称只保存在本次会话，不落到本机缓存，避免下一位游客看到上一位的昵称
     if (scanSessionActive) {

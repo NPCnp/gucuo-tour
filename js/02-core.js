@@ -38,6 +38,8 @@
 
   // 打开网页链接：手机端当前窗口跳转，桌面端新窗口
   function openNavWebPage(url) {
+    // 记录「去高德」标记，返回后可按需恢复离开前的页面
+    markNavLeave();
     if (isMobileDevice()) {
       window.location.href = url;
     } else {
@@ -151,7 +153,12 @@
   try { history.replaceState({ stack: pageStack.slice() }, ''); } catch (e) {}
 
   /* ========== 页面记忆：跳到高德等外部应用再回来时，恢复到离开前的页面 ========== */
+  // 仅在「主动跳转高德网页导航」后 5 分钟内恢复；普通刷新/重新打开仍从启动页开始
   const SESSION_KEY = 'gucuo_last_page';
+  const NAV_LEAVE_KEY = 'gucuo_nav_leave';
+  function markNavLeave() {
+    try { sessionStorage.setItem(NAV_LEAVE_KEY, String(Date.now())); } catch (e) {}
+  }
   function saveSessionState(id) {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({
@@ -163,6 +170,11 @@
     } catch (e) {}
   }
   function restoreSessionState() {
+    // 没有「刚去过高德」的标记：视为普通刷新，不恢复页面（保证每次从启动页进入）
+    let leaveTs = 0;
+    try { leaveTs = Number(sessionStorage.getItem(NAV_LEAVE_KEY) || 0); } catch (e) {}
+    if (!leaveTs || Date.now() - leaveTs > 300000) return false;
+    try { sessionStorage.removeItem(NAV_LEAVE_KEY); } catch (e) {}
     let st = null;
     try { st = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) {}
     if (!st || !st.page || st.page === 'splash' || st.page === 'settings') return false;
@@ -251,6 +263,7 @@
     }
     if (id === 'home') maybeStartupLocate();
     if (id === 'settings-manage') syncSettingsUI();
+    if (id === 'settings') syncSetupForm();
     if (id === 'account') syncAccountUI();
     if (id === 'detail') {
       renderDetail();
@@ -267,19 +280,15 @@
   }
 
   /* ========== 启动欢迎页 ========== */
-  // 首次打开（本机无昵称缓存）：弹出设置基础信息页；已保存过昵称：直接进首页
+  // 统一入口：每次「立即进入」都先到「设置基础信息」，昵称与头像可一并设置/修改，
+  // 已保存的内容会自动回填；不想设置可点「跳过」直接进首页，行为不再因缓存而时有时无
   function goHomeFromSplash() {
-    if (!readCachedNickname()) {
-      settingsFirstOpen = true;
-      // 首次进入：昵称页恢复为「设置基础信息」并显示跳过按钮
-      const t = document.querySelector('#page-settings .nav-bar .title');
-      if (t) t.textContent = '设置基础信息';
-      const skip = document.querySelector('#page-settings .nav-skip');
-      if (skip) skip.style.visibility = '';
-      showScreen('settings', true);
-    } else {
-      showScreen('home', true);
-    }
+    settingsFirstOpen = true;
+    const t = document.querySelector('#page-settings .nav-bar .title');
+    if (t) t.textContent = '设置基础信息';
+    const skip = document.querySelector('#page-settings .nav-skip');
+    if (skip) skip.style.visibility = '';
+    showScreen('settings', true);
   }
 
   function goBack() {

@@ -105,15 +105,48 @@
   }
 
   /* ========== 头像上传 ========== */
+  const AVATAR_KEY = 'gucuo_avatar';
+  // 头像读取/写入本机缓存（扫码游客仅本次会话，不落盘）
+  function readCachedAvatar() {
+    try { return localStorage.getItem(AVATAR_KEY) || ''; } catch (e) { return ''; }
+  }
+  function persistAvatar(dataUrl) {
+    if (scanSessionActive) return;
+    try { localStorage.setItem(AVATAR_KEY, dataUrl); } catch (e) {}
+  }
+  // 头像同步：个人中心、设置基础信息、设置管理、账号与安全四处共用
+  function applyAvatar(dataUrl) {
+    ['profileAvatar', 'setAvatar', 'stAvatar', 'acAvatar'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (dataUrl) {
+        el.style.backgroundImage = `url(${dataUrl})`;
+        el.textContent = '';
+      } else {
+        el.style.backgroundImage = '';
+        el.textContent = '头像';
+      }
+    });
+  }
+  // 进入「设置基础信息」页：昵称以「游客」虚化占位提示，输入框留空可直接填写
+  function syncSetupForm() {
+    const input = document.getElementById('setName');
+    if (input) {
+      input.value = '';
+      input.placeholder = readCachedNickname() || '游客';
+    }
+    applyAvatar(getAvatarData() || readCachedAvatar());
+    try { validateName(); } catch (e) {}
+  }
+
   function onAvatarChange(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function (ev) {
       const dataUrl = ev.target.result;
-      const av = document.getElementById('profileAvatar');
-      av.style.backgroundImage = `url(${dataUrl})`;
-      av.textContent = '';
+      applyAvatar(dataUrl);
+      persistAvatar(dataUrl);
       syncSettingsUI();
       syncAccountUI();
       showToast('头像已更新');
@@ -127,13 +160,13 @@
     try { return (localStorage.getItem('gucuo_name') || '').trim(); } catch (e) { return ''; }
   }
 
-  // 把昵称同步到全局变量与各页面 UI
+  // 把昵称同步到全局变量与各页面 UI（设置页输入框保持空白，仅用占位提示）
   function applyNickname(name) {
     userName = name || '游客';
     const pn = document.getElementById('profileName');
     if (pn) pn.textContent = userName;
     const setName = document.getElementById('setName');
-    if (setName) setName.value = userName;
+    if (setName) setName.placeholder = userName;
     const certEl = document.getElementById('certUserName');
     if (certEl) certEl.textContent = userName;
   }
@@ -143,8 +176,7 @@
   function initVisitorState() {
     const cached = readCachedNickname();
     applyNickname(cached || '游客');
-    const avatar = document.getElementById('profileAvatar');
-    if (avatar) { avatar.style.backgroundImage = ''; avatar.textContent = '头像'; }
+    applyAvatar(readCachedAvatar());
     try { renderCheckinPage(); } catch (e) {}
     try { updateProgress(); } catch (e) {}
     try { renderWorks('worksGrid'); } catch (e) {}
@@ -252,12 +284,7 @@
   function syncSettingsUI() {
     applySettings();
     setSwitchState(document.getElementById('swNotify'), appSettings.notify);
-    const av = getAvatarData();
-    const stA = document.getElementById('stAvatar');
-    if (stA) {
-      if (av) { stA.style.backgroundImage = `url(${av})`; stA.textContent = ''; }
-      else { stA.style.backgroundImage = ''; stA.textContent = '头像'; }
-    }
+    applyAvatar(getAvatarData() || readCachedAvatar());
   }
 
   function syncAccountUI() {
@@ -267,12 +294,7 @@
     let phone = '';
     try { phone = localStorage.getItem(PHONE_KEY) || ''; } catch (e) {}
     if (phoneEl) phoneEl.textContent = phone || '未绑定';
-    const av = getAvatarData();
-    const acA = document.getElementById('acAvatar');
-    if (acA) {
-      if (av) { acA.style.backgroundImage = `url(${av})`; acA.textContent = ''; }
-      else { acA.style.backgroundImage = ''; acA.textContent = '头像'; }
-    }
+    applyAvatar(getAvatarData() || readCachedAvatar());
   }
 
   function getAvatarData() {
@@ -519,7 +541,7 @@
     openSheet(`
       <div class="sh-handle"></div>
       <div class="sh-title">关于我们与帮助</div>
-      <div class="sh-desc">福见闽都・古厝元游 · v1.0.0 · 本地演示版</div>
+      <div class="sh-desc">福程智遇·古厝寻踪 · v1.0.0 · 本地演示版</div>
       <div class="sh-list">
         <div class="sh-item" onclick="closeSheet(); showToast('用户协议（模拟）')"><div class="sh-item-main"><div>用户协议</div></div><span class="st-arrow">›</span></div>
         <div class="sh-item" onclick="closeSheet(); showToast('隐私政策（模拟）')"><div class="sh-item-main"><div>隐私政策</div></div><span class="st-arrow">›</span></div>

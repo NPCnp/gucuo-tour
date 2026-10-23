@@ -19,7 +19,7 @@
     }
   })();
 </script>
-<title>福见闽都·古厝元游</title>
+<title>福程智遇·古厝寻踪</title>
 <!-- 高德地图 JS API（请替换为你自己的 Key：https://lbs.amap.com/） -->
 <script>
   window._AMapSecurityConfig = { securityJsCode: 'c31603b7e17903803ca4a1409e4fa0a1' };
@@ -34,12 +34,14 @@
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
-<link rel="stylesheet" href="css/base.css?v=8">
-<link rel="stylesheet" href="css/pages.css?v=20">
+<link rel="stylesheet" href="css/base.css?v=11">
+<link rel="stylesheet" href="css/pages.css?v=23">
 </head>
 <body>
   <div class="phone">
     <div class="screen" id="screen">
+      <!-- 全站水墨古厝背景 -->
+      <div class="app-bg" aria-hidden="true"></div>
 
       <!-- ===================== 启动欢迎页 ===================== -->
       <div class="page active" id="page-splash">
@@ -62,9 +64,9 @@
         <div class="splash-body">
           <div class="splash-slogan">一座福州城，半部古厝史</div>
           <div class="splash-logo-wrap">
-            <div class="splash-logo">🏛️</div>
+            <div class="splash-logo"></div>
           </div>
-          <div class="splash-title">福见闽都·古厝元游</div>
+          <div class="splash-title">福程智遇·古厝寻踪</div>
           <div class="splash-sub">福州古厝文旅服务平台</div>
           <div class="splash-intro">寻访闽都古厝文脉，探寻千年榕城故事，沉浸式解锁福州历史文化旅程</div>
         </div>
@@ -80,7 +82,7 @@
           <div class="home-header">
             <div class="app-name-row">
               <div>
-                <div class="app-name">福见闽都・古厝元游</div>
+                <div class="app-name">福程智遇·古厝寻踪</div>
                 <div class="app-sub">福州古厝文旅服务平台</div>
               </div>
             </div>
@@ -94,28 +96,55 @@
             <div class="section-title">探索古厝</div>
             <div class="feature-grid">
               <div class="feature-card" onclick="showScreen('ai-route')">
-                <div class="feature-icon">🗺️</div>
+                <div class="feature-icon">
+                  <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M6 8.6 13 6l6 2.6L26 6v17.4L19 26l-6-2.6L6 26z" fill="#eaf2ed" stroke="#3f6b5f" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M13 6v17.4M19 8.6V26" stroke="#3f6b5f" stroke-width="1.1" opacity=".45"/>
+                    <path d="M9.6 20.4c2.6-2.2 4.4-1 6.6-3.6 1.6-1.9 3.2-3.2 6.2-3.4" fill="none" stroke="#c05b4d" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="3 2.6"/>
+                    <circle cx="22.4" cy="13.4" r="2.3" fill="#c05b4d"/>
+                  </svg>
+                </div>
                 <div>
                   <div class="feature-label">智能路线</div>
                   <div class="feature-desc">AI定制福州古厝游览路线</div>
                 </div>
               </div>
               <div class="feature-card" onclick="showScreen('narrator')">
-                <div class="feature-icon">🤖</div>
+                <div class="feature-icon">
+                  <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M4.5 14.6C8 10.8 11.8 8.8 16 8.8s8 2 11.5 5.8" fill="none" stroke="#3f6b5f" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="9.8" y="16.2" width="12.4" height="9.4" rx="1.6" fill="#f6e7da" stroke="#8a6a4f" stroke-width="1.6"/>
+                    <path d="M14 25.6v-4.4a2 2 0 0 1 4 0v4.4" fill="none" stroke="#8a6a4f" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M24.2 18.2c1.5 1.1 1.5 3.3 0 4.4M26.4 16.6c2.5 1.9 2.5 5.9 0 7.8" fill="none" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
                 <div>
                   <div class="feature-label">古厝导览</div>
                   <div class="feature-desc">数字讲解员陪你逛古厝</div>
                 </div>
               </div>
               <div class="feature-card" onclick="openCheckinPage()">
-                <div class="feature-icon">📍</div>
+                <div class="feature-icon">
+                  <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M16 26.6c4.8-5.9 7.8-9.5 7.8-13.4A7.8 7.8 0 0 0 8.2 13.2c0 3.9 3 7.5 7.8 13.4z" fill="#fdeae6" stroke="#c05b4d" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="m12.6 13.6 2.4 2.4 4.6-4.6" fill="none" stroke="#c05b4d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
                 <div>
                   <div class="feature-label">景点打卡</div>
                   <div class="feature-desc">按路线打卡福州古厝点位</div>
                 </div>
               </div>
               <div class="feature-card" onclick="showScreen('cultural')">
-                <div class="feature-icon">🎨</div>
+                <div class="feature-icon">
+                  <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M16 5.2c6 0 9.8 3.8 9.8 8.5 0 3.2-2.2 4.6-4.2 4.9-1.7.3-2.4 1.6-1.2 2.7 1.4 1.3.8 3.3-1.4 3.9-1.4.4-2.9.8-4.6.8C9.4 26 6 22.2 6 16.7 6 10.2 10.4 5.2 16 5.2z" fill="#f7f0de" stroke="#8a6a4f" stroke-width="1.7" stroke-linejoin="round"/>
+                    <circle cx="12" cy="11.4" r="1.9" fill="#c05b4d"/>
+                    <circle cx="18.2" cy="9.4" r="1.9" fill="#c9a227"/>
+                    <circle cx="22.2" cy="13.2" r="1.9" fill="#6fa9a3"/>
+                    <circle cx="11" cy="17.4" r="1.9" fill="#8a6a4f" opacity=".75"/>
+                  </svg>
+                </div>
                 <div>
                   <div class="feature-label">福厝文创</div>
                   <div class="feature-desc">选购福州古厝主题文创</div>
@@ -726,7 +755,7 @@
             </div>
           </div>
 
-          <div class="st-version">福见闽都・古厝元游 v1.0.0 · 本地演示版</div>
+          <div class="st-version">福程智遇·古厝寻踪 v1.0.0 · 本地演示版</div>
         </div>
       </div>
 
@@ -786,14 +815,20 @@
         </div>
         <div class="content">
           <div class="settings-form">
+            <div class="form-group avatar-group">
+              <label class="form-label">头像</label>
+              <div class="settings-avatar-row">
+                <div class="settings-avatar" id="setAvatar" onclick="document.getElementById('avatarFile').click()">头像</div>
+                <span class="settings-avatar-tip">点击上传头像</span>
+              </div>
+            </div>
             <div class="form-group">
               <label class="form-label">昵称</label>
-              <input class="form-input" id="setName" value="游客" placeholder="请输入昵称，2-10个字符"
+              <input class="form-input" id="setName" placeholder="游客"
                      maxlength="10" oninput="validateName()" onblur="validateName(true)" />
               <div class="form-error" id="nameError"></div>
             </div>
             <button class="generate-btn" id="saveSettingsBtn" onclick="saveSettings()">保存</button>
-            <p class="settings-note">昵称仅保存在当前设备，用于打卡与收藏记录，不会上传云端，保护游客隐私</p>
           </div>
         </div>
       </div>
@@ -1149,20 +1184,20 @@
   </div>
 
   <script src="js/01-data.js?v=8"></script>
-  <script src="js/02-core.js?v=22"></script>
-  <script src="js/03-checkin.js?v=7"></script>
+  <script src="js/02-core.js?v=24"></script>
+  <script src="js/03-checkin.js?v=10"></script>
   <script src="js/04-route.js"></script>
   <script src="js/05-narrations.js?v=13"></script>
   <script src="js/06-narrator.js?v=4"></script>
   <script src="js/07-nav.js?v=9"></script>
   <script src="js/08-creative.js?v=6"></script>
-  <script src="js/09-profile.js?v=2"></script>
+  <script src="js/09-profile.js?v=5"></script>
   <script src="js/10-init.js?v=4"></script>
 
   <!-- 分享二维码弹层 -->
   <div id="qrShareMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:24px;" onclick="closeShareQR(event)">
     <div style="background:#fff;border-radius:20px;padding:24px 20px 20px;width:min(320px,100%);text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:600;color:#222;margin-bottom:4px">扫码访问「福见闽都」</div>
+      <div style="font-size:17px;font-weight:600;color:#222;margin-bottom:4px">扫码访问「福程智遇」</div>
       <div style="font-size:12px;color:#888;margin-bottom:16px">用微信/浏览器扫描下方二维码</div>
       <div id="qrShareBox" style="display:inline-block;padding:14px;background:#fff;border:1px solid #eee;border-radius:12px;margin:0 auto"></div>
       <div id="qrShareUrl" style="font-size:11px;color:#aaa;margin-top:10px;word-break:break-all;line-height:1.5"></div>
