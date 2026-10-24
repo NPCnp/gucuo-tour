@@ -273,12 +273,9 @@
   }
 
   /* ========== 纪念电子凭证 ========== */
-  // 以本路线打卡景点特色为背景生成凭证
+  // 凭证背景统一使用本地预生成的水墨长卷，避免平台文生图不可用时出现英文占位图
   function buildCertBgUrl() {
-    const names = checkinPoints.map(p => p.name).join('、');
-    const prompt = `中国风淡雅水墨画风格的福州古厝文化长卷，景点元素：${names}，闽派民居燕尾脊马鞍墙、白墙黛瓦、古巷榕树，意境悠远，留白构图，柔和米色宣纸色调，无文字无人物，高质量插画`;
-    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=' +
-      encodeURIComponent(prompt) + '&image_size=portrait_4_3';
+    return 'img/creative/cert-bg.jpg';
   }
 
   function fillCertificate() {
@@ -302,7 +299,7 @@
       spotsBox.innerHTML = checkinPoints
         .map(p => `<span class="cert-spot-chip">✓ ${p.name}</span>`).join('');
     }
-    // 生成特色背景图（以路线景点为主题；CSS 背景不受跨域限制可直接显示）
+    // 生成特色背景图：本地预生成水墨长卷，稳定可显示
     const card = document.getElementById('certCard');
     const bg = document.getElementById('certBg');
     if (card && bg && checkinPoints.length) {

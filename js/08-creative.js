@@ -174,7 +174,7 @@
     return new Promise(resolve => {
       const img = new Image();
       let done = false;
-      const timer = setTimeout(() => { if (!done) { done = true; resolve(null); } }, 10000);
+      const timer = setTimeout(() => { if (!done) { done = true; resolve(null); } }, 4500);
       img.onload = () => {
         if (done) return;
         done = true; clearTimeout(timer);
@@ -189,13 +189,23 @@
   function creativeFallback(cat) {
     const icon = CAT_ICON[cat] || '🎁';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-      <rect width="400" height="400" fill="#f2f2f2"/>
-      <rect x="20" y="20" width="360" height="360" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="8 6" rx="12"/>
-      <text x="200" y="170" font-size="120" text-anchor="middle">${icon}</text>
-      <text x="200" y="230" font-size="22" font-family="sans-serif" text-anchor="middle" fill="#1a1a1a" font-weight="bold">古厝元素·${cat}</text>
-      <text x="200" y="265" font-size="14" font-family="sans-serif" text-anchor="middle" fill="#888">福州古厝国风文创</text>
-      <text x="200" y="320" font-size="12" font-family="sans-serif" text-anchor="middle" fill="#aaa">（示意图 · AI 出图通道繁忙，可点重新生成）</text>
-      <path d="M60 350 Q100 320 140 340 Q180 315 220 340 Q260 315 300 340 Q340 320 340 350" fill="none" stroke="#1a1a1a" stroke-width="2" opacity="0.3"/>
+      <defs>
+        <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fbf8f1"/>
+          <stop offset="100%" stop-color="#f0e8d8"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="400" fill="url(#paper)"/>
+      <path d="M0 300 Q70 258 130 288 Q200 248 262 288 Q330 256 400 300 L400 400 L0 400 Z" fill="#e6dcc7" opacity="0.85"/>
+      <path d="M0 340 Q90 312 160 336 Q240 308 320 338 Q360 322 400 340 L400 400 L0 400 Z" fill="#d8cbb2" opacity="0.7"/>
+      <path d="M40 372 Q80 356 110 372 M150 372 Q190 352 230 372 M270 372 Q320 354 360 372" stroke="#b9a98c" stroke-width="2" fill="none" opacity="0.8"/>
+      <rect x="18" y="18" width="364" height="364" rx="12" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-dasharray="8 6"/>
+      <circle cx="336" cy="58" r="21" fill="none" stroke="#b23a32" stroke-width="2"/>
+      <text x="336" y="65" font-size="18" font-family="serif" text-anchor="middle" fill="#b23a32">厝</text>
+      <text x="200" y="176" font-size="96" text-anchor="middle">${icon}</text>
+      <text x="200" y="228" font-size="21" font-family="sans-serif" text-anchor="middle" fill="#2b2b2b" font-weight="bold">古厝元素·${cat}</text>
+      <text x="200" y="254" font-size="13" font-family="sans-serif" text-anchor="middle" fill="#8a8175">福州古厝 · 闽都国风文创</text>
+      <text x="200" y="288" font-size="12" font-family="sans-serif" text-anchor="middle" fill="#a8a094">AI 出图通道繁忙，可点「重新生成」重试</text>
     </svg>`;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
@@ -223,16 +233,19 @@
     const imgPrompt = `product photography of ${typeEn}, the ancient house elements (swallow-tail ridge, horse-saddle wall, grey tile, banyan tree) are decorative patterns on the product surface only, NOT the product shape, chinese guofeng style, ${prompt}, elegant minimalist design, clean solid white background, e-commerce studio shot, high detail, sharp focus`;
     const baseUrl = t2i(imgPrompt, CAT_IMG_SIZE[currentCat] || 'square');
 
-    // 文生图接口异步出图：先等 1.2s，再每 3s 带时间戳重试（绕过缓存），最多 8 次
-    const maxAttempts = 8;
+    // 文生图接口异步出图：先等 1.2s，再每 2.5s 带时间戳重试（绕过 CDN 占位图缓存），总时长上限 15s
+    const startAt = Date.now();
+    const limitMs = 15000;
     let finalUrl = null;
-    for (let i = 0; i < maxAttempts; i++) {
-      await new Promise(r => setTimeout(r, i === 0 ? 1200 : 3000));
+    await new Promise(r => setTimeout(r, 1200));
+    while (Date.now() - startAt < limitMs) {
       const txt = previewArea.querySelector('.loading-state .text');
-      if (txt) txt.textContent = 'AI正在绘制古厝文创，请稍候（' + (i + 1) + '/' + maxAttempts + '）';
+      if (txt) txt.textContent = 'AI正在绘制古厝文创，请稍候（' + Math.round((Date.now() - startAt) / 1000) + 's）';
       const sep = baseUrl.includes('?') ? '&' : '?';
       finalUrl = await loadWorkImage(baseUrl + sep + '_t=' + Date.now());
       if (finalUrl) break;
+      const left = limitMs - (Date.now() - startAt);
+      if (left > 0) await new Promise(r => setTimeout(r, Math.min(2500, left)));
     }
 
     const work = {
