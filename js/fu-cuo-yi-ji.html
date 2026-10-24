@@ -294,33 +294,6 @@
     color: #666;
   }
 
-  /* ========== 生成中：先展示本地预生成参考图 ========== */
-  .pending-preview {
-    position: relative;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .pending-preview img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-  }
-  .pending-preview.landscape img { aspect-ratio: 4 / 3; }
-  .pending-mask {
-    position: absolute; inset: 0;
-    background: rgba(255,255,255,.58);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 10px;
-  }
-  .pending-mask .text {
-    font-size: 13px;
-    color: #444;
-  }
-
   /* ========== 作品卡片 ========== */
   .work-card {
     background: #fff;
@@ -329,6 +302,7 @@
     overflow: hidden;
   }
   .work-img {
+    position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     background: #fafafa;
@@ -337,6 +311,19 @@
     justify-content: center;
     cursor: pointer;
     overflow: hidden;
+  }
+  /* AI 效果图角标 */
+  .work-ai-tag {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 2px 6px;
+    font-size: 10px;
+    line-height: 1.5;
+    color: #fff;
+    background: rgba(0, 0, 0, .42);
+    border-radius: 4px;
+    pointer-events: none;
   }
   .work-img.landscape {
     aspect-ratio: 4 / 3;
@@ -1119,7 +1106,7 @@
           <div class="form-group">
             <label class="form-label">提示词</label>
             <div class="prompt-wrap">
-              <textarea class="form-input" id="culturalPrompt" placeholder="描述你的创意，如：以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致">以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致</textarea>
+              <textarea class="form-input" id="culturalPrompt" placeholder="可输入如：爱心树古厝、燕尾脊线稿、榕树下古厝">以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致</textarea>
               <button class="ai-polish-btn" id="polishBtn" onclick="optimizePrompt()">AI优化文案</button>
             </div>
           </div>
@@ -1297,15 +1284,18 @@
 
   /* ========== 品类材质工艺映射（按品类自动匹配） ========== */
   const POLISH_CRAFT = {
-    '书签':   '卡纸/竹片雕刻工艺，简约线条，薄款质感',
-    '帆布袋': '棉麻布料丝网印刷，哑光质感，适合大面积图案',
-    '明信片': '特种艺术纸印刷，淡雅国风',
-    '手机壳': 'TPU磨砂壳，图案精细印刷',
-    '冰箱贴': '亚克力材质，扁平插画',
-    '钥匙扣': '亚克力/木质挂件，小巧精致纹样',
-    '马克杯': '陶瓷釉面印花',
-    '折扇':   '宣纸扇面配竹骨'
+    '书签':   '黄铜雕刻',
+    '帆布袋': '帆布印花',
+    '冰箱贴': '软磁UV印刷',
+    '明信片': '纸质国风印刷',
+    '手机壳': '壳面印花',
+    '钥匙扣': '亚克力挂件',
+    '马克杯': '陶瓷花纸',
+    '折扇':   '扇面线稿'
   };
+
+  /* ========== 负面提示词（避免出图走形） ========== */
+  const NEGATIVE_PROMPT = '禁止扭曲建筑、杂乱背景、畸形元素、模糊低清';
 
   /* ========== 多样化风格库（随机切换，避免模板化） ========== */
   const POLISH_STYLE = [
@@ -1446,7 +1436,7 @@
       gridEl.innerHTML = list.map(g => `
         <div class="shop-card" onclick="openProductDetail('${view}', '${g.id}')">
           <div class="shop-img">
-            <img src="${g.img}" alt="${g.name}" loading="lazy">
+            <img src="${g.img}" alt="${g.name}">
             <span class="shop-badge ${view}">${badge}</span>
           </div>
           <div class="shop-info">
@@ -1929,7 +1919,7 @@
             `${base}，结合${elementsStr.replace('融入', '')}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
             `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
           ];
-      const polished = pick(templates);
+      const polished = pick(templates) + `负面提示：${NEGATIVE_PROMPT}。`;
 
       ta.value = `【AI优化】${polished}`;
 
@@ -1968,24 +1958,12 @@
       </div>`;
   }
 
-  function renderLoading(cat) {
-    const local = CAT_LOCAL_IMG[cat];
-    if (!local) {
-      $('previewArea').innerHTML = `
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <div class="text">AI正在绘制古厝文创，请稍候</div>
-        </div>`;
-      return;
-    }
-    // 先展示品类预生成图，避免长时间空白等待
+  function renderLoading() {
+    // 生成中只显示加载动画，不提前露出任何图片
     $('previewArea').innerHTML = `
-      <div class="pending-preview ${cat === '明信片' ? 'landscape' : ''}">
-        <img src="${local}" alt="参考效果图" />
-        <div class="pending-mask">
-          <div class="spinner"></div>
-          <div class="text">AI 正在个性化绘制，已先展示参考效果</div>
-        </div>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <div class="text">正在生成，请稍候</div>
       </div>`;
   }
 
@@ -1997,6 +1975,7 @@
       <div class="work-card">
         <div class="work-img ${isLandscape ? 'landscape' : ''}" onclick="openPreview('${work.img}')">
           <img src="${work.img}" alt="${work.name}" />
+          <span class="work-ai-tag">AI效果图，仅供文创参考</span>
         </div>
         <div class="work-meta">
           <div class="work-name">${CAT_ICON[work.cat] || '🎁'} 古厝元素·${work.cat}</div>
@@ -2072,7 +2051,7 @@
     grid.innerHTML = savedWorks.map(g => `
       <div class="shop-card" onclick="openProductDetail('custom', '${g.id}')">
         <div class="shop-img">
-          <img src="${g.img}" alt="${g.name}" loading="lazy">
+          <img src="${g.img}" alt="${g.name}">
           <span class="shop-badge custom">定制</span>
         </div>
         <div class="shop-info">
@@ -2088,20 +2067,47 @@
       </div>`).join('');
   }
 
+  /* ========== 生成结果本地缓存：相同提示词+相同品类优先复用 ========== */
+  const GEN_CACHE_KEY = 'fzyj_gen_cache_v1';
+  const GEN_CACHE_FALLBACK_TTL = 10 * 60 * 1000; // 预制样稿缓存 10 分钟内有效，过期后重新尝试真图
+  function readGenCache(cat, prompt) {
+    try {
+      const map = JSON.parse(localStorage.getItem(GEN_CACHE_KEY) || '{}');
+      const v = map[cat + '|' + prompt];
+      if (!v || !v.u) return null;
+      if (v.f && Date.now() - v.t > GEN_CACHE_FALLBACK_TTL) return null;
+      return v.u;
+    } catch (e) { return null; }
+  }
+  function writeGenCache(cat, prompt, url, isFallback) {
+    try {
+      const map = JSON.parse(localStorage.getItem(GEN_CACHE_KEY) || '{}');
+      map[cat + '|' + prompt] = { u: url, t: Date.now(), f: isFallback ? 1 : 0 };
+      const keys = Object.keys(map);
+      if (keys.length > 40) keys.slice(0, keys.length - 40).forEach(k => delete map[k]);
+      localStorage.setItem(GEN_CACHE_KEY, JSON.stringify(map));
+    } catch (e) { /* 缓存失败不影响主流程 */ }
+  }
+
   /* ========== AI 生成文创效果图（含轮询重试，确保真图可见） ========== */
   function generateWork() {
+    const btn = $('generateBtn');
+    // 防重复提交
+    if (btn.disabled) return;
+
     const prompt = ($('culturalPrompt').value || '').trim()
       || '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
 
-    const btn = $('generateBtn');
     btn.disabled = true;
-    btn.textContent = '生成中…';
+    btn.textContent = '正在生成，请稍候';
 
-    renderLoading(currentCat);
+    renderLoading();
 
     // 拼装文生图提示词：先锁定产品实物形态，古厝元素仅作为表面纹样
+    // AI 优化文案已把品类工艺与负面提示写进 textarea，这里拆开分别拼装
     const typeEn = CAT_EN[currentCat] || 'souvenir';
-    const imgPrompt = `product photography of ${typeEn}, the ancient house elements (swallow-tail ridge, horse-saddle wall, grey tile, banyan tree) are decorative patterns on the product surface only, NOT the product shape, chinese guofeng style, ${prompt}, elegant minimalist design, clean solid white background, e-commerce studio shot, high detail, sharp focus`;
+    const positive = prompt.replace(/负面提示：.*$/, '').trim();
+    const imgPrompt = `product photography of ${typeEn}, the ancient house elements (swallow-tail ridge, horse-saddle wall, grey tile, banyan tree) are decorative patterns on the product surface only, NOT the product shape, chinese guofeng style, ${positive}, elegant minimalist design, clean solid white background, e-commerce studio shot, high detail, sharp focus, avoid distorted architecture, cluttered background, deformed elements, blurry low resolution`;
     const baseUrl = t2i(imgPrompt, CAT_IMG_SIZE[currentCat] || 'square');
 
     // 网络真图出不来时：优先用品类预生成图，再退到国风占位 SVG
@@ -2149,9 +2155,12 @@
       btn.disabled = false; btn.textContent = 'AI生成文创效果图';
     }
 
-    // 3.5s 内没出真图，先用品类参考图交付，避免长时间等待；后台继续等真图
+    // 3.5s 内没出真图，先交付该品类预制样稿，避免长时间等待；后台继续等真图
     const earlyTimer = setTimeout(() => {
-      if (!finalImg) showResult(fallback);
+      if (!finalImg) {
+        writeGenCache(currentCat, prompt, fallback, true);
+        showResult(fallback);
+      }
     }, 3500);
 
     // 轮询：先等 1.2s loading，之后每 2.5s 重试（带时间戳绕过 CDN 占位图缓存），总时长上限 15s
@@ -2159,14 +2168,15 @@
     const limitMs = 15000;
 
     async function poll() {
-      const txt = document.querySelector('#previewArea .pending-mask .text, #previewArea .loading-state .text');
+      const txt = document.querySelector('#previewArea .loading-state .text');
       await new Promise(r => setTimeout(r, 1200));
       while (Date.now() - startAt < limitMs) {
-        if (txt) txt.textContent = 'AI 正在个性化绘制，已先展示参考效果（' + Math.round((Date.now() - startAt) / 1000) + 's）';
+        if (txt) txt.textContent = '正在生成，请稍候（' + Math.round((Date.now() - startAt) / 1000) + 's）';
         const tsUrl = baseUrl + '&_t=' + Date.now();
         const result = await loadImage(tsUrl);
         if (result.ok) {
           finalImg = result.url;
+          writeGenCache(currentCat, prompt, finalImg);
           clearTimeout(earlyTimer);
           showResult(finalImg);
           return;
@@ -2174,14 +2184,26 @@
         const left = limitMs - (Date.now() - startAt);
         if (left > 0) await new Promise(r => setTimeout(r, Math.min(2500, left)));
       }
-      // 超限用品类预生成图兜底（绝对不会空白），并提示可重新生成
+      // 超限静默加载该品类预制样稿，不打断游客操作
       clearTimeout(earlyTimer);
       finalImg = fallback;
       showResult(fallback);
-      showToast('AI 出图通道繁忙，已展示该品类参考效果，可点「重新生成」再试');
     }
 
-    poll();
+    // 相同提示词+相同品类优先读取本地缓存，二次生成几乎瞬时完成
+    const cachedUrl = readGenCache(currentCat, prompt);
+    if (cachedUrl) {
+      loadImage(cachedUrl).then(hit => {
+        if (hit.ok) {
+          clearTimeout(earlyTimer);
+          showResult(cachedUrl);
+        } else {
+          poll();
+        }
+      });
+    } else {
+      poll();
+    }
   }
 
   /* ========== 离线兜底：生成国风示意 SVG ========== */
