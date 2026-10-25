@@ -277,10 +277,19 @@
     return b;
   }
 
+  // 语言入口只保留在启动页、首页、设置基础信息这三页，其余页面不显示 🌐
+  var GLOBE_PAGES = { 'page-splash': 1, 'page-home': 1, 'page-settings': 1 };
+
+  function inGlobePage(el) {
+    var page = el && el.closest ? el.closest('.page') : null;
+    return !!(page && GLOBE_PAGES[page.id]);
+  }
+
   function injectGlobe() {
     var navs = document.querySelectorAll('.nav-bar');
     for (var i = 0; i < navs.length; i++) {
       var nav = navs[i];
+      if (!inGlobePage(nav)) continue;
       if (nav.querySelector('.lang-btn')) continue;
       var holders = nav.querySelectorAll('.right-placeholder');
       var slot = holders.length ? holders[holders.length - 1] : null;
@@ -290,6 +299,7 @@
     }
     var rows = document.querySelectorAll('.app-name-row');
     for (var j = 0; j < rows.length; j++) {
+      if (!inGlobePage(rows[j])) continue;
       if (rows[j].querySelector('.lang-btn')) continue;
       rows[j].appendChild(makeGlobe());
     }
