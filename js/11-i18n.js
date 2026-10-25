@@ -17,8 +17,25 @@
   var inFrame = false;
   try { inFrame = window.self !== window.top; } catch (e) { inFrame = true; }
 
-  var savedLang = null;
-  try { savedLang = localStorage.getItem(LS_KEY); } catch (e) {}
+  // 语言读取：localStorage 优先，其次 sessionStorage / cookie（避免隐私模式或存储被禁时反复弹窗）
+  function readLang() {
+    var v = null;
+    try { v = localStorage.getItem(LS_KEY); } catch (e) {}
+    if (!v) { try { v = sessionStorage.getItem(LS_KEY); } catch (e) {} }
+    if (!v) {
+      var m = document.cookie.match(/(?:^|;\s*)fzyj_lang=([a-zA-Z]+)/);
+      if (m) v = m[1];
+    }
+    return v === 'en' || v === 'zh' ? v : null;
+  }
+
+  function writeLang(l) {
+    try { localStorage.setItem(LS_KEY, l); } catch (e) {}
+    try { sessionStorage.setItem(LS_KEY, l); } catch (e) {}
+    try { document.cookie = LS_KEY + '=' + l + ';path=/;max-age=31536000;SameSite=Lax'; } catch (e) {}
+  }
+
+  var savedLang = readLang();
   var current = savedLang === 'en' ? 'en' : 'zh';
 
   var applying = false;
@@ -58,6 +75,11 @@
     var core = m ? m[2] : str;
     if (!core || !CN_RE.test(core)) return str;
     var out = DICT[core];
+    // 「⌂ 首页」「🏆 排行榜」这类带图标/符号前缀的短标签：剥离前缀后按主体查词
+    if (out == null) {
+      var pre = /^([^\u4e00-\u9fa5A-Za-z0-9]*)([\u4e00-\u9fa5][\s\S]*)$/.exec(core);
+      if (pre && pre[1] && DICT[pre[2]] != null) out = pre[1] + DICT[pre[2]];
+    }
     if (out == null) {
       for (var i = 0; i < RULES.length; i++) {
         var r = RULES[i];
@@ -75,7 +97,8 @@
   }
 
   /* ---------- DOM 翻译 ---------- */
-  var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, INPUT: 1 };
+  // TEXTAREA 不整体跳过：它内部的文本节点（默认值）需要按未编辑状态单独翻译
+  var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, INPUT: 1 };
 
   function skipEl(el) {
     if (!el || el.nodeType !== 1) return false;
@@ -109,6 +132,7 @@
     var out = T(src);
     if (out === src) return;
     node.__i18nOrig = src;
+    node.__i18nLast = out;   // 记录本引擎最后一次写入，避免把翻译结果当原文反复处理
     if (node.nodeValue !== out) node.nodeValue = out;
   }
 
@@ -133,6 +157,14 @@
     if (root.nodeType === 3) { trText(root); return; }
     if (root.nodeType !== 1) return;
     trAttr(root);              // 先处理自身属性（含输入框 placeholder）
+    // 文本域里的文本节点就是它的默认值：用户尚未改动时一并翻译，避免覆盖已输入内容
+    if (root.tagName === 'TEXTAREA') {
+      if (root.value === root.defaultValue && root.childNodes.length === 1 &&
+          root.childNodes[0].nodeType === 3) {
+        trText(root.childNodes[0]);
+      }
+      return;
+    }
     if (skipEl(root)) return;  // 再决定是否深入子树
     var children = root.childNodes;
     for (var i = 0; i < children.length; i++) translateSubtree(children[i]);
@@ -142,7 +174,7 @@
     if (current !== 'en') return;
     applying = true;
     try {
-      translateSubtree(document.body);
+      try { translateSubtree(document.body); } catch (e) { console.warn('i18n translate failed', e); }
       if (document.title) document.title = T(titleSrc);
     } finally { applying = false; }
   }
@@ -178,13 +210,20 @@
         for (var i = 0; i < muts.length; i++) {
           var m = muts[i];
           if (m.type === 'characterData') {
-            if (m.target) { m.target.__i18nOrig = null; trText(m.target); }
+            var t = m.target;
+            // 业务代码改写文本（Toast 等）时重新翻译；若是本引擎自己写入的结果则跳过，避免自触发
+            if (!t || (t.__i18nLast != null && t.__i18nLast === t.nodeValue)) continue;
+            t.__i18nOrig = null;
+            t.__i18nLast = null;
+            trText(t);
           } else if (m.type === 'childList') {
             for (var j = 0; j < m.addedNodes.length; j++) translateSubtree(m.addedNodes[j]);
           } else if (m.type === 'attributes') {
             trAttr(m.target);
           }
         }
+      } catch (e) {
+        console.warn('i18n observer failed', e);
       } finally { applying = false; }
     });
     observer.observe(document.body, {
@@ -198,23 +237,26 @@
   }
 
   /* ---------- 语言切换 ---------- */
+  function syncFrame(l) {
+    var frame = document.querySelector('#page-cultural .cultural-iframe');
+    if (!frame || !frame.contentWindow) return;
+    try { frame.contentWindow.postMessage({ type: 'fzyj-lang', lang: l || current }, '*'); } catch (e) {}
+  }
+
   function setLang(lang, opts) {
     var l = lang === 'en' ? 'en' : 'zh';
     current = l;
-    try { localStorage.setItem(LS_KEY, l); } catch (e) {}
+    writeLang(l);
     document.documentElement.lang = l === 'en' ? 'en' : 'zh-CN';
-    if (l === 'en') { translateAll(); startObserver(); }
-    else { stopObserver(); restoreAll(); }
+    // 先收起语言弹窗，避免翻译耗时/异常时遮罩把页面锁住
+    var mask = document.getElementById('langMask');
+    if (mask) mask.classList.remove('show');
+    try {
+      if (l === 'en') { translateAll(); startObserver(); }
+      else { stopObserver(); restoreAll(); }
+    } catch (e) { console.warn('i18n setLang failed', e); }
     updateLangButtons();
-    // 同步 iframe（福厝艺集）
-    var frame = document.querySelector('#page-cultural .cultural-iframe');
-    if (frame && frame.contentWindow) {
-      try { frame.contentWindow.postMessage({ type: 'fzyj-lang', lang: l }, '*'); } catch (e) {}
-    }
-    if (!opts || !opts.silent) {
-      var mask = document.getElementById('langMask');
-      if (mask) mask.classList.remove('show');
-    }
+    syncFrame(l);
   }
 
   function getLang() { return current; }
@@ -281,12 +323,8 @@
         '<div class="lang-note">选择您所偏好的游览语言</div>' +
       '</div>';
     mask.addEventListener('click', function (ev) {
-      if (ev.target === mask) {
-        // 已选过语言时，允许点空白处关闭；首次进入需先选一种
-        var picked = null;
-        try { picked = localStorage.getItem(LS_KEY); } catch (e) {}
-        if (picked) mask.classList.remove('show');
-      }
+      // 点遮罩空白处即可关闭（防止弹窗在异常场景下把整页点击锁住）
+      if (ev.target === mask) mask.classList.remove('show');
     });
     var opts = mask.querySelectorAll('.lang-opt');
     for (var i = 0; i < opts.length; i++) {
@@ -313,6 +351,22 @@
   }
 
   /* ---------- 初始化 ---------- */
+  // 每次切换页面后补翻一次目标页，保证动态渲染的页面与其它页语言一致
+  function hookPaint() {
+    if (typeof window.paintScreen !== 'function' || window.paintScreen.__i18nHooked) return;
+    var orig = window.paintScreen;
+    var wrapped = function (id) {
+      var r = orig.apply(this, arguments);
+      if (current === 'en') {
+        var page = document.getElementById('page-' + id);
+        if (page) translateSubtree(page);
+      }
+      return r;
+    };
+    wrapped.__i18nHooked = true;
+    window.paintScreen = wrapped;
+  }
+
   function boot() {
     if (inFrame) {
       // 子页（福厝艺集）：沿用本地缓存；父页切换时通过 postMessage 同步
@@ -330,9 +384,24 @@
     document.documentElement.lang = current === 'en' ? 'en' : 'zh-CN';
     if (current === 'en') { translateAll(); startObserver(); }
     if (!savedLang) {
-      setTimeout(function () { openLangModal(); }, 450);
+      setTimeout(function () {
+        // 只在用户确实还没选过语言时弹出一次
+        if (!readLang() && current === 'zh') openLangModal();
+      }, 450);
     }
-    // 页面切换后（原有逻辑只切 class，不重建 DOM）无需额外处理
+    hookPaint();
+    // iframe 子页可能在语言切换后才加载完成，加载时再同步一次语言
+    var frame = document.querySelector('#page-cultural .cultural-iframe');
+    if (frame) {
+      frame.addEventListener('load', function () { syncFrame(current); });
+      syncFrame(current);
+    }
+    // 从微信/浏览器返回缓存（bfcache）时重新应用一次
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      if (current === 'en') { translateAll(); startObserver(); }
+      syncFrame(current);
+    });
   }
 
   // 暴露给业务代码（AI 优化提示词 / 导航提示等）
