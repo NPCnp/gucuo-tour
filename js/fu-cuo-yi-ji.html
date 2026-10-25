@@ -1057,6 +1057,54 @@
   }
   .ck-submit:active { opacity: .85; }
   .ck-submit b { font-size: 16px; }
+
+  /* ========== 中英文切换（右上角 🌐 入口 + 轻量语言弹窗） ========== */
+  .nav-bar .right-placeholder { display: flex; align-items: center; justify-content: center; }
+  .lang-btn {
+    width: 30px; height: 30px;
+    padding: 0; border: none; background: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1;
+    color: #1a1a1a; opacity: .72;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .lang-btn:active { opacity: 1; transform: scale(.92); }
+  .lang-btn.is-en { opacity: .95; }
+  .lang-mask {
+    position: absolute; inset: 0;
+    z-index: 1200;
+    background: rgba(24, 20, 14, .30);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  .lang-mask.show { opacity: 1; pointer-events: auto; }
+  .lang-card {
+    width: min(272px, 78%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 18px 15px;
+    box-shadow: 0 14px 40px rgba(30, 26, 18, .20);
+    text-align: center;
+    transform: translateY(8px) scale(.97);
+    transition: transform .18s ease;
+  }
+  .lang-mask.show .lang-card { transform: none; }
+  .lang-title { font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: .2px; }
+  .lang-actions { display: flex; gap: 10px; margin: 16px 0 10px; }
+  .lang-opt {
+    flex: 1; height: 40px;
+    border-radius: 10px;
+    border: 1px solid #ddd6c8;
+    background: #fdfaf4;
+    color: #2b2b2b;
+    font-size: 14px; font-weight: 600;
+    font-family: inherit;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .lang-opt.active, .lang-opt:active { background: #2f5d50; border-color: #2f5d50; color: #fff; }
+  .lang-note { font-size: 11px; color: #9a9a9a; line-height: 1.4; }
 </style>
 </head>
 <body>
@@ -1296,6 +1344,38 @@
 
   /* ========== 负面提示词（避免出图走形） ========== */
   const NEGATIVE_PROMPT = '禁止扭曲建筑、杂乱背景、畸形元素、模糊低清';
+  const NEGATIVE_PROMPT_EN = 'no distorted buildings, no cluttered background, no deformed elements, no blurry low-resolution output';
+
+  /* ========== 英文模式素材（英文模式直接产出英文绘图提示词） ========== */
+  const CAT_NAME_EN = {
+    '书签': 'bookmark', '帆布袋': 'canvas tote bag', '明信片': 'postcard', '手机壳': 'phone case',
+    '冰箱贴': 'fridge magnet', '钥匙扣': 'keychain', '马克杯': 'mug', '折扇': 'folding fan'
+  };
+  const POLISH_CRAFT_EN = {
+    '书签': 'brass engraving with clean lines and a slim refined finish',
+    '帆布袋': 'canvas screen printing with matte texture',
+    '冰箱贴': 'soft magnetic UV printing',
+    '明信片': 'fine-art paper printing in a light guofeng style',
+    '手机壳': 'precise pattern printing on the case surface',
+    '钥匙扣': 'acrylic charm with delicate patterns',
+    '马克杯': 'ceramic glaze printing',
+    '折扇': 'line-art painting on the fan face'
+  };
+  const POLISH_STYLE_EN = [
+    'guofeng line-art illustration', 'minimal fresh illustration', 'light watercolor texture',
+    'china-chic illustration', 'oriental ink wash', 'new Chinese style design',
+    'clean line drawing with soft color', 'fresh guofeng illustration',
+    'Mindu heritage illustration', 'ultra-minimal guofeng lines'
+  ];
+  const POLISH_COMPOSITION_EN = [
+    'clean soft lines, simple composition, refined details',
+    'soft layered image with large-scale patterns',
+    'centered subject, generous negative space, delicate brushwork',
+    'symmetrical composition, clear layers, light elegant colors',
+    'close-up detail, rich texture, airy composition',
+    'full composition, flowing lines, fresh texture',
+    'well-balanced density, proper negative space, poetic mood'
+  ];
 
   /* ========== 多样化风格库（随机切换，避免模板化） ========== */
   const POLISH_STYLE = [
@@ -1883,45 +1963,65 @@
   function optimizePrompt() {
     const ta = $('culturalPrompt');
     const btn = $('polishBtn');
+    const isEn = typeof window.getLang === 'function' && window.getLang() === 'en';
 
     let base = (ta.value || '').trim();
-    if (!base) base = '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+    if (!base) {
+      base = isEn
+        ? 'Fuzhou historic residence swallowtail ridges and saddle walls, minimalist and elegant'
+        : '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+    }
 
     // 若之前优化过，剥离旧的「【AI优化】」段，取用户原始创意
-    base = base.split('【AI优化】')[0].replace(/[。\s]+$/, '');
+    base = base.split('【AI优化】')[0].split('[AI Enhanced]')[0].replace(/[。\s]+$/, '');
     // 去掉开头的「以」方便拼接句式
-    const baseClean = base.replace(/^以/, '').replace(/[。\s]+$/, '');
+    const baseClean = isEn ? base : base.replace(/^以/, '').replace(/[。\s]+$/, '');
 
     btn.disabled = true;
     btn.textContent = '优化中…';
 
     // 模拟大模型思考延迟
     setTimeout(() => {
-      // 强制元素：马鞍墙、燕尾脊、灰塑、青瓦、榕树（全部必须出现）
-      const elementsStr = '融入福州古厝' + MUST_ELEMENTS.join('、') + '元素';
+      let polished;
+      if (isEn) {
+        // 英文模式：直接产出英文绘图提示词（古厝元素 + 品类材质工艺 + 风格构图 + 负面提示）
+        const catName = CAT_NAME_EN[currentCat] || 'cultural-creative product';
+        const elementsStr = 'incorporating Fuzhou historic residence motifs: saddle walls, swallowtail ridges, grey plaster sculpture, grey tiles and banyan trees';
+        const craft = POLISH_CRAFT_EN[currentCat] || 'fine crafted details';
+        const style = pick(POLISH_STYLE_EN);
+        const composition = pick(POLISH_COMPOSITION_EN);
+        const isShortPhrase = base.length <= 12 && !/[,\s]/.test(base);
+        polished = isShortPhrase
+          ? `A ${catName} centered on "${baseClean}", ${elementsStr}, ${style}, ${craft}, ${composition}, high detail, ideal for a ${catName} design.`
+          : `${base}, ${elementsStr}, ${style}, ${craft}, ${composition}, high detail, ideal for a ${catName} design.`;
+        polished += ` Negative prompt: ${NEGATIVE_PROMPT_EN}.`;
+      } else {
+        // 强制元素：马鞍墙、燕尾脊、灰塑、青瓦、榕树（全部必须出现）
+        const elementsStr = '融入福州古厝' + MUST_ELEMENTS.join('、') + '元素';
 
-      // 按品类匹配材质工艺
-      const craft = POLISH_CRAFT[currentCat] || '精致工艺细节';
-      // 随机风格 + 构图，避免每次雷同
-      const style = pick(POLISH_STYLE);
-      const composition = pick(POLISH_COMPOSITION);
+        // 按品类匹配材质工艺
+        const craft = POLISH_CRAFT[currentCat] || '精致工艺细节';
+        // 随机风格 + 构图，避免每次雷同
+        const style = pick(POLISH_STYLE);
+        const composition = pick(POLISH_COMPOSITION);
 
-      // 句式选择：短创意用「以…为主体」，长描述直接拼接，避免语法不通
-      const isShortPhrase = !base.includes('为元素') && !base.includes('风格') && base.length <= 12;
-      const templates = isShortPhrase
-        ? [
-            `以${baseClean}为主体，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
-            `主体为${baseClean}，${elementsStr}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
-            `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
-          ]
-        : [
-            `${base}，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
-            `${base}，结合${elementsStr.replace('融入', '')}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
-            `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
-          ];
-      const polished = pick(templates) + `负面提示：${NEGATIVE_PROMPT}。`;
+        // 句式选择：短创意用「以…为主体」，长描述直接拼接，避免语法不通
+        const isShortPhrase = !base.includes('为元素') && !base.includes('风格') && base.length <= 12;
+        const templates = isShortPhrase
+          ? [
+              `以${baseClean}为主体，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
+              `主体为${baseClean}，${elementsStr}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
+              `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
+            ]
+          : [
+              `${base}，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
+              `${base}，结合${elementsStr.replace('融入', '')}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
+              `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
+            ];
+        polished = pick(templates) + `负面提示：${NEGATIVE_PROMPT}。`;
+      }
 
-      ta.value = `【AI优化】${polished}`;
+      ta.value = (isEn ? '[AI Enhanced] ' : '【AI优化】') + polished;
 
       // 自适应高度：先 auto 让内容溢出，再读真实 scrollHeight
       ta.style.height = 'auto';
@@ -2095,8 +2195,11 @@
     // 防重复提交
     if (btn.disabled) return;
 
+    const isEn = typeof window.getLang === 'function' && window.getLang() === 'en';
     const prompt = ($('culturalPrompt').value || '').trim()
-      || '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+      || (isEn
+        ? 'Fuzhou historic residence swallowtail ridges and saddle walls, minimalist and elegant'
+        : '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致');
 
     btn.disabled = true;
     btn.textContent = '正在生成，请稍候';
@@ -2106,7 +2209,7 @@
     // 拼装文生图提示词：先锁定产品实物形态，古厝元素仅作为表面纹样
     // AI 优化文案已把品类工艺与负面提示写进 textarea，这里拆开分别拼装
     const typeEn = CAT_EN[currentCat] || 'souvenir';
-    const positive = prompt.replace(/负面提示：.*$/, '').trim();
+    const positive = prompt.replace(/(负面提示|Negative prompt)[:：].*$/, '').trim();
     const imgPrompt = `product photography of ${typeEn}, the ancient house elements (swallow-tail ridge, horse-saddle wall, grey tile, banyan tree) are decorative patterns on the product surface only, NOT the product shape, chinese guofeng style, ${positive}, elegant minimalist design, clean solid white background, e-commerce studio shot, high detail, sharp focus, avoid distorted architecture, cluttered background, deformed elements, blurry low resolution`;
     const baseUrl = t2i(imgPrompt, CAT_IMG_SIZE[currentCat] || 'square');
 
@@ -2355,5 +2458,9 @@
     });
   })();
 </script>
+<!-- 中英文切换（词典 + 动态规则 + 引擎）：与主页面共用同一份语言缓存 -->
+<script src="i18n/dict.js?v=1"></script>
+<script src="i18n/rules.js?v=1"></script>
+<script src="11-i18n.js?v=1"></script>
 </body>
 </html>

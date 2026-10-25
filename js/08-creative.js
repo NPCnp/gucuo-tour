@@ -100,6 +100,37 @@
     '疏密有致，留白得当，意境悠远'
   ];
 
+  /* ========== 英文模式：AI 优化文案素材（保证英文模式产出英文绘图提示词） ========== */
+  const CAT_NAME_EN = {
+    '书签': 'bookmark', '帆布袋': 'canvas tote bag', '明信片': 'postcard', '手机壳': 'phone case',
+    '冰箱贴': 'fridge magnet', '钥匙扣': 'keychain', '马克杯': 'mug', '折扇': 'folding fan'
+  };
+  const POLISH_CRAFT_EN = {
+    '书签': 'brass engraving with clean lines and a slim refined finish',
+    '帆布袋': 'canvas screen printing with matte texture, ideal for large patterns',
+    '明信片': 'fine-art paper printing in a light guofeng style',
+    '手机壳': 'matte TPU case with precise pattern printing',
+    '冰箱贴': 'flat acrylic illustration',
+    '钥匙扣': 'compact acrylic or wooden charm with delicate patterns',
+    '马克杯': 'ceramic glaze printing',
+    '折扇': 'rice-paper fan face with bamboo ribs'
+  };
+  const POLISH_STYLE_EN = [
+    'guofeng line-art illustration', 'minimal fresh illustration', 'light watercolor texture',
+    'china-chic illustration', 'oriental ink wash', 'new Chinese style design',
+    'clean line drawing with soft color', 'fresh guofeng illustration',
+    'Mindu heritage illustration', 'ultra-minimal guofeng lines'
+  ];
+  const POLISH_COMPOSITION_EN = [
+    'clean soft lines, simple composition, refined details',
+    'soft layered image with large-scale patterns',
+    'centered subject, generous negative space, delicate brushwork',
+    'symmetrical composition, clear layers, light elegant colors',
+    'close-up detail, rich texture, airy composition',
+    'full composition, flowing lines, fresh texture',
+    'well-balanced density, proper negative space, poetic mood'
+  ];
+
   /* ========== 品类单选（仅当元素存在时绑定，元素在 iframe 中时跳过） ========== */
   const _catGrid = document.getElementById('categoryGrid');
   if (_catGrid) {
@@ -116,40 +147,59 @@
   function optimizePrompt() {
     const ta = document.getElementById('culturalPrompt');
     const btn = document.getElementById('polishBtn');
+    const isEn = typeof window.getLang === 'function' && window.getLang() === 'en';
 
     let base = (ta.value || '').trim();
-    if (!base) base = '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+    if (!base) {
+      base = isEn
+        ? 'Fuzhou historic residence swallowtail ridges and saddle walls, minimalist and elegant'
+        : '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+    }
 
     // 剥离旧的【AI优化】段，取用户原始创意
-    base = base.split('【AI优化】')[0].replace(/[。\s]+$/, '');
-    const baseClean = base.replace(/^以/, '').replace(/[。\s]+$/, '');
+    base = base.split('【AI优化】')[0].split('[AI Enhanced]')[0].replace(/[。\s]+$/, '');
+    const baseClean = isEn ? base : base.replace(/^以/, '').replace(/[。\s]+$/, '');
 
     btn.disabled = true;
     btn.textContent = '优化中…';
 
     setTimeout(() => {
-      // 强制元素全部出现
-      const elementsStr = '融入福州古厝' + MUST_ELEMENTS.join('、') + '元素';
-      const craft = POLISH_CRAFT[currentCat] || '精致工艺细节';
-      const style = pick(POLISH_STYLE);
-      const composition = pick(POLISH_COMPOSITION);
+      let polished;
+      if (isEn) {
+        // 英文模式：直接产出英文绘图提示词（融入古厝元素 + 品类材质工艺 + 构图风格）
+        const catName = CAT_NAME_EN[currentCat] || 'cultural-creative product';
+        const elementsStr = 'incorporating Fuzhou historic residence motifs: saddle walls, swallowtail ridges, grey plaster sculpture, grey tiles and banyan trees';
+        const craft = POLISH_CRAFT_EN[currentCat] || 'fine crafted details';
+        const style = pick(POLISH_STYLE_EN);
+        const composition = pick(POLISH_COMPOSITION_EN);
+        const isShortPhrase = base.length <= 12 && !/[,\s]/.test(base);
+        polished = isShortPhrase
+          ? `A ${catName} centered on "${baseClean}", ${elementsStr}, ${style}, ${craft}, ${composition}, high detail, ideal for a ${catName} design.`
+          : `${base}, ${elementsStr}, ${style}, ${craft}, ${composition}, high detail, ideal for a ${catName} design.`;
+      } else {
+        // 强制元素全部出现
+        const elementsStr = '融入福州古厝' + MUST_ELEMENTS.join('、') + '元素';
+        const craft = POLISH_CRAFT[currentCat] || '精致工艺细节';
+        const style = pick(POLISH_STYLE);
+        const composition = pick(POLISH_COMPOSITION);
 
-      // 短创意用「以…为主体」，长描述直接拼接
-      const isShortPhrase = !base.includes('为元素') && !base.includes('风格') && base.length <= 12;
-      const templates = isShortPhrase
-        ? [
-            `以${baseClean}为主体，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
-            `主体为${baseClean}，${elementsStr}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
-            `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
-          ]
-        : [
-            `${base}，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
-            `${base}，结合${elementsStr.replace('融入', '')}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
-            `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
-          ];
-      const polished = pick(templates);
+        // 短创意用「以…为主体」，长描述直接拼接
+        const isShortPhrase = !base.includes('为元素') && !base.includes('风格') && base.length <= 12;
+        const templates = isShortPhrase
+          ? [
+              `以${baseClean}为主体，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
+              `主体为${baseClean}，${elementsStr}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
+              `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
+            ]
+          : [
+              `${base}，${elementsStr}，${style}，${craft}，${composition}，高清细腻，适合${currentCat}文创落地。`,
+              `${base}，结合${elementsStr.replace('融入', '')}，${style}，${craft}，${composition}，适合${currentCat}文创。`,
+              `${base}，${elementsStr}，${style}，${craft}，${composition}，画面精致，适合${currentCat}文创落地。`
+            ];
+        polished = pick(templates);
+      }
 
-      ta.value = `【AI优化】${polished}`;
+      ta.value = (isEn ? '[AI Enhanced] ' : '【AI优化】') + polished;
       setTimeout(autoResizePrompt, 0);
       showToast('AI 已完成文案优化');
       btn.disabled = false;
@@ -187,7 +237,11 @@
 
   // 通道繁忙时的国风示意 SVG，避免出现英文占位图或空白
   function creativeFallback(cat) {
+    const isEn = typeof window.getLang === 'function' && window.getLang() === 'en';
     const icon = CAT_ICON[cat] || '🎁';
+    const titleTxt = isEn ? ('Gucuo Motif · ' + (CAT_NAME_EN[cat] || cat)) : ('古厝元素·' + cat);
+    const subTxt = isEn ? 'Fuzhou Historic Residence · Mindu Guofeng Design' : '福州古厝 · 闽都国风文创';
+    const noteTxt = isEn ? 'AI channel is busy. Tap “Regenerate” to retry.' : 'AI 出图通道繁忙，可点「重新生成」重试';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
       <defs>
         <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
@@ -203,9 +257,9 @@
       <circle cx="336" cy="58" r="21" fill="none" stroke="#b23a32" stroke-width="2"/>
       <text x="336" y="65" font-size="18" font-family="serif" text-anchor="middle" fill="#b23a32">厝</text>
       <text x="200" y="176" font-size="96" text-anchor="middle">${icon}</text>
-      <text x="200" y="228" font-size="21" font-family="sans-serif" text-anchor="middle" fill="#2b2b2b" font-weight="bold">古厝元素·${cat}</text>
-      <text x="200" y="254" font-size="13" font-family="sans-serif" text-anchor="middle" fill="#8a8175">福州古厝 · 闽都国风文创</text>
-      <text x="200" y="288" font-size="12" font-family="sans-serif" text-anchor="middle" fill="#a8a094">AI 出图通道繁忙，可点「重新生成」重试</text>
+      <text x="200" y="228" font-size="21" font-family="sans-serif" text-anchor="middle" fill="#2b2b2b" font-weight="bold">${titleTxt}</text>
+      <text x="200" y="254" font-size="13" font-family="sans-serif" text-anchor="middle" fill="#8a8175">${subTxt}</text>
+      <text x="200" y="288" font-size="12" font-family="sans-serif" text-anchor="middle" fill="#a8a094">${noteTxt}</text>
     </svg>`;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
@@ -214,9 +268,14 @@
     const ta = document.getElementById('culturalPrompt');
     const btn = document.getElementById('culturalBtn');
     const previewArea = document.getElementById('previewArea');
+    const isEn = typeof window.getLang === 'function' && window.getLang() === 'en';
 
     let prompt = (ta.value || '').trim();
-    if (!prompt) prompt = '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+    if (!prompt) {
+      prompt = isEn
+        ? 'Fuzhou historic residence swallowtail ridges and saddle walls, minimalist and elegant'
+        : '以福州古厝燕尾脊、马鞍墙为元素，风格简约雅致';
+    }
 
     btn.disabled = true;
     btn.textContent = 'AI正在绘制古厝文创，请稍候';
@@ -431,7 +490,7 @@
     return `
       <div class="shop-card">
         <div class="shop-img">
-          <img src="${g.img}" alt="${g.name}" loading="lazy">
+          <img src="${g.img}" alt="${g.name}">
           <span class="shop-badge ${view}">${badge}</span>
         </div>
         <div class="shop-info">

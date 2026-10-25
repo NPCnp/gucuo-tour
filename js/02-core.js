@@ -507,7 +507,7 @@
     box.innerHTML = list.map(({ p, dist }) => {
       const photo = poiPhoto(p.name);
       const thumb = photo
-        ? `<img src="${photo}" alt="${p.name}" loading="lazy" onerror="this.parentNode.textContent='${p.thumb}'">`
+        ? `<img src="${photo}" alt="${p.name}" onerror="this.parentNode.textContent='${p.thumb}'">`
         : p.thumb;
       return `
       <div class="poi-card" onclick="gotoDetail('${p.name}')">

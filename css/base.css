@@ -1019,3 +1019,63 @@
       border: none;
     }
   }
+
+  /* ========== 中英文切换（右上角 🌐 入口 + 轻量语言弹窗） ========== */
+  /* 原有右侧占位槽复用为图标位，不改变导航栏高度与标题居中 */
+  .nav-bar .right-placeholder { display: flex; align-items: center; justify-content: center; }
+  .lang-btn {
+    width: 30px; height: 30px;
+    padding: 0; border: none; background: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1;
+    color: #1a1a1a; opacity: .72;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .lang-btn:active { opacity: 1; transform: scale(.92); }
+  .lang-btn.is-en { opacity: .95; }
+  .app-name-row .lang-btn,
+  .nav-bar .lang-btn-end { margin-left: auto; }
+  .nav-bar.dark .lang-btn { color: #fff; opacity: .9; }
+  /* 启动页无导航栏：右上角浮动入口，绝对定位不参与排版 */
+  .lang-btn-float {
+    position: absolute; top: 14px; right: 14px;
+    z-index: 30;
+    opacity: .55;
+  }
+
+  .lang-mask {
+    position: absolute; inset: 0;
+    z-index: 1200;
+    background: rgba(24, 20, 14, .30);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  .lang-mask.show { opacity: 1; pointer-events: auto; }
+  .lang-card {
+    width: min(272px, 78%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 18px 15px;
+    box-shadow: 0 14px 40px rgba(30, 26, 18, .20);
+    text-align: center;
+    transform: translateY(8px) scale(.97);
+    transition: transform .18s ease;
+  }
+  .lang-mask.show .lang-card { transform: none; }
+  .lang-title { font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: .2px; }
+  .lang-actions { display: flex; gap: 10px; margin: 16px 0 10px; }
+  .lang-opt {
+    flex: 1; height: 40px;
+    border-radius: 10px;
+    border: 1px solid #ddd6c8;
+    background: #fdfaf4;
+    color: #2b2b2b;
+    font-size: 14px; font-weight: 600;
+    font-family: inherit;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .lang-opt.active, .lang-opt:active { background: #2f5d50; border-color: #2f5d50; color: #fff; }
+  .lang-note { font-size: 11px; color: #9a9a9a; line-height: 1.4; }
+  .lang-opt.is-en-font, html[lang="en"] .lang-title { letter-spacing: 0; }
