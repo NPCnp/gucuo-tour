@@ -598,34 +598,97 @@
     '平潭坛南湾': '海边音频文件/07_平潭坛南湾.mp3'
   };
 
-  // 获取景点的音频文件路径
+  // 英文讲解音频（audio_en/，与中文音频同名同景点，编号以英文录音批次为准）
+  const AUDIO_MAP_EN = {
+    '严复故居': 'audio_en/01_三坊七巷严复故居.mp3',
+    '萨镇冰故居': 'audio_en/11_朱紫坊萨镇冰故居.mp3',
+    '南后街': 'audio_en/12_南后街.mp3',
+    '小黄楼': 'audio_en/13_小黄楼.mp3',
+    '衣锦坊': 'audio_en/14_衣锦坊.mp3',
+    '沈葆桢故居': 'audio_en/15_沈葆桢故居.mp3',
+    '林觉民故居': 'audio_en/16_林觉民故居.mp3',
+    '冰心故居': 'audio_en/17_冰心故居.mp3',
+    '林则徐纪念馆': 'audio_en/02_林则徐纪念馆.mp3',
+    '烟台山': 'audio_en/04_烟台山历史风貌区.mp3',
+    '三通桥': 'audio_en/03_上下杭三通桥.mp3',
+    '泛船浦天主教堂': 'audio_en/18_泛船浦天主教堂.mp3',
+    '福建博物院': 'audio_en/19_福建博物院.mp3',
+    '鼓山': 'audio_en/05_鼓山风景区.mp3',
+    '水榭戏台': 'audio_en/06_水榭戏台.mp3',
+    '二梅书屋': 'audio_en/08_二梅书屋.mp3',
+    '陈氏五楼': 'audio_en/09_螺洲陈氏五楼.mp3',
+    '泰山宫': 'audio_en/10_林浦泰山宫.mp3',
+    '于山': 'audio_en/20_于山风景区.mp3',
+    '西禅寺': 'audio_en/21_西禅寺.mp3',
+    '华林寺': 'audio_en/22_华林寺.mp3',
+    '福州文庙': 'audio_en/23_福州文庙.mp3',
+    '开元寺': 'audio_en/24_开元寺.mp3',
+    '闽王祠': 'audio_en/25_闽王祠.mp3',
+    '梁厝': 'audio_en/26_梁厝特色历史文化街区.mp3',
+    '船政博物馆': 'audio_en/27_中国船政文化博物馆.mp3',
+    '鼓岭': 'audio_en/28_鼓岭旅游度假区.mp3',
+    '严复翰墨馆': 'audio_en/07_严复翰墨馆.mp3',
+    '文儒坊': 'audio_en/29_文儒坊.mp3',
+    '光禄坊': 'audio_en/30_光禄坊.mp3',
+    '朱紫坊': 'audio_en/31_朱紫坊.mp3',
+    '乌山历史风貌区': 'audio_en/32_乌山历史风貌区.mp3',
+    '西湖公园': 'audio_en/33_西湖公园.mp3',
+    '左海公园': 'audio_en/34_左海公园.mp3',
+    '屏山公园': 'audio_en/35_屏山公园.mp3',
+    '福道': 'audio_en/36_福道.mp3',
+    '闽江公园': 'audio_en/37_闽江公园.mp3',
+    '上下杭历史文化街区': 'audio_en/38_上下杭历史文化街区.mp3',
+    '闽江夜游': 'audio_en/39_闽江夜游.mp3',
+    '花海公园': 'audio_en/40_花海公园.mp3',
+    '螺洲古镇': 'audio_en/41_螺洲古镇.mp3',
+    '林浦古村': 'audio_en/42_林浦古村.mp3',
+    '罗星塔公园': 'audio_en/43_罗星塔公园.mp3',
+    '金鸡山公园': 'audio_en/44_金鸡山公园.mp3',
+    '温泉公园': 'audio_en/45_温泉公园.mp3',
+    '福州国家森林公园': 'audio_en/46_福州国家森林公园.mp3',
+    '长乐南澳海滩': 'audio_en/51_长乐南澳海滩.mp3',
+    '长乐象鼻澳海滩': 'audio_en/52_长乐象鼻澳海滩.mp3',
+    '长乐下沙海滩': 'audio_en/48_长乐下沙海滩.mp3',
+    '琅岐岛沙滩': 'audio_en/49_琅岐岛沙滩.mp3',
+    '连江平流尾地质公园': 'audio_en/50_连江平流尾地质公园.mp3',
+    '平潭龙凤头海滨浴场': 'audio_en/47_平潭龙凤头海滨浴场.mp3',
+    '平潭坛南湾': 'audio_en/53_平潭坛南湾.mp3'
+  };
+
+  // 获取景点的音频文件路径（英文模式下优先返回英文讲解音频）
   function getAudioPath(spotName) {
+    const enMode = typeof getLang === 'function' && getLang() === 'en';
+    const map = enMode ? AUDIO_MAP_EN : AUDIO_MAP;
     // 先直接匹配
-    let path = AUDIO_MAP[spotName];
+    let path = map[spotName];
     if (!path) {
       // 尝试从别名映射
       const alias = SPOT_PHOTO_ALIAS[spotName];
-      if (alias && AUDIO_MAP[alias]) path = AUDIO_MAP[alias];
+      if (alias && map[alias]) path = map[alias];
     }
     if (!path && NARRATIONS[spotName]) {
       // 尝试从讲解词库键名匹配
       const name = NARRATIONS[spotName].name;
-      if (AUDIO_MAP[name]) path = AUDIO_MAP[name];
+      if (map[name]) path = map[name];
     }
     if (!path) return null;
     // 使用相对路径，兼容子路径部署与 file:// 协议
     return encodeURI(path);
   }
 
-  // 挑选最接近真人的中文音色：优先本地音色（断网也能读），其次神经网络自然音
+  // 挑选最接近真人的音色：英文模式选英文音色（中文音频缺失时的朗读兜底），否则选中文音色
   function pickNarrVoice() {
     if (!('speechSynthesis' in window)) return;
-    const all = speechSynthesis.getVoices().filter(v => /zh|cmn/i.test(v.lang));
+    const enMode = typeof getLang === 'function' && getLang() === 'en';
+    const all = speechSynthesis.getVoices().filter(v => enMode ? /^en/i.test(v.lang) : /zh|cmn/i.test(v.lang));
     if (!all.length) return;
     // 部分手机的「在线音色」弱网时会静默失败，优先使用本机已安装的音色
     const local = all.filter(v => v.localService);
     const pool = local.length ? local : all;
-    const prefer = [
+    const prefer = enMode ? [
+      /natural|neural|online/i, /samantha|aria|jenny|ana|zira/i,
+      /google/i, /female|女/i
+    ] : [
       /xiaoxiao|晓晓/i, /xiaoyi|晓伊/i, /xiaomo|晓梦|xiaoshuang|晓双|xiaorui|晓睿/i,
       /yunxi|云希|yunye|云野|yunjian|云健/i,
       /natural|neural|online/i,
