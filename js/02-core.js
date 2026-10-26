@@ -678,11 +678,17 @@
 
   /* ========== 媒体文件 CDN 兜底 ==========
      线上用 GitHub Pages，国内访问时常被限速或拦截（页面能开、音视频卡住）。
-     本地文件加载失败时改走 jsDelivr（同一仓库镜像），不影响原有路径。 */
+     本地文件加载失败时才走镜像，不影响原有路径：
+       · 音频走 jsDelivr（同仓库镜像，直连可播）
+       · 视频走 ghfast 加速代理（jsDelivr 会把 mp4 301 到国内打不开的 raw.githubusercontent） */
   const MEDIA_CDN = 'https://cdn.jsdelivr.net/gh/NPCnp/gucuo-tour@main/';
+  const GH_RAW = 'https://raw.githubusercontent.com/NPCnp/gucuo-tour/main/';
+  const GH_PROXY = 'https://ghfast.top/';
   function cdnMediaUrl(rel) {
-    if (!rel || /^https?:/i.test(rel)) return null;
-    return MEDIA_CDN + encodeURI(String(rel).replace(/^\.?\//, ''));
+    const p = String(rel || '').replace(/^\.?\//, '');
+    if (!p || /^https?:/i.test(p)) return null;
+    const enc = encodeURI(p);
+    return /\.mp4$/i.test(p) ? GH_PROXY + GH_RAW + enc : MEDIA_CDN + enc;
   }
 
   // 挑选最接近真人的音色：英文模式选英文音色（中文音频缺失时的朗读兜底），否则选中文音色
