@@ -1392,7 +1392,21 @@
   .narr-empty span { font-size: 11px; color: #bbb; }
   /* 黑色信息卡片折叠：收起时卡片高度固定，保证各景点完全一致 */
   .spot-frame.collapsed { height: 380px; overflow: hidden; padding-bottom: 44px; }
-  .spot-frame.collapsed .spot-intro-text { max-height: 5.7em; overflow: hidden; }
+  .spot-frame.collapsed .spot-intro-text {
+    /* 折叠态只显示 3 行，末尾补省略号，避免文字被硬切断看不出还有下文 */
+    position: relative;
+    max-height: 5.7em;
+    overflow: hidden;
+  }
+  .spot-frame.collapsed .spot-intro-text::after {
+    content: '…';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 0 2px 0 8px;
+    background: #1a1a1a;
+    color: #e2e2e2;
+  }
   .spot-frame.collapsed .spot-history,
   .spot-frame.collapsed .spot-history-label { display: none; }
   .spot-frame.collapsed .narr-intro-toggle { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; height: 44px; }
