@@ -676,6 +676,15 @@
     return encodeURI(path);
   }
 
+  /* ========== 媒体文件 CDN 兜底 ==========
+     线上用 GitHub Pages，国内访问时常被限速或拦截（页面能开、音视频卡住）。
+     本地文件加载失败时改走 jsDelivr（同一仓库镜像），不影响原有路径。 */
+  const MEDIA_CDN = 'https://cdn.jsdelivr.net/gh/NPCnp/gucuo-tour@main/';
+  function cdnMediaUrl(rel) {
+    if (!rel || /^https?:/i.test(rel)) return null;
+    return MEDIA_CDN + encodeURI(String(rel).replace(/^\.?\//, ''));
+  }
+
   // 挑选最接近真人的音色：英文模式选英文音色（中文音频缺失时的朗读兜底），否则选中文音色
   function pickNarrVoice() {
     if (!('speechSynthesis' in window)) return;
@@ -801,7 +810,20 @@
       currentAudio.onended = () => {
         onNarrEnd();
       };
+      let narrCdnTried = false;
       currentAudio.onerror = () => {
+        // 先试 CDN（GitHub Pages 在国内常被限速/拦截）
+        if (!narrCdnTried) {
+          const alt = cdnMediaUrl(audioPath);
+          if (alt) {
+            narrCdnTried = true;
+            try {
+              currentAudio.src = alt;
+              currentAudio.play().catch(() => {});
+              return;
+            } catch (e) {}
+          }
+        }
         // 音频文件加载失败（弱网/被拦截）：改用本机语音朗读，避免完全没声音
         currentAudio = null;
         audioPlaying = false;
@@ -916,10 +938,23 @@
       }
       currentAudio = new Audio(audioPath);
       audioPlaying = true;
+      let audioCdnTried = false;
       currentAudio.onended = () => {
         onNarrEnd();
       };
       currentAudio.onerror = () => {
+        // 先试 CDN（GitHub Pages 在国内常被限速/拦截）
+        if (!audioCdnTried) {
+          const alt = cdnMediaUrl(audioPath);
+          if (alt) {
+            audioCdnTried = true;
+            try {
+              currentAudio.src = alt;
+              currentAudio.play().catch(() => {});
+              return;
+            } catch (e) {}
+          }
+        }
         // 音频文件加载失败（弱网/被拦截）：改用本机语音朗读，避免完全没声音
         currentAudio = null;
         audioPlaying = false;
@@ -1139,6 +1174,19 @@
       video.addEventListener('error', function() {
         // 只有真实的解码/网络错误才提示；切换 src 导致的中止不提示
         if (!video.error) return;
+        // 先试 CDN（GitHub Pages 在国内常被限速/拦截）
+        if (!video.dataset.cdnTried) {
+          const alt = cdnMediaUrl(video.dataset.mediaRel);
+          if (alt) {
+            video.dataset.cdnTried = '1';
+            try {
+              video.src = alt;
+              video.load();
+              playVideoWhenReady(video, () => {});
+              return;
+            } catch (e) {}
+          }
+        }
         const e = document.getElementById(VIDEO_ERROR_ID);
         if (e) e.style.display = 'block';
         exitVideoPlaying();
@@ -1152,6 +1200,8 @@
 
     // 设置 src 并进入播放状态（先 load，等可播再 play）
     if (video.getAttribute('src') !== v.local) {
+      video.dataset.mediaRel = v.local;
+      delete video.dataset.cdnTried;
       video.src = v.local;
       video.load();
     }
@@ -1186,6 +1236,19 @@
       video.dataset.errBound = '1';
       video.addEventListener('error', function() {
         if (!video.error) return;  // 切换 src 引起的中止，不算失败
+        // 先试 CDN（GitHub Pages 在国内常被限速/拦截）
+        if (!video.dataset.cdnTried) {
+          const alt = cdnMediaUrl(video.dataset.mediaRel);
+          if (alt) {
+            video.dataset.cdnTried = '1';
+            try {
+              video.src = alt;
+              video.load();
+              playVideoWhenReady(video, () => {});
+              return;
+            } catch (e) {}
+          }
+        }
         showToast('视频加载失败，请检查网络后重试');
       });
     }
@@ -1194,6 +1257,8 @@
     const dCover = spotPhoto(name);
     if (dCover) video.poster = dCover;
     if (video.getAttribute('src') !== v.local) {
+      video.dataset.mediaRel = v.local;
+      delete video.dataset.cdnTried;
       video.src = v.local;
       video.load();
     }
