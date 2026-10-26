@@ -245,18 +245,37 @@
 
   function setLang(lang, opts) {
     var l = lang === 'en' ? 'en' : 'zh';
+    var changed = l !== current;
     current = l;
     writeLang(l);
     document.documentElement.lang = l === 'en' ? 'en' : 'zh-CN';
     // 先收起语言弹窗，避免翻译耗时/异常时遮罩把页面锁住
     var mask = document.getElementById('langMask');
     if (mask) mask.classList.remove('show');
+    // 切换语言时立刻停掉正在播放的讲解，避免中英文音频串着播
+    if (changed) stopNarrationForLang();
     try {
       if (l === 'en') { translateAll(); startObserver(); }
       else { stopObserver(); restoreAll(); }
     } catch (e) { console.warn('i18n setLang failed', e); }
     updateLangButtons();
     syncFrame(l);
+  }
+
+  // 停掉正在播放的讲解音频/语音，并把按钮状态复位；音色缓存也清空，换语言时重新挑
+  function stopNarrationForLang() {
+    try {
+      if (typeof narrCancel === 'function') narrCancel();
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      if (typeof narrPlaying !== 'undefined') narrPlaying = false;
+      if (typeof narrVoice !== 'undefined') narrVoice = null;
+      var b = document.getElementById('narrPlayBtn');
+      if (b) b.textContent = '▶';
+      var b2 = document.getElementById('narrSpeakBtn');
+      if (b2) b2.textContent = '播放讲解';
+      var st = document.getElementById('narrStatus');
+      if (st) st.textContent = '点击 ▶ 开始收听讲解';
+    } catch (e) {}
   }
 
   function getLang() { return current; }
