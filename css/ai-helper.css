@@ -142,8 +142,17 @@
 }
 
 #aiPanel .ai-chat {
+  /* 覆盖路线页原有 .ai-chat 的绝对定位/最大高度/边框阴影，避免对话区被裁到面板外 */
+  position: static;
+  inset: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
   display: flex;
   flex: 1 1 auto;
+  height: auto;
+  max-height: none;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -151,6 +160,10 @@
   flex-direction: column;
   gap: 10px;
   background: #faf7f0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: auto;
 }
 #aiPanel .ai-msg {
   max-width: 88%;
@@ -165,12 +178,14 @@
   align-self: flex-start;
   background: #fff;
   color: #453a31;
+  border: none;
   box-shadow: 0 2px 8px rgba(90, 70, 50, .08);
 }
 #aiPanel .ai-msg.user {
   align-self: flex-end;
   background: linear-gradient(145deg, #8c5a3c, #6d4227);
   color: #fff;
+  border: none;
 }
 #aiPanel .ai-msg.typing {
   color: #9b8a7a;
