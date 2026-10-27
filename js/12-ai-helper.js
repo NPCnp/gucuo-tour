@@ -12,7 +12,6 @@
   var API_BASE = (window.FZYJ_AI_API == null ? 'http://127.0.0.1:8000' : window.FZYJ_AI_API).replace(/\/$/, '');
   var API_TIMEOUT = 9000;
 
-  var LS_CHAT = 'fzyj_ai_chat';
   var LS_BALL = 'fzyj_ai_ball';
   var LS_TIP = 'fzyj_ai_tip_shown';
 
@@ -394,23 +393,11 @@
     if (img) m.img = img;
     history.push(m);
     if (history.length > 40) history = history.slice(history.length - 40);
-    writeJSON(LS_CHAT, { lang: curLang(), list: history });
   }
 
-  function loadHistory() {
-    var st = readJSON(LS_CHAT, null);
-    // 只恢复同语言的记录，避免中英混在一起
-    if (st && st.lang === curLang() && Array.isArray(st.list)) {
-      // 清掉旧版本缓存的“（离线演示样例）”后缀
-      history = st.list.map(function (m) {
-        var item = {
-          role: m.role,
-          text: String(m.text == null ? '' : m.text).replace(/\s*[（(](离线演示样例|offline demo sample)[）)]/gi, '')
-        };
-        if (m.img) item.img = m.img;
-        return item;
-      });
-    } else history = [];
+  // 不再把对话写入本地存储：刷新页面后从问候语重新开始，避免旧记录一直残留
+  function clearSavedChat() {
+    try { localStorage.removeItem('fzyj_ai_chat'); } catch (e) {}
   }
 
   function togglePanel(show) {
@@ -419,7 +406,6 @@
     var side = (parseFloat(ball.style.left) || 0) + BALL_SIZE / 2 < b.w / 2 ? 'left' : 'right';
     open = !!show;
     if (show) {
-      loadHistory();
       renderTexts();
       preloadPics();
       panel.classList.toggle('from-left', side === 'left');
@@ -529,6 +515,7 @@
     target.appendChild(host);
     buildBall();
     buildPanel();
+    clearSavedChat();
     restorePos();
     syncVisibility();
     // 所有页面切换最终都会走 paintScreen（showScreen / 返回键 / 跳过设置页均如此）
@@ -555,7 +542,7 @@
         var next = curLang();
         if (next !== lang) {
           lang = next;
-          loadHistory();
+          history = [];   // 换语言后重新开始，避免中英文对话混在一起
           if (panel) { renderTexts(); }
         }
         return r;
