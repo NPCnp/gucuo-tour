@@ -1287,7 +1287,8 @@
       var slides = track.children;
       var items = dots.children;
       var idx = 0, timer = null, resumeTimer = null;
-      var downX = 0, moved = false, suppressClick = false;
+      var downX = 0, downScroll = 0, moved = false, suppressClick = false;
+      var mouseDrag = false;
 
       function step() {
         var w = slides[0] ? slides[0].offsetWidth : 0;
@@ -1331,15 +1332,36 @@
         downX = e.clientX;
         moved = false;
         hold();
+        // 桌面端鼠标没有触摸滑动，自己实现拖拽平移；触摸端交给系统原生滚动
+        if (e.pointerType === 'mouse') {
+          mouseDrag = true;
+          downScroll = track.scrollLeft;
+          track.style.scrollBehavior = 'auto';
+          track.style.scrollSnapType = 'none';
+          track.classList.add('dragging');
+          try { track.setPointerCapture(e.pointerId); } catch (err) {}
+          e.preventDefault();
+        }
       });
       track.addEventListener('pointermove', function (e) {
         if (Math.abs(e.clientX - downX) > 8) moved = true;
+        if (!mouseDrag) return;
+        e.preventDefault();
+        track.scrollLeft = downScroll - (e.clientX - downX);
       });
       track.addEventListener('pointerup', function () {
         // 只有真的横向拖动才拦掉 click，自动轮播造成的滚动不影响点按
         if (moved) {
           suppressClick = true;
           setTimeout(function () { suppressClick = false; }, 220);
+        }
+        if (mouseDrag) {
+          mouseDrag = false;
+          track.classList.remove('dragging');
+          track.style.scrollBehavior = '';
+          track.style.scrollSnapType = '';
+          var s = step();
+          if (s) go(Math.round(track.scrollLeft / s));
         }
       });
       track.addEventListener('click', function (e) {
