@@ -12,12 +12,11 @@
   var API_BASE = (window.FZYJ_AI_API == null ? 'http://127.0.0.1:8000' : window.FZYJ_AI_API).replace(/\/$/, '');
   var API_TIMEOUT = 9000;
 
-  var LS_BALL = 'fzyj_ai_ball';
   var LS_TIP = 'fzyj_ai_tip_shown';
 
   var BALL_SIZE = 56;
-  var MARGIN = 20;
-  var DEFAULT_TOP = 132; // 右上角：首页标题/搜索框下方
+  var MARGIN = 14;
+  var DEFAULT_TOP = 240; // 固定停在首页横幅下沿、右侧贴边
   // 这些页面不显示悬浮球（启动页、设置基础信息）
   var HIDE_PAGES = ['page-splash', 'page-settings'];
 
@@ -34,7 +33,7 @@
       close: '关闭',
       placeholder: '问问古厝历史、马鞍墙、燕尾脊相关知识…',
       send: '发送',
-      tip: '📜 古厝文史问答｜可拖动移动',
+      tip: '💬 古厝文史问答｜点我提问',
       quick: ['马鞍墙是什么？', '燕尾脊的由来？', '福州灰塑介绍', '古厝有什么历史故事'],
       busy: '古厝知识库暂时繁忙，请稍后再试',
       thinking: '正在查阅古厝文史资料…',
@@ -45,7 +44,7 @@
       close: 'Close',
       placeholder: 'Ask about Fuzhou historic houses, saddle walls, swallowtail ridges…',
       send: 'Send',
-      tip: '📜 Ancient House Q&A | Drag to move',
+      tip: '💬 Ancient House Q&A | Tap to ask',
       quick: ['What is a saddle wall?', 'Origin of the swallowtail ridge?', 'Fuzhou grey plaster craft', 'Stories of the old houses'],
       busy: 'The heritage knowledge base is busy right now. Please try again later.',
       thinking: 'Looking up the heritage archive…',
@@ -127,8 +126,7 @@
 
   /* ---------- 元素创建 ---------- */
   var host = null, ball = null, panel = null, chatBox = null, input = null, tipEl = null;
-  var open = false, dragging = false, moved = false, pointerId = null;
-  var startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  var open = false;
   var lastSent = 0;
   var history = [];
 
@@ -167,12 +165,6 @@
     return { x: x, y: y };
   }
 
-  function defaultPos() {
-    var b = screenBox();
-    // 统一停在右上角，避开顶部状态栏、标题与语言按钮
-    return clampPos(b.w - MARGIN - BALL_SIZE, DEFAULT_TOP);
-  }
-
   function activePageId() {
     var p = document.querySelector('.page.active');
     return p ? p.id : '';
@@ -203,25 +195,10 @@
     ball.style.bottom = 'auto';
   }
 
-  function snap() {
+  /* 球固定在右侧、横幅下方，不随拖动或记录变化 */
+  function lockPos() {
     var b = screenBox();
-    var cur = parseFloat(ball.style.left) || 0;
-    var side = cur + BALL_SIZE / 2 < b.w / 2 ? 'left' : 'right';
-    var x = side === 'left' ? 8 : b.w - BALL_SIZE - 8;
-    var pos = clampPos(x, parseFloat(ball.style.top) || 0);
-    applyPos(pos, true);
-    writeJSON(LS_BALL, { x: pos.x, y: pos.y, side: side, v: 2 });
-    return side;
-  }
-
-  function restorePos() {
-    var saved = readJSON(LS_BALL, null);
-    // v2 起默认右上角；旧版本存下的右下角坐标一次性作废
-    if (saved && saved.v === 2 && typeof saved.x === 'number' && typeof saved.y === 'number') {
-      applyPos(clampPos(saved.x, saved.y), false);
-    } else {
-      applyPos(defaultPos(), false);
-    }
+    applyPos(clampPos(b.w - MARGIN - BALL_SIZE, DEFAULT_TOP), false);
   }
 
   function buildBall() {
@@ -231,64 +208,12 @@
     ball.className = 'ai-ball';
     ball.setAttribute('aria-label', '古厝文史问答 / Ancient House Q&A');
     ball.innerHTML = '<img class="ai-ball-img" src="images/ai-mascot.png" alt="" draggable="false" aria-hidden="true" />';
-    // 拖拽用 pointer 事件，区分点击与拖动
-    ball.addEventListener('pointerdown', onDown);
-    ball.addEventListener('pointermove', onMove);
-    ball.addEventListener('pointerup', onUp);
-    ball.addEventListener('pointercancel', onUp);
     ball.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      if (dragJustEnded) { dragJustEnded = false; return; }
       togglePanel(true);
     });
     host.appendChild(ball);
-  }
-
-  var dragJustEnded = false;
-
-  function onDown(e) {
-    if (e.button != null && e.button !== 0) return;
-    pointerId = e.pointerId;
-    dragging = true;
-    moved = false;
-    var r = ball.getBoundingClientRect();
-    var b = screenBox();
-    var boxRect = b.el.getBoundingClientRect();
-    startLeft = r.left - boxRect.left;
-    startTop = r.top - boxRect.top;
-    startX = e.clientX;
-    startY = e.clientY;
-    ball.classList.add('dragging');
-    ball.style.transition = 'none';
-    try { ball.setPointerCapture(pointerId); } catch (err) {}
-  }
-
-  function onMove(e) {
-    if (!dragging || e.pointerId !== pointerId) return;
-    var dx = e.clientX - startX;
-    var dy = e.clientY - startY;
-    if (!moved && Math.abs(dx) + Math.abs(dy) > 6) moved = true;
-    if (!moved) return;
-    e.preventDefault();
-    var pos = clampPos(startLeft + dx, startTop + dy);
-    ball.style.left = pos.x + 'px';
-    ball.style.top = pos.y + 'px';
-  }
-
-  function onUp(e) {
-    if (!dragging) return;
-    dragging = false;
-    ball.classList.remove('dragging');
-    try { if (pointerId != null) ball.releasePointerCapture(pointerId); } catch (err) {}
-    pointerId = null;
-    if (moved) {
-      dragJustEnded = true;
-      snap();
-      setTimeout(function () { dragJustEnded = false; }, 120);
-      // 拖动后收起面板，避免误开
-      if (open) togglePanel(false);
-    }
   }
 
   /* ---------- 面板 ---------- */
@@ -518,18 +443,17 @@
     buildBall();
     buildPanel();
     clearSavedChat();
-    restorePos();
+    lockPos();
     syncVisibility();
     // 所有页面切换最终都会走 paintScreen（showScreen / 返回键 / 跳过设置页均如此）
-    // 在这里收起面板、隐藏球体、恢复默认右上角位置，并补发首访气泡
+    // 在这里收起面板、隐藏球体，并保持固定位置
     if (typeof window.paintScreen === 'function' && !window.paintScreen.__aiHooked) {
       var origPaint = window.paintScreen;
       var wrappedPaint = function () {
         var r = origPaint.apply(this, arguments);
         if (open) togglePanel(false);
         var visible = syncVisibility();
-        var saved = readJSON(LS_BALL, null);
-        if (!saved || saved.v !== 2) applyPos(defaultPos(), true);
+        lockPos();
         if (visible) setTimeout(maybeShowTip, 500);
         return r;
       };
@@ -552,11 +476,8 @@
       wrappedSet.__aiHooked = true;
       window.setLang = wrappedSet;
     }
-    // 窗口尺寸变化时保证不出屏
-    window.addEventListener('resize', function () {
-      var saved = readJSON(LS_BALL, null);
-      applyPos((saved && saved.v === 2) ? clampPos(saved.x, saved.y) : defaultPos(), false);
-    });
+    // 窗口尺寸变化时保持固定位置
+    window.addEventListener('resize', lockPos);
     setTimeout(maybeShowTip, 1200);
     if (typeof requestIdleCallback === 'function') requestIdleCallback(preloadPics);
     else setTimeout(preloadPics, 1000);

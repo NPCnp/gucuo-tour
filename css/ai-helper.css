@@ -58,8 +58,8 @@
 /* ---------- 首次气泡提示 ---------- */
 .ai-float-host .ai-tip {
   position: absolute;
-  right: 16px;
-  bottom: 78px;
+  top: 252px;
+  right: 88px;
   max-width: 200px;
   padding: 8px 12px;
   border-radius: 12px;
