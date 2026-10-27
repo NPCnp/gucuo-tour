@@ -18,6 +18,9 @@
 
   var BALL_SIZE = 44;
   var MARGIN = 20;
+  var DEFAULT_TOP = 132; // 右上角：首页标题/搜索框下方
+  // 这些页面不显示悬浮球（启动页、设置基础信息）
+  var HIDE_PAGES = ['page-splash', 'page-settings'];
 
   var lang = 'zh'; // 当前面板语言（随全站语言切换动态读取）
 
@@ -128,8 +131,30 @@
 
   function defaultPos() {
     var b = screenBox();
-    var bottomBar = tabBarHeight();
-    return clampPos(b.w - MARGIN - BALL_SIZE, b.h - 24 - bottomBar - BALL_SIZE);
+    // 统一停在右上角，避开顶部状态栏、标题与语言按钮
+    return clampPos(b.w - MARGIN - BALL_SIZE, DEFAULT_TOP);
+  }
+
+  function activePageId() {
+    var p = document.querySelector('.page.active');
+    return p ? p.id : '';
+  }
+
+  function ballVisible() {
+    return !!host && host.style.display !== 'none';
+  }
+
+  // 启动页 / 设置基础信息页隐藏悬浮球与面板；进入其他页面恢复
+  function syncVisibility() {
+    if (!host) return false;
+    var hide = HIDE_PAGES.indexOf(activePageId()) !== -1;
+    host.style.display = hide ? 'none' : '';
+    if (hide) {
+      if (open) togglePanel(false);
+      if (tipEl && tipEl.parentNode) { tipEl.parentNode.removeChild(tipEl); tipEl = null; }
+      if (ball) ball.classList.remove('bounce');
+    }
+    return !hide;
   }
 
   function applyPos(pos, animate) {
@@ -147,14 +172,14 @@
     var x = side === 'left' ? 8 : b.w - BALL_SIZE - 8;
     var pos = clampPos(x, parseFloat(ball.style.top) || 0);
     applyPos(pos, true);
-    writeJSON(LS_BALL, { x: pos.x, y: pos.y, side: side });
+    writeJSON(LS_BALL, { x: pos.x, y: pos.y, side: side, v: 2 });
     return side;
   }
 
   function restorePos() {
     var saved = readJSON(LS_BALL, null);
-    var b = screenBox();
-    if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+    // v2 起默认右上角；旧版本存下的右下角坐标一次性作废
+    if (saved && saved.v === 2 && typeof saved.x === 'number' && typeof saved.y === 'number') {
       applyPos(clampPos(saved.x, saved.y), false);
     } else {
       applyPos(defaultPos(), false);
@@ -395,7 +420,7 @@
   /* ---------- 首次气泡提示 ---------- */
   function maybeShowTip() {
     var shown = readJSON(LS_TIP, false);
-    if (shown) return;
+    if (shown || tipEl || !ballVisible()) return;
     writeJSON(LS_TIP, true);
     ball.classList.add('bounce');
     tipEl = document.createElement('div');
@@ -434,18 +459,22 @@
     buildBall();
     buildPanel();
     restorePos();
-    // 页面切换时收起面板，只留小球；同时按新页面重算默认位置（未手动拖过时）
-    if (typeof window.showScreen === 'function' && !window.showScreen.__aiHooked) {
-      var orig = window.showScreen;
-      var wrapped = function () {
-        var r = orig.apply(this, arguments);
+    syncVisibility();
+    // 所有页面切换最终都会走 paintScreen（showScreen / 返回键 / 跳过设置页均如此）
+    // 在这里收起面板、隐藏球体、恢复默认右上角位置，并补发首访气泡
+    if (typeof window.paintScreen === 'function' && !window.paintScreen.__aiHooked) {
+      var origPaint = window.paintScreen;
+      var wrappedPaint = function () {
+        var r = origPaint.apply(this, arguments);
         if (open) togglePanel(false);
+        var visible = syncVisibility();
         var saved = readJSON(LS_BALL, null);
-        if (!saved) applyPos(defaultPos(), true);
+        if (!saved || saved.v !== 2) applyPos(defaultPos(), true);
+        if (visible) setTimeout(maybeShowTip, 500);
         return r;
       };
-      wrapped.__aiHooked = true;
-      window.showScreen = wrapped;
+      wrappedPaint.__aiHooked = true;
+      window.paintScreen = wrappedPaint;
     }
     // 语言切换后刷新面板文案（动态读取当前语言，避免缓存不同步）
     if (typeof window.setLang === 'function' && !window.setLang.__aiHooked) {
@@ -466,7 +495,7 @@
     // 窗口尺寸变化时保证不出屏
     window.addEventListener('resize', function () {
       var saved = readJSON(LS_BALL, null);
-      applyPos(saved ? clampPos(saved.x, saved.y) : defaultPos(), false);
+      applyPos((saved && saved.v === 2) ? clampPos(saved.x, saved.y) : defaultPos(), false);
     });
     setTimeout(maybeShowTip, 1200);
   }
