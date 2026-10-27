@@ -31,7 +31,7 @@
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
-<link rel="stylesheet" href="css/base.css?v=17">
+<link rel="stylesheet" href="css/base.css?v=19">
 <link rel="stylesheet" href="css/pages.css?v=28">
 <link rel="stylesheet" href="css/ai-helper.css?v=8">
 </head>
@@ -1286,65 +1286,62 @@
       if (!track || !dots) return;
       var slides = track.children;
       var items = dots.children;
-      var idx = 0, timer = null;
-      var dragging = false, moved = false, startX = 0, startY = 0, dx = 0;
-      var suppressClick = false;
+      var idx = 0, timer = null, resumeTimer = null;
+      var downX = 0, moved = false, suppressClick = false;
 
       function step() {
         var w = slides[0] ? slides[0].offsetWidth : 0;
         return w ? w + 10 : 0;
       }
-      function apply(x, animate) {
-        track.style.transition = animate ? '' : 'none';
-        track.style.transform = 'translateX(' + x + 'px)';
-      }
       function mark() {
         for (var k = 0; k < items.length; k++) items[k].className = k === idx ? 'on' : '';
       }
-      function go(i, animate) {
+      function go(i, smooth) {
         idx = Math.max(0, Math.min(slides.length - 1, i));
-        if (step()) apply(-idx * step(), animate !== false);
+        if (step()) track.scrollTo({ left: idx * step(), behavior: smooth === false ? 'auto' : 'smooth' });
         mark();
       }
       function stop() { if (timer) { clearInterval(timer); timer = null; } }
+      // 用户操作后延后恢复自动轮播，避免边看边跳
+      function hold() {
+        stop();
+        if (resumeTimer) clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(play, 6000);
+      }
       function play() {
         stop();
         timer = setInterval(function () { go(idx + 1 >= slides.length ? 0 : idx + 1); }, 4000);
       }
 
+      // 滑动过程中同步指示点（用户手势 + 自动轮播都走这里）
+      var raf = false;
+      track.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = true;
+        requestAnimationFrame(function () {
+          raf = false;
+          var s = step();
+          if (!s) return;
+          var cur = Math.round(track.scrollLeft / s);
+          if (cur !== idx) { idx = cur; mark(); }
+        });
+      }, { passive: true });
+
       track.addEventListener('pointerdown', function (e) {
-        dragging = true; moved = false;
-        startX = e.clientX; startY = e.clientY; dx = 0;
-        stop();
+        downX = e.clientX;
+        moved = false;
+        hold();
       });
       track.addEventListener('pointermove', function (e) {
-        if (!dragging) return;
-        var mx = e.clientX - startX, my = e.clientY - startY;
-        if (!moved && Math.abs(mx) + Math.abs(my) > 8) moved = true;
-        if (!moved) return;
-        e.preventDefault();
-        dx = mx;
-        apply(-idx * step() + dx, false);
+        if (Math.abs(e.clientX - downX) > 8) moved = true;
       });
-      function finish() {
-        if (!dragging) return;
-        dragging = false;
+      track.addEventListener('pointerup', function () {
+        // 只有真的横向拖动才拦掉 click，自动轮播造成的滚动不影响点按
         if (moved) {
-          var half = step() / 2;
-          if (dx < -half) go(idx + 1);
-          else if (dx > half) go(idx - 1);
-          else go(idx);
-          // 拖动结束后短暂拦掉这次 click，避免误跳详情
           suppressClick = true;
-          setTimeout(function () { suppressClick = false; }, 200);
-        } else {
-          go(idx);
+          setTimeout(function () { suppressClick = false; }, 220);
         }
-        play();
-      }
-      track.addEventListener('pointerup', finish);
-      track.addEventListener('pointercancel', finish);
-      // 拖动结束后拦掉这次 click，避免误跳详情
+      });
       track.addEventListener('click', function (e) {
         if (!suppressClick) return;
         e.preventDefault();
@@ -1354,7 +1351,7 @@
       window.addEventListener('resize', function () { go(idx, false); });
       window.addEventListener('pageshow', function () { go(idx, false); play(); });
       document.addEventListener('visibilitychange', function () {
-        if (document.hidden) stop(); else play();
+        if (document.hidden) { stop(); if (resumeTimer) clearTimeout(resumeTimer); } else play();
       });
 
       go(0, false);

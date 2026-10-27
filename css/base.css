@@ -213,10 +213,16 @@
   .home-banner-track {
     display: flex;
     gap: 10px;
-    overflow: hidden;
-    touch-action: pan-y;
-    transition: transform .42s cubic-bezier(.22, .61, .36, 1);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .home-banner-track::-webkit-scrollbar { display: none; }
   .home-banner-dots {
     display: flex;
     justify-content: center;
@@ -243,7 +249,6 @@
     box-shadow: 0 8px 20px rgba(90, 70, 50, 0.16);
     cursor: pointer;
     scroll-snap-align: start;
-    transition: transform 0.16s ease;
   }
   .home-banner:active { transform: scale(0.98); }
   /* 内部遮罩/文字都不接收点击，统一交给外层 .home-banner 的 onclick */
