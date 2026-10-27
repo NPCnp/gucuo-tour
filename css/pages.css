@@ -1397,7 +1397,10 @@
     position: relative;
     max-height: 5.7em;
     overflow: hidden;
+    cursor: pointer;
   }
+  /* 展开态：简介完整显示，不再限高 */
+  .spot-frame:not(.collapsed) .spot-intro-text { max-height: none; overflow: visible; position: static; cursor: auto; }
   .spot-frame.collapsed .spot-intro-text::after {
     content: '…';
     position: absolute;

@@ -60,6 +60,17 @@
     if (btn) btn.textContent = '展开全部介绍 ▾';
   }
 
+  // 折叠态下直接点简介文字（含末尾省略号）也能展开，不用非去找下面的按钮
+  if (!window.__narrIntroTapBound) {
+    window.__narrIntroTapBound = true;
+    document.addEventListener('click', function (e) {
+      const intro = e.target && e.target.closest ? e.target.closest('#spotIntro, .spot-intro-label') : null;
+      if (!intro) return;
+      const frame = document.getElementById('spotFrame');
+      if (frame && frame.classList.contains('collapsed')) toggleNarrIntro();
+    });
+  }
+
   // 详情页左上角返回：在景点详情视图时先回到景点列表，列表页再返回上一级
   function narrNavBack() {
     const detail = document.getElementById('narrDetailView');
