@@ -31,7 +31,7 @@
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
-<link rel="stylesheet" href="css/base.css?v=19">
+<link rel="stylesheet" href="css/base.css?v=20">
 <link rel="stylesheet" href="css/pages.css?v=28">
 <link rel="stylesheet" href="css/ai-helper.css?v=9">
 </head>
@@ -1288,7 +1288,7 @@
       var items = dots.children;
       var idx = 0, timer = null, resumeTimer = null;
       var downX = 0, downScroll = 0, moved = false, suppressClick = false;
-      var mouseDrag = false;
+      var dragging = false;
 
       function step() {
         var w = slides[0] ? slides[0].offsetWidth : 0;
@@ -1328,42 +1328,48 @@
         });
       }, { passive: true });
 
+      // 统一用指针拖动：触摸与鼠标都能左右滑（原生横向滚动会抢手势，改由脚本接管）
       track.addEventListener('pointerdown', function (e) {
+        if (e.button != null && e.button !== 0) return;
         downX = e.clientX;
+        downScroll = track.scrollLeft;
         moved = false;
+        dragging = true;
         hold();
-        // 桌面端鼠标没有触摸滑动，自己实现拖拽平移；触摸端交给系统原生滚动
-        if (e.pointerType === 'mouse') {
-          mouseDrag = true;
-          downScroll = track.scrollLeft;
-          track.style.scrollBehavior = 'auto';
-          track.style.scrollSnapType = 'none';
-          track.classList.add('dragging');
-          try { track.setPointerCapture(e.pointerId); } catch (err) {}
-          e.preventDefault();
-        }
+        track.style.scrollBehavior = 'auto';
+        track.style.scrollSnapType = 'none';
+        track.classList.add('dragging');
+        // 注意：这里不能 setPointerCapture / preventDefault ——
+        // 指针捕获会把后续 click 的 target 提升到 track，导致卡片上的 onclick 收不到点击
       });
       track.addEventListener('pointermove', function (e) {
-        if (Math.abs(e.clientX - downX) > 8) moved = true;
-        if (!mouseDrag) return;
+        if (!dragging) return;
+        var dx = e.clientX - downX;
+        if (!moved && Math.abs(dx) > 8) {
+          moved = true;
+          // 真正开始拖动后再捕获指针，手指滑出横幅也能继续跟手
+          try { track.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+        if (!moved) return;
         e.preventDefault();
-        track.scrollLeft = downScroll - (e.clientX - downX);
+        track.scrollLeft = downScroll - dx;
       });
-      track.addEventListener('pointerup', function () {
-        // 只有真的横向拖动才拦掉 click，自动轮播造成的滚动不影响点按
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        track.classList.remove('dragging');
+        track.style.scrollBehavior = '';
+        track.style.scrollSnapType = '';
+        var s = step();
+        if (s) go(Math.round(track.scrollLeft / s));
+        // 只有真的拖动过才拦掉随后的 click
         if (moved) {
           suppressClick = true;
-          setTimeout(function () { suppressClick = false; }, 220);
+          setTimeout(function () { suppressClick = false; }, 300);
         }
-        if (mouseDrag) {
-          mouseDrag = false;
-          track.classList.remove('dragging');
-          track.style.scrollBehavior = '';
-          track.style.scrollSnapType = '';
-          var s = step();
-          if (s) go(Math.round(track.scrollLeft / s));
-        }
-      });
+      }
+      track.addEventListener('pointerup', endDrag);
+      track.addEventListener('pointercancel', endDrag);
       track.addEventListener('click', function (e) {
         if (!suppressClick) return;
         e.preventDefault();
