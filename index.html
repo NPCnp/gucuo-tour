@@ -31,7 +31,7 @@
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
-<link rel="stylesheet" href="css/base.css?v=15">
+<link rel="stylesheet" href="css/base.css?v=16">
 <link rel="stylesheet" href="css/pages.css?v=28">
 <link rel="stylesheet" href="css/ai-helper.css?v=8">
 </head>
@@ -90,16 +90,63 @@
             </div>
           </div>
 
-          <!-- 首页主推：图片跳转展示框（三坊七巷） -->
-          <div class="home-banner" onclick="gotoDetail('南后街')">
-            <img class="home-banner-img" src="images/spots/10.jpg" alt="三坊七巷" />
-            <div class="home-banner-shade"></div>
-            <span class="home-banner-tag">必游地标</span>
-            <div class="home-banner-text">
-              <div class="home-banner-title">三坊七巷</div>
-              <div class="home-banner-sub">历史文化街区 · 古厝群落 · 必游地标</div>
+          <!-- 首页主推：多景点图片跳转展示框（横向滑动） -->
+          <div class="home-banner-wrap">
+            <div class="home-banner-track" id="homeBannerTrack">
+              <div class="home-banner" onclick="gotoDetail('南后街')">
+                <img class="home-banner-img" src="images/spots/10.jpg" alt="三坊七巷" />
+                <div class="home-banner-shade"></div>
+                <span class="home-banner-tag">必游地标</span>
+                <div class="home-banner-text">
+                  <div class="home-banner-title">三坊七巷</div>
+                  <div class="home-banner-sub">历史文化街区 · 古厝群落 · 必游地标</div>
+                </div>
+                <span class="home-banner-go">查看详情 ›</span>
+              </div>
+              <div class="home-banner" onclick="gotoDetail('烟台山历史风貌区')">
+                <img class="home-banner-img" src="images/spots/banner-yantai.jpg" alt="烟台山" />
+                <div class="home-banner-shade"></div>
+                <span class="home-banner-tag">万国建筑</span>
+                <div class="home-banner-text">
+                  <div class="home-banner-title">烟台山</div>
+                  <div class="home-banner-sub">万国建筑 · 近代街区 · 文艺打卡</div>
+                </div>
+                <span class="home-banner-go">查看详情 ›</span>
+              </div>
+              <div class="home-banner" onclick="gotoDetail('水榭戏台')">
+                <img class="home-banner-img" src="images/spots/banner-shuixie.jpg" alt="水榭戏台" />
+                <div class="home-banner-shade"></div>
+                <span class="home-banner-tag">古厝园林</span>
+                <div class="home-banner-text">
+                  <div class="home-banner-title">水榭戏台</div>
+                  <div class="home-banner-sub">古厝园林 · 水上戏台 · 戏台建筑</div>
+                </div>
+                <span class="home-banner-go">查看详情 ›</span>
+              </div>
+              <div class="home-banner" onclick="gotoDetail('泛船浦天主教堂')">
+                <img class="home-banner-img" src="images/spots/29.jpg" alt="泛船浦天主教堂" />
+                <div class="home-banner-shade"></div>
+                <span class="home-banner-tag">哥特建筑</span>
+                <div class="home-banner-text">
+                  <div class="home-banner-title">泛船浦天主教堂</div>
+                  <div class="home-banner-sub">江南第一堂 · 哥特式钟楼</div>
+                </div>
+                <span class="home-banner-go">查看详情 ›</span>
+              </div>
+              <div class="home-banner" onclick="gotoDetail('中洲岛')">
+                <img class="home-banner-img" src="images/spots/28.jpg" alt="中洲岛" />
+                <div class="home-banner-shade"></div>
+                <span class="home-banner-tag">城市地标</span>
+                <div class="home-banner-text">
+                  <div class="home-banner-title">中洲岛</div>
+                  <div class="home-banner-sub">欧式建筑群 · 闽江之心 · 城市地标</div>
+                </div>
+                <span class="home-banner-go">查看详情 ›</span>
+              </div>
             </div>
-            <span class="home-banner-go">查看详情 ›</span>
+            <div class="home-banner-dots" id="homeBannerDots">
+              <span class="on"></span><span></span><span></span><span></span><span></span>
+            </div>
           </div>
 
           <div class="grid-section">
@@ -1206,7 +1253,7 @@
     </div>
   </div>
 
-  <script src="js/01-data.js?v=10"></script>
+  <script src="js/01-data.js?v=11"></script>
   <script src="js/02-core.js?v=29"></script>
   <script src="js/03-checkin.js?v=12"></script>
   <script src="js/04-route.js"></script>
@@ -1217,7 +1264,7 @@
   <script src="js/09-profile.js?v=6"></script>
   <script src="js/10-init.js?v=4"></script>
   <!-- 中英文切换（词典 + 动态规则 + 引擎） -->
-  <script src="js/i18n/dict.js?v=3"></script>
+  <script src="js/i18n/dict.js?v=4"></script>
   <script src="js/i18n/rules.js?v=3"></script>
   <script src="js/11-i18n.js?v=4"></script>
   <!-- AI 后端地址：同局域网演示自动指向「当前主机:8000」，线上部署请改成实际域名 -->
@@ -1231,6 +1278,25 @@
     })();
   </script>
   <script src="js/12-ai-helper.js?v=12"></script>
+  <!-- 首页横幅轮播指示点 -->
+  <script>
+    (function () {
+      var track = document.getElementById('homeBannerTrack');
+      var dots = document.getElementById('homeBannerDots');
+      if (!track || !dots) return;
+      var items = dots.children;
+      function sync() {
+        var idx = 0, min = Infinity;
+        for (var i = 0; i < track.children.length; i++) {
+          var d = Math.abs(track.children[i].offsetLeft - track.scrollLeft);
+          if (d < min) { min = d; idx = i; }
+        }
+        for (var k = 0; k < items.length; k++) items[k].className = k === idx ? 'on' : '';
+      }
+      track.addEventListener('scroll', sync, { passive: true });
+      window.addEventListener('resize', sync);
+    })();
+  </script>
 
   <!-- 分享二维码弹层 -->
   <div id="qrShareMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:24px;" onclick="closeShareQR(event)">
