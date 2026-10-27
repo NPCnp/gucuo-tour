@@ -39,8 +39,7 @@
       quick: ['马鞍墙是什么？', '燕尾脊的由来？', '福州灰塑介绍', '古厝有什么历史故事'],
       busy: '古厝知识库暂时繁忙，请稍后再试',
       thinking: '正在查阅古厝文史资料…',
-      greeting: '你好，我是古厝文史小问。关于福州古厝、闽都民俗、建筑文史的问题，都可以问我。',
-      offlineTip: '（离线演示样例）'
+      greeting: '你好，我是古厝文史小问。关于福州古厝、闽都民俗、建筑文史的问题，都可以问我。'
     },
     en: {
       title: 'Heritage Q&A · Ancient House Knowledge',
@@ -51,28 +50,68 @@
       quick: ['What is a saddle wall?', 'Origin of the swallowtail ridge?', 'Fuzhou grey plaster craft', 'Stories of the old houses'],
       busy: 'The heritage knowledge base is busy right now. Please try again later.',
       thinking: 'Looking up the heritage archive…',
-      greeting: "Hi, I'm the heritage guide. Ask me anything about Fuzhou's old houses, Min customs, and architectural history.",
-      offlineTip: '(offline demo sample)'
+      greeting: "Hi, I'm the heritage guide. Ask me anything about Fuzhou's old houses, Min customs, and architectural history."
     }
   };
 
   /* ---------- 离线演示样例（后端不可达时使用） ---------- */
   var OFFLINE = {
     zh: [
-      { k: ['马鞍墙', '马鞍'], a: '马鞍墙是福州古厝特有的封火墙，墙头随木构架起伏、两端高翘，形似马鞍，故得名。它既能防火，也把闽派建筑的曲线美勾勒出来。' },
-      { k: ['燕尾脊', '燕尾'], a: '燕尾脊源自闽南、福州一带的传统做法，正脊两端向上分叉翘起如燕子尾羽，象征“燕归巢”，寄托家族兴旺、游子归家的愿望。' },
-      { k: ['灰塑', '雕塑'], a: '福州灰塑以石灰、麻丝、糯米浆等为料，塑出花鸟、人物、博古纹样，多施于墙头、门楣与山墙，是闽都民居最生动的装饰语言。' },
-      { k: ['三坊七巷', '历史故事'], a: '三坊七巷由南后街两侧的十条坊巷组成，保留了大量明清宅院。林则徐、严复、林觉民、冰心等都曾在此居住，被称为“里坊制度活化石”。' },
-      { k: ['路线', '行程', '文创', '生成'], a: '这个问题更适合路线规划与文创助手来处理：路线问题可以在「路线规划」页底部和 AI 小助手聊，文创需求可以到「福厝艺集」页生成。' }
+      { k: ['马鞍墙', '马鞍', '封火墙'], a: '马鞍墙是福州古厝最醒目的封火墙，也是闽派建筑的招牌。它顺着木构架的高低起伏砌筑，两端高高翘起、中间略微下凹，从巷子里侧看像一副马鞍，因此得名。它的第一功能是防火：高过屋顶的砖墙能把火势挡在一进院落之内，不再往邻居家串；第二功能是好看：墙头常做灰塑、彩绘，转角处起翘，把整条巷子的天际线连成一道流动的曲线。看马鞍墙建议去衣锦坊、文儒坊的巷口，上午侧光斜照时，墙头的弧线最清楚。' },
+      { k: ['燕尾脊', '燕尾', '正脊'], a: '燕尾脊是正脊两端向上分叉、翘起如燕尾的做法，多用在庙宇、祠堂和大户宅院的正厅。它寄托的是「燕归巢」的心愿：家中有人远行，屋脊上的燕子替他先回来，寓意家族兴旺、游子归家；福州靠海风大，两端起翘也兼有减弱风压之用。做法上先砌脊座，再用灰塑、剪粘堆出脊堵上的花鸟人物，最后两端起翘。抬头看时先看分叉的角度，再看脊堵的题材，那往往是屋主最舍得花钱的地方。市郊林浦泰山宫、螺洲一带的祠堂保存得比较完整。' },
+      { k: ['灰塑', '灰批', '雕塑'], a: '灰塑是福州古厝门楣、山墙和墙头上最常见的装饰。原料以石灰为主，掺麻丝、糯米浆、红糖水增加韧性，匠人先用竹骨、铁线扎出轮廓，再把灰料一层层塑上去，半干时用刀修出羽毛、衣纹和花瓣。题材多为花鸟、博古纹、瑞兽和戏文故事，如「郭子仪拜寿」「松鼠葡萄」。颜色以青灰、米白打底，局部点朱红、赭石，远看素净，近看层次极多。想集中看灰塑，去衣锦坊、文儒坊宅院的门头与山墙，小黄楼的门楼也很值得细看。' },
+      { k: ['三坊七巷', '坊巷', '历史故事', '故事'], a: '三坊七巷以南后街为中轴：西侧是衣锦坊、文儒坊、光禄坊，东侧是杨桥巷、郎官巷、塔巷、黄巷、安民巷、宫巷、吉庇巷，保留明清古建筑一百多处，被称为「里坊制度活化石」。这里人物密度极高：林则徐在文藻山居住并倡修西湖，严复在郎官巷译《天演论》，林觉民在杨桥巷写下《与妻书》，冰心童年在同一座宅院度过。建议留三到四小时：上午人少先走西侧三坊看宅院和灰塑，中午在南后街吃鱼丸、肉燕，下午走东侧宫巷、杨桥巷看人物故居。' },
+      { k: ['上下杭', '烟台山', '朱紫坊'], a: '上下杭是旧时闽江水运码头，商帮会馆云集，采峰别墅、古田会馆、永德会馆都在这一带，被称为「福州传统商业博物馆」，傍晚灯亮后砖雕更有层次。烟台山是近代领事馆、洋行、教堂和学校聚集地，被叫作「万国建筑博物馆」，与三坊七巷的中式古厝正好形成对照，适合下午到黄昏。朱紫坊是宋明士大夫府第区，巷子安静，适合慢慢走，看河坊与老宅门头。' },
+      { k: ['路线', '行程', '文创', '生成'], a: '这个问题更适合路线规划与文创助手来处理：路线问题可以在「路线规划」页底部和 AI 小助手聊，它能按地理位置就近重排；文创需求可以到「福厝艺集」页生成，那里有专门的提示词助手。' }
     ],
     en: [
-      { k: ['saddle wall', 'saddle'], a: 'A saddle wall (ma’an qiang) is a fire wall unique to Fuzhou historic houses: its top follows the timber frame, rising at both ends like a saddle. It stops fire and gives Min-style architecture its flowing silhouette.' },
-      { k: ['swallowtail', 'ridge'], a: 'The swallowtail ridge is a traditional Min and Fuzhou detail: both ends of the main ridge fork upward like a swallow’s tail, symbolising swallows returning home and the family’s prosperity.' },
-      { k: ['plaster', 'grey'], a: 'Fuzhou grey plaster (huisu) is made from lime, hemp fibre and glutinous rice paste, shaped into birds, flowers, figures and antique motifs on parapets, lintels and gable walls.' },
-      { k: ['three lanes', 'story'], a: 'Three Lanes and Seven Alleys is made of ten lanes flanking South Back Street, preserving many Ming and Qing residences of Lin Zexu, Yan Fu, Lin Juemin and Bing Xin.' },
-      { k: ['route', 'itinerary', 'creative', 'design'], a: 'That belongs to the Route Planner and the Creative Studio: chat with the assistant at the bottom of the Route page, or generate artwork in the “Fucuo Art Collection” page.' }
+      { k: ['saddle wall', 'saddle', 'fire wall'], a: 'The saddle wall is the most distinctive fire wall of Fuzhou’s historic houses. Built along the rise and fall of the timber frame, it sweeps up at both ends and dips slightly in the middle, so from the lane it looks like a horse’s saddle. Its first job is fire control: standing above the roof, it keeps a blaze inside one courtyard instead of spreading to the neighbours. Its second job is beauty: the crest carries grey-plaster reliefs and painted bands, and the upturned corners turn the whole lane into one continuous curve. The lane mouths of Yijin Fang and Wenru Fang are the best places to see it, especially in the raking morning light.' },
+      { k: ['swallowtail', 'ridge'], a: 'The swallowtail ridge is a main ridge whose two ends fork upward like a swallow’s tail. It is common on temples, ancestral halls and the main halls of wealthy houses. It carries the wish of “the swallow returns to the nest”: when someone is away, the swallow on the roof comes home first, a sign of family prosperity. On the coast the upturned ends also help relieve wind pressure. Builders first raise the ridge base, then model birds, flowers and figures in grey plaster and ceramic shard work, and finally lift both ends. Look first at the angle of the fork, then at the reliefs on the ridge band — that is where the owner spent the most money. Temples around Linpu and Luozhou preserve good examples.' },
+      { k: ['plaster', 'grey', 'huisu'], a: 'Grey plaster (huisu) is the most common ornament on Fuzhou lintels, gable walls and parapets. It is made mainly of lime mixed with hemp fibre, glutinous rice paste and brown sugar water for toughness. Craftsmen first build a bamboo-and-wire armature, then layer the paste on and carve feathers, drapery and petals while it is half dry. Subjects include birds, flowers, antique motifs, auspicious beasts and opera scenes. The palette is mostly blue-grey and off-white with touches of vermilion and ochre, so it reads quietly from afar and in fine layers up close. The gateways of Yijin Fang and Wenru Fang, and the gate tower of Xiaohuang Lou, are good places to study it.' },
+      { k: ['three lanes', 'lanes', 'story'], a: 'Three Lanes and Seven Alleys is centred on Nanhou Street: on the west are Yijin Fang, Wenru Fang and Guanglu Fang; on the east are Yangqiao, Languan, Ta, Huang, Anmin, Gong and Jibi lanes. More than a hundred Ming and Qing buildings survive here, which is why it is called a living fossil of the ward system. The area is dense with figures: Lin Zexu lived at Wenzao Hill and promoted West Lake; Yan Fu translated “Evolution and Ethics” in Languan Lane; Lin Juemin wrote his “Letter to My Wife” in Yangqiao Lane; Bing Xin spent her childhood in the same courtyard. Allow three to four hours: the west lanes in the quiet morning, lunch on Nanhou Street, then the east lanes for the former residences.' },
+      { k: ['shangxiahang', 'yan tai shan', 'yantaishan', 'zhuzi'], a: 'Shangxiahang was the old Min River wharf district, packed with guild halls such as Caifeng Villa and the Gutian and Yongde halls; it is called a museum of traditional Fuzhou commerce, and the brick carving looks best after the lamps come on. Yantaishan gathers consulates, trading houses, churches and schools from the treaty-port era, known as a museum of world architecture, and makes a fine contrast with the Chinese courtyards of Three Lanes and Seven Alleys. Zhuzi Fang is the quiet Song-and-Ming scholar-official quarter, good for a slow walk along the old river lanes.' },
+      { k: ['route', 'itinerary', 'creative', 'design'], a: 'That belongs to the Route Planner and the Creative Studio: chat with the assistant at the bottom of the Route page, which re-orders stops by location, or generate artwork in the “Fucuo Art Collection” page, where a dedicated prompt assistant lives.' }
     ]
   };
+
+  /* ---------- 回答配图：按内容匹配本地实景图（复用 images/spots 图库） ---------- */
+  var PIC_RULES = [
+    { k: ['马鞍墙', '马鞍', '封火墙', 'saddle wall', 'saddle', 'fire wall'], src: 'images/spots/06.jpg' },
+    { k: ['燕尾脊', '燕尾', '正脊', 'swallowtail', 'ridge'], src: 'images/spots/45.jpg' },
+    { k: ['灰塑', '灰批', 'plaster', 'huisu'], src: 'images/spots/11.jpg' },
+    { k: ['三坊七巷', '南后街', '坊巷', 'three lanes', 'lanes'], src: 'images/spots/10.jpg' },
+    { k: ['上下杭', 'shangxiahang'], src: 'images/spots/27.jpg' },
+    { k: ['烟台山', 'yantaishan'], src: 'images/spots/16.jpg' },
+    { k: ['朱紫坊', 'zhuzi'], src: 'images/spots/11.jpg' },
+    { k: ['严复', 'yan fu'], src: 'images/spots/01.jpg' },
+    { k: ['林则徐', 'lin zexu'], src: 'images/spots/02.jpg' },
+    { k: ['林觉民', 'lin juemin'], src: 'images/spots/13.jpg' },
+    { k: ['冰心', 'bing xin'], src: 'images/spots/05.jpg' },
+    { k: ['沈葆桢', 'shen baozhen'], src: 'images/spots/12.jpg' }
+  ];
+  var GUIDE_RE = /路线规划|福厝艺集|Route Planner|Creative Studio|Route page|Creative page/;
+  var DEFAULT_PIC = 'images/spots/10.jpg';
+
+  // 先按主题细节匹配，再退到完整景点名；路线/文创引导话术不配图
+  function pickImage(text) {
+    var s = String(text || '');
+    if (!s || GUIDE_RE.test(s)) return '';
+    var low = s.toLowerCase();
+    for (var i = 0; i < PIC_RULES.length; i++) {
+      for (var j = 0; j < PIC_RULES[i].k.length; j++) {
+        if (low.indexOf(String(PIC_RULES[i].k[j]).toLowerCase()) !== -1) return PIC_RULES[i].src;
+      }
+    }
+    if (typeof SPOT_PHOTOS === 'object' && typeof spotPhoto === 'function') {
+      for (var name in SPOT_PHOTOS) {
+        if (s.indexOf(name) !== -1) {
+          var u = spotPhoto(name);
+          if (u) return u;
+        }
+      }
+    }
+    return DEFAULT_PIC;
+  }
 
   function t(key) { return (TXT[curLang()] || TXT.zh)[key]; }
 
@@ -314,21 +353,43 @@
       appendMsg('ai', t('greeting'), false);
       return;
     }
-    history.forEach(function (m) { appendMsg(m.role, m.text, false); });
+    history.forEach(function (m) { appendMsg(m.role, m.text, false, m.img); });
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  function appendMsg(role, text, scroll) {
+  function appendMsg(role, text, scroll, img) {
     var d = document.createElement('div');
     d.className = 'ai-msg ' + (role === 'user' ? 'user' : 'ai');
     d.textContent = text;
+    if (img) appendPic(d, img);
     chatBox.appendChild(d);
     if (scroll !== false) chatBox.scrollTop = chatBox.scrollHeight;
     return d;
   }
 
-  function pushHistory(role, text) {
-    history.push({ role: role, text: text });
+  // 在回答气泡内追加一张对应的实景图
+  function appendPic(bubble, src) {
+    if (!bubble || !src) return;
+    var im = document.createElement('img');
+    im.className = 'ai-pic';
+    im.src = src;
+    im.alt = t('title');
+    im.loading = 'lazy';
+    bubble.appendChild(im);
+  }
+
+  function showAnswer(bubble, text, question) {
+    bubble.textContent = text;
+    var img = pickImage((question || '') + ' ' + text);
+    if (img) appendPic(bubble, img);
+    pushHistory('ai', text, img);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function pushHistory(role, text, img) {
+    var m = { role: role, text: text };
+    if (img) m.img = img;
+    history.push(m);
     if (history.length > 40) history = history.slice(history.length - 40);
     writeJSON(LS_CHAT, { lang: curLang(), list: history });
   }
@@ -336,8 +397,17 @@
   function loadHistory() {
     var st = readJSON(LS_CHAT, null);
     // 只恢复同语言的记录，避免中英混在一起
-    if (st && st.lang === curLang() && Array.isArray(st.list)) history = st.list.slice();
-    else history = [];
+    if (st && st.lang === curLang() && Array.isArray(st.list)) {
+      // 清掉旧版本缓存的“（离线演示样例）”后缀
+      history = st.list.map(function (m) {
+        var item = {
+          role: m.role,
+          text: String(m.text == null ? '' : m.text).replace(/\s*[（(](离线演示样例|offline demo sample)[）)]/gi, '')
+        };
+        if (m.img) item.img = m.img;
+        return item;
+      });
+    } else history = [];
   }
 
   function togglePanel(show) {
@@ -400,20 +470,17 @@
 
     callAI(q).then(function (reply) {
       wait.classList.remove('typing');
-      wait.textContent = reply;
-      pushHistory('ai', reply);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      showAnswer(wait, reply, q);
     }).catch(function () {
       // 离线演示：命中内置样例就回答样例，否则提示繁忙
       var sample = offlineAnswer(q);
       wait.classList.remove('typing');
       if (sample) {
-        wait.textContent = sample + '\n' + t('offlineTip');
-        pushHistory('ai', sample);
+        showAnswer(wait, sample, q);
       } else {
         wait.textContent = t('busy');
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
-      chatBox.scrollTop = chatBox.scrollHeight;
     });
   }
 
