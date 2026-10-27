@@ -13,10 +13,11 @@
   var API_TIMEOUT = 9000;
 
   var LS_TIP = 'fzyj_ai_tip_shown';
+  var LS_BALL = 'fzyj_ai_ball';
 
   var BALL_SIZE = 56;
   var MARGIN = 14;
-  var DEFAULT_TOP = 240; // 固定停在首页横幅下沿、右侧贴边
+  var DEFAULT_TOP = 240; // 默认停在首页横幅下沿、右侧贴边
   // 这些页面不显示悬浮球（启动页、设置基础信息）
   var HIDE_PAGES = ['page-splash', 'page-settings'];
 
@@ -195,10 +196,79 @@
     ball.style.bottom = 'auto';
   }
 
-  /* 球固定在右侧、横幅下方，不随拖动或记录变化 */
-  function lockPos() {
+  /* 球默认停在右上角（横幅下沿），但可以拖动；松手吸附最近左右边缘并记住位置 */
+  function defaultPos() {
     var b = screenBox();
-    applyPos(clampPos(b.w - MARGIN - BALL_SIZE, DEFAULT_TOP), false);
+    return clampPos(b.w - MARGIN - BALL_SIZE, DEFAULT_TOP);
+  }
+
+  function restorePos(animate) {
+    var s = readJSON(LS_BALL, null);
+    if (s && s.v === 3 && typeof s.x === 'number' && typeof s.y === 'number') {
+      applyPos(clampPos(s.x, s.y), !!animate);
+    } else {
+      applyPos(defaultPos(), !!animate);
+    }
+  }
+
+  function snapToEdge() {
+    var b = screenBox();
+    var x = parseFloat(ball.style.left) || 0;
+    var y = parseFloat(ball.style.top) || 0;
+    var side = (x + BALL_SIZE / 2) < b.w / 2 ? 'left' : 'right';
+    var p = clampPos(side === 'left' ? MARGIN : b.w - MARGIN - BALL_SIZE, y);
+    applyPos(p, true);
+    writeJSON(LS_BALL, { x: p.x, y: p.y, side: side, v: 3 });
+  }
+
+  var dragging = false, dragMoved = false, dragStart = null;
+
+  function bindBallDrag() {
+    ball.addEventListener('pointerdown', function (e) {
+      if (e.button != null && e.button !== 0) return;
+      dragging = true;
+      dragMoved = false;
+      dragStart = {
+        x: e.clientX, y: e.clientY,
+        left: parseFloat(ball.style.left) || 0,
+        top: parseFloat(ball.style.top) || 0
+      };
+      ball.classList.add('dragging');
+      try { ball.setPointerCapture(e.pointerId); } catch (err) {}
+      // 同时监听 document：即使指针捕获失败，手指拖出球外也能继续跟手
+      document.addEventListener('pointermove', onMove, true);
+      document.addEventListener('pointerup', finish, true);
+      document.addEventListener('pointercancel', finish, true);
+    });
+    function onMove(e) {
+      if (!dragging || !dragStart) return;
+      var dx = e.clientX - dragStart.x;
+      var dy = e.clientY - dragStart.y;
+      if (!dragMoved && Math.abs(dx) + Math.abs(dy) < 6) return;
+      if (!dragMoved) {
+        dragMoved = true;
+        if (tipEl) {   // 拖动时收起问候气泡
+          if (tipEl.parentNode) tipEl.parentNode.removeChild(tipEl);
+          tipEl = null;
+        }
+      }
+      e.preventDefault();
+      applyPos(clampPos(dragStart.left + dx, dragStart.top + dy), false);
+    }
+    function finish() {
+      if (!dragging) return;
+      dragging = false;
+      dragStart = null;
+      ball.classList.remove('dragging');
+      document.removeEventListener('pointermove', onMove, true);
+      document.removeEventListener('pointerup', finish, true);
+      document.removeEventListener('pointercancel', finish, true);
+      if (dragMoved) {
+        snapToEdge();
+        // 拖动结束后短时间内忽略随后的 click，避免误开面板
+        setTimeout(function () { dragMoved = false; }, 320);
+      }
+    }
   }
 
   function buildBall() {
@@ -211,8 +281,10 @@
     ball.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
+      if (dragMoved) return;   // 刚拖动过：不打开面板
       togglePanel(true);
     });
+    bindBallDrag();
     host.appendChild(ball);
   }
 
@@ -448,17 +520,17 @@
     buildBall();
     buildPanel();
     clearSavedChat();
-    lockPos();
+    restorePos(false);
     syncVisibility();
     // 所有页面切换最终都会走 paintScreen（showScreen / 返回键 / 跳过设置页均如此）
-    // 在这里收起面板、隐藏球体，并保持固定位置
+    // 在这里收起面板、隐藏球体，并恢复上次拖动后的位置
     if (typeof window.paintScreen === 'function' && !window.paintScreen.__aiHooked) {
       var origPaint = window.paintScreen;
       var wrappedPaint = function () {
         var r = origPaint.apply(this, arguments);
         if (open) togglePanel(false);
         var visible = syncVisibility();
-        lockPos();
+        restorePos(false);
         if (visible) setTimeout(maybeShowTip, 500);
         return r;
       };
@@ -481,8 +553,8 @@
       wrappedSet.__aiHooked = true;
       window.setLang = wrappedSet;
     }
-    // 窗口尺寸变化时保持固定位置
-    window.addEventListener('resize', lockPos);
+    // 窗口尺寸变化时把球收回到安全范围
+    window.addEventListener('resize', function () { restorePos(false); });
     setTimeout(maybeShowTip, 1200);
     if (typeof requestIdleCallback === 'function') requestIdleCallback(preloadPics);
     else setTimeout(preloadPics, 1000);
