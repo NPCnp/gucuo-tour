@@ -15,7 +15,7 @@
   var LS_BALL = 'fzyj_ai_ball';
   var LS_TIP = 'fzyj_ai_tip_shown';
 
-  var BALL_SIZE = 44;
+  var BALL_SIZE = 56;
   var MARGIN = 20;
   var DEFAULT_TOP = 132; // 右上角：首页标题/搜索框下方
   // 这些页面不显示悬浮球（启动页、设置基础信息）
@@ -230,7 +230,7 @@
     ball.id = 'aiBall';
     ball.className = 'ai-ball';
     ball.setAttribute('aria-label', '古厝文史问答 / Ancient House Q&A');
-    ball.innerHTML = '<span aria-hidden="true">📜</span>';
+    ball.innerHTML = '<img class="ai-ball-img" src="images/ai-mascot.png" alt="" draggable="false" aria-hidden="true" />';
     // 拖拽用 pointer 事件，区分点击与拖动
     ball.addEventListener('pointerdown', onDown);
     ball.addEventListener('pointermove', onMove);
@@ -259,6 +259,7 @@
     startTop = r.top - boxRect.top;
     startX = e.clientX;
     startY = e.clientY;
+    ball.classList.add('dragging');
     ball.style.transition = 'none';
     try { ball.setPointerCapture(pointerId); } catch (err) {}
   }
@@ -278,6 +279,7 @@
   function onUp(e) {
     if (!dragging) return;
     dragging = false;
+    ball.classList.remove('dragging');
     try { if (pointerId != null) ball.releasePointerCapture(pointerId); } catch (err) {}
     pointerId = null;
     if (moved) {

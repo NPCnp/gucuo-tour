@@ -10,35 +10,49 @@
   pointer-events: none;
 }
 
-/* ---------- 悬浮球 ---------- */
+/* ---------- 悬浮球（吉祥物形象） ---------- */
 .ai-float-host .ai-ball {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   border: none;
   border-radius: 50%;
   padding: 0;
+  background: none;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 21px;
-  line-height: 1;
-  color: #fff;
-  background: linear-gradient(145deg, #8c5a3c, #6d4227);
-  box-shadow: 0 6px 16px rgba(90, 58, 36, .34);
   pointer-events: auto;
   touch-action: none;
   cursor: grab;
   -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 6px 12px rgba(90, 58, 36, .28));
+  animation: aiMascotFloat 3.4s ease-in-out infinite;
+  transition: transform .18s ease, opacity .2s ease;
   z-index: 95;
 }
+.ai-float-host .ai-ball-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
 .ai-float-host .ai-ball:active { cursor: grabbing; }
-.ai-float-host .ai-ball.active { background: linear-gradient(145deg, #7a4c31, #5b3620); }
-.ai-float-host .ai-ball.bounce { animation: aiBallBounce .9s ease .1s 2; }
-@keyframes aiBallBounce {
-  0%, 100% { transform: translateY(0); }
-  35% { transform: translateY(-7px); }
-  60% { transform: translateY(0); }
+.ai-float-host .ai-ball.dragging { animation: none; }
+.ai-float-host .ai-ball.active { animation-play-state: paused; transform: scale(.94); }
+.ai-float-host .ai-ball.bounce { animation: aiMascotHop .8s ease .1s 2; }
+@keyframes aiMascotFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(-2deg); }
+}
+@keyframes aiMascotHop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-10px) scale(1.06, .98); }
+  62% { transform: translateY(0) scale(.98, 1.04); }
+  80% { transform: translateY(-3px) scale(1.02); }
 }
 
 /* ---------- 首次气泡提示 ---------- */
