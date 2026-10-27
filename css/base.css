@@ -168,7 +168,7 @@
   /* ========== 首页 ========== */
   .home-header {
     background: transparent;
-    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 22px;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 14px;
   }
   .app-name-row {
     display: flex; align-items: center; justify-content: space-between;
@@ -207,6 +207,75 @@
   }
 
   .grid-section { padding: 20px 16px 22px; }
+
+  /* ========== 首页图片跳转展示框 ========== */
+  .home-banner {
+    position: relative;
+    margin: 0 16px;
+    height: 150px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(90, 70, 50, 0.16);
+    cursor: pointer;
+    transition: transform 0.16s ease;
+  }
+  .home-banner:active { transform: scale(0.98); }
+  /* 内部遮罩/文字都不接收点击，统一交给外层 .home-banner 的 onclick */
+  .home-banner-img,
+  .home-banner-shade,
+  .home-banner-tag,
+  .home-banner-text,
+  .home-banner-go { pointer-events: none; }
+  .home-banner-img {
+    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    background: #e8ded0;
+  }
+  .home-banner-shade {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(24, 14, 6, 0) 40%, rgba(24, 14, 6, 0.66) 100%);
+  }
+  .home-banner-tag {
+    position: absolute;
+    top: 10px; left: 10px;
+    padding: 3px 9px;
+    border-radius: 10px;
+    background: rgba(255, 253, 246, 0.92);
+    color: #8c5a3c;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .home-banner-text {
+    position: absolute;
+    left: 14px; bottom: 12px; right: 96px;
+  }
+  .home-banner-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  }
+  .home-banner-sub {
+    margin-top: 3px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .home-banner-go {
+    position: absolute;
+    right: 12px; bottom: 14px;
+    font-size: 11px;
+    color: #fff;
+    background: rgba(140, 90, 60, 0.78);
+    padding: 4px 10px;
+    border-radius: 12px;
+    line-height: 1.4;
+  }
   .section-title {
     font-size: 15px; font-weight: 700; color: #1a1a1a;
     margin-bottom: 14px;
