@@ -544,6 +544,7 @@
     '严复故居': 'audio/01_三坊七巷·严复故居.mp3',
     '萨镇冰故居': 'audio/02_朱紫坊·萨镇冰故居.mp3',
     '南后街': 'audio/03_南后街.mp3',
+    '爱心树': 'audio/47_三坊七巷爱心树.mp3',
     '小黄楼': 'audio/04_小黄楼.mp3',
     '衣锦坊': 'audio/05_衣锦坊.mp3',
     '沈葆桢故居': 'audio/06_沈葆桢故居.mp3',
@@ -603,6 +604,7 @@
     '严复故居': 'audio_en/01_三坊七巷严复故居.mp3',
     '萨镇冰故居': 'audio_en/11_朱紫坊萨镇冰故居.mp3',
     '南后街': 'audio_en/12_南后街.mp3',
+    '爱心树': 'audio_en/54_三坊七巷爱心树.mp3',
     '小黄楼': 'audio_en/13_小黄楼.mp3',
     '衣锦坊': 'audio_en/14_衣锦坊.mp3',
     '沈葆桢故居': 'audio_en/15_沈葆桢故居.mp3',
@@ -1229,8 +1231,11 @@
 
   /* ========== 古厝详情页视频（旧版 narrator-panel 内嵌） ========== */
   function openSpotVideo() {
+    // 名称以数据源为准：英文界面下 #detailName 已被翻译成英文，直接读 DOM 会查不到视频
+    const n = typeof currentNarration === 'function' ? currentNarration() : null;
+    const key = typeof currentSpotKey !== 'undefined' ? currentSpotKey : '';
     const nameEl = document.getElementById('detailName');
-    const name = nameEl ? nameEl.textContent.trim() : '';
+    const name = (n && n.name) || key || (nameEl ? nameEl.textContent.trim() : '');
     const v = spotVideo(name);
     const box = document.getElementById('narrVideoBox');
     const video = document.getElementById('narrVideo');
