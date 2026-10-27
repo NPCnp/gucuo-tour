@@ -206,7 +206,7 @@
     transform: rotate(45deg);
   }
 
-  .grid-section { padding: 20px 16px 22px; }
+  .grid-section { padding: 20px 16px 10px; }
 
   /* ========== 首页图片跳转展示框 ========== */
   .home-banner {
@@ -317,7 +317,7 @@
   .feature-card.center .feature-desc { text-align: left; }
 
   /* ========== 首页：热门古厝 / 热门小吃（横向滑动） ========== */
-  .home-section { margin-top: 24px; }
+  .home-section { margin-top: 12px; }
   .home-section:last-child { padding-bottom: 24px; }
   .section-head {
     display: flex;
