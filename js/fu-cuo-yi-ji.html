@@ -1886,7 +1886,9 @@
     const order = {
       id: 'ord-' + Date.now(),
       name: cur.g.name,
-      img: cur.g.img,
+      // iframe 内的相对路径（../img/...）在外层页面会 404，统一改成外层可访问的路径
+      img: String(cur.g.img || '').replace(/^\.\.\//, ''),
+      cat: cur.g.cat,
       spec: cur.spec.label,
       qty: pdState.qty,
       total: cur.total,

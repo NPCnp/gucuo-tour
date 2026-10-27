@@ -191,10 +191,12 @@
   font-style: italic;
 }
 
-/* 回答配图：气泡内的实景图 */
+/* 回答配图：气泡内的实景图（先占位再填充，和文字同时出现不跳动） */
 #aiPanel .ai-pic {
   display: block;
   width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
   max-height: 200px;
   margin-top: 8px;
   border-radius: 10px;

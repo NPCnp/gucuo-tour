@@ -88,9 +88,20 @@
       box.innerHTML = '<div class="empty-tip"><div class="big">📦</div>暂无待收货订单<br/>在「福厝艺集」下单后可在这里查看</div>';
       return;
     }
+    // 订单图兜底：旧订单存的是 iframe 相对路径（../img/...），这里统一修正
+    const FALLBACK_IMG = {
+      '书签': 'img/creative/bookmark.jpg', '帆布袋': 'img/creative/totebag.jpg',
+      '明信片': 'img/creative/postcard.jpg', '手机壳': 'img/creative/phonecase.jpg',
+      '冰箱贴': 'img/creative/fridge-magnet.jpg', '钥匙扣': 'img/creative/keychain.jpg',
+      '马克杯': 'img/creative/mug.jpg', '折扇': 'img/creative/fan.jpg'
+    };
+    const orderImg = o => {
+      const src = String(o.img || '').replace(/^\.\.\//, '');
+      return src || FALLBACK_IMG[o.cat] || FALLBACK_IMG['帆布袋'];
+    };
     box.innerHTML = list.map(o => `
       <div class="od-card">
-        <div class="od-img"><img src="${o.img}" alt="${o.name}" /></div>
+        <div class="od-img"><img src="${orderImg(o)}" alt="${o.name}" data-cat="${o.cat || ''}" /></div>
         <div class="od-main">
           <div class="od-name">${o.name}</div>
           <div class="od-spec">${o.spec || '单件装'} × ${o.qty || 1}</div>
@@ -102,6 +113,13 @@
         </div>
       </div>
     `).join('');
+    // 网络图失效时换成本地品类预生成图，避免出现破图
+    box.querySelectorAll('.od-img img').forEach(im => {
+      im.addEventListener('error', () => {
+        const fb = FALLBACK_IMG[im.getAttribute('data-cat')] || FALLBACK_IMG['帆布袋'];
+        if (im.getAttribute('src') !== fb) im.src = fb;
+      });
+    });
   }
 
   /* ========== 头像上传 ========== */

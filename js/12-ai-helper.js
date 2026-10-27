@@ -374,8 +374,13 @@
     im.className = 'ai-pic';
     im.src = src;
     im.alt = t('title');
-    im.loading = 'lazy';
     bubble.appendChild(im);
+  }
+
+  // 预加载常问主题的配图，保证图片与文字答案同时出现，游客不用等图
+  function preloadPics() {
+    ['images/spots/06.jpg', 'images/spots/45.jpg', 'images/spots/11.jpg', 'images/spots/10.jpg']
+      .forEach(function (src) { var im = new Image(); im.src = src; });
   }
 
   function showAnswer(bubble, text, question) {
@@ -418,6 +423,7 @@
     if (show) {
       loadHistory();
       renderTexts();
+      preloadPics();
       panel.classList.toggle('from-left', side === 'left');
       panel.classList.add('show');
       ball.classList.add('active');
@@ -565,6 +571,8 @@
       applyPos((saved && saved.v === 2) ? clampPos(saved.x, saved.y) : defaultPos(), false);
     });
     setTimeout(maybeShowTip, 1200);
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(preloadPics);
+    else setTimeout(preloadPics, 1000);
   }
 
   if (document.readyState === 'loading') {
