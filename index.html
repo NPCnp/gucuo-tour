@@ -31,7 +31,7 @@
 <script src="vendor/html2canvas.min.js"></script>
 <!-- 二维码生成库（qrcode-generator） -->
 <script src="vendor/qrcode.min.js"></script>
-<link rel="stylesheet" href="css/base.css?v=16">
+<link rel="stylesheet" href="css/base.css?v=17">
 <link rel="stylesheet" href="css/pages.css?v=28">
 <link rel="stylesheet" href="css/ai-helper.css?v=8">
 </head>
@@ -1278,23 +1278,87 @@
     })();
   </script>
   <script src="js/12-ai-helper.js?v=12"></script>
-  <!-- 首页横幅轮播指示点 -->
+  <!-- 首页横幅轮播：自动切换 + 手势拖动 + 指示点 -->
   <script>
     (function () {
       var track = document.getElementById('homeBannerTrack');
       var dots = document.getElementById('homeBannerDots');
       if (!track || !dots) return;
+      var slides = track.children;
       var items = dots.children;
-      function sync() {
-        var idx = 0, min = Infinity;
-        for (var i = 0; i < track.children.length; i++) {
-          var d = Math.abs(track.children[i].offsetLeft - track.scrollLeft);
-          if (d < min) { min = d; idx = i; }
-        }
+      var idx = 0, timer = null;
+      var dragging = false, moved = false, startX = 0, startY = 0, dx = 0;
+      var suppressClick = false;
+
+      function step() {
+        var w = slides[0] ? slides[0].offsetWidth : 0;
+        return w ? w + 10 : 0;
+      }
+      function apply(x, animate) {
+        track.style.transition = animate ? '' : 'none';
+        track.style.transform = 'translateX(' + x + 'px)';
+      }
+      function mark() {
         for (var k = 0; k < items.length; k++) items[k].className = k === idx ? 'on' : '';
       }
-      track.addEventListener('scroll', sync, { passive: true });
-      window.addEventListener('resize', sync);
+      function go(i, animate) {
+        idx = Math.max(0, Math.min(slides.length - 1, i));
+        if (step()) apply(-idx * step(), animate !== false);
+        mark();
+      }
+      function stop() { if (timer) { clearInterval(timer); timer = null; } }
+      function play() {
+        stop();
+        timer = setInterval(function () { go(idx + 1 >= slides.length ? 0 : idx + 1); }, 4000);
+      }
+
+      track.addEventListener('pointerdown', function (e) {
+        dragging = true; moved = false;
+        startX = e.clientX; startY = e.clientY; dx = 0;
+        stop();
+      });
+      track.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        var mx = e.clientX - startX, my = e.clientY - startY;
+        if (!moved && Math.abs(mx) + Math.abs(my) > 8) moved = true;
+        if (!moved) return;
+        e.preventDefault();
+        dx = mx;
+        apply(-idx * step() + dx, false);
+      });
+      function finish() {
+        if (!dragging) return;
+        dragging = false;
+        if (moved) {
+          var half = step() / 2;
+          if (dx < -half) go(idx + 1);
+          else if (dx > half) go(idx - 1);
+          else go(idx);
+          // 拖动结束后短暂拦掉这次 click，避免误跳详情
+          suppressClick = true;
+          setTimeout(function () { suppressClick = false; }, 200);
+        } else {
+          go(idx);
+        }
+        play();
+      }
+      track.addEventListener('pointerup', finish);
+      track.addEventListener('pointercancel', finish);
+      // 拖动结束后拦掉这次 click，避免误跳详情
+      track.addEventListener('click', function (e) {
+        if (!suppressClick) return;
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+
+      window.addEventListener('resize', function () { go(idx, false); });
+      window.addEventListener('pageshow', function () { go(idx, false); play(); });
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) stop(); else play();
+      });
+
+      go(0, false);
+      play();
     })();
   </script>
 
