@@ -1,0 +1,76 @@
+{
+  "heritage": [
+    {
+      "keys": ["马鞍墙", "马鞍", "封火墙", "saddle"],
+      "answer": "马鞍墙是福州古厝最有辨识度的封火墙。它顺着木构架的高低起伏，两端翘起、中间略微下凹，从巷子里看过去像一副马鞍，所以叫马鞍墙。它首先是防火墙，能把火势隔在一进院落之内；其次它把闽派建筑的曲线勾勒得很完整，墙头常做灰塑、彩绘，转角处还要起翘。看马鞍墙最好的位置是衣锦坊、文儒坊的巷口，上午斜光打上去时，墙头的弧线最清楚。"
+    },
+    {
+      "keys": ["燕尾脊", "燕尾", "正脊", "swallowtail"],
+      "answer": "燕尾脊指的是正脊两端向上分叉、翘起如燕尾的做法。它寄托的是「燕归巢」的心愿——家里有人远行，屋脊上的燕子替他先回来，寓意家族兴旺、游子归家。福州靠海，这种做法在沿海民居里尤其常见，屋脊上还会配脊堵灰塑、剪粘和彩绘。抬头看的时候先看正脊两端的分叉角度，再看脊堵上的花鸟题材，那是屋主最愿意花钱的地方。"
+    },
+    {
+      "keys": ["灰塑", "灰批", "雕塑", "plaster"],
+      "answer": "福州灰塑以石灰为主料，掺麻丝、糯米浆、红糖水增加韧性，再由匠人一点点塑上去。题材多是花鸟、人物、博古纹和瑞兽，常见「郭子仪拜寿」「八仙」「松鼠葡萄」。颜色偏淡，青灰和米白打底，局部点朱红、赭石，所以远看很素，近看细节极多。想集中看灰塑，去衣锦坊、文儒坊宅院的门楣和山墙，那是整条巷子里最讲究的几处。"
+    },
+    {
+      "keys": ["三坊七巷", "坊巷", "南后街", "lanes"],
+      "answer": "三坊七巷以南后街为中轴：西边衣锦坊、文儒坊、光禄坊，东边杨桥巷、郎官巷、塔巷、黄巷、安民巷、宫巷、吉庇巷。这里保留了 159 处明清古建筑，被叫作「里坊制度活化石」。林则徐、严复、林觉民、冰心都在这儿住过，一座杨桥巷的宅子先后住过林觉民和冰心。建议留三到四小时：上午人少，先走西侧三坊看宅院，下午到南后街看商铺和灯市。"
+    },
+    {
+      "keys": ["林则徐", "林觉民", "严复", "冰心", "沈葆桢", "故事"],
+      "answer": "这条巷子里的人物故事很密集。林则徐晚年归福州住文藻山，倡修西湖；严复在郎官巷度过晚年，译《天演论》提出「物竞天择」；林觉民在杨桥巷写下《与妻书》，是黄花岗七十二烈士之一；冰心童年在同一座宅院度过，晚年题下「故乡」二字；沈葆桢住宫巷，主持福州船政。走的时候看一眼门口的说明牌，一间屋子往往叠着两三代人的故事。"
+    },
+    {
+      "keys": ["上下杭", "烟台山", "朱紫坊", "商帮"],
+      "answer": "上下杭是旧时闽江水运码头，商帮会馆云集，采峰别墅、古田会馆、永德会馆都在这一带，被称为「福州传统商业博物馆」，适合傍晚去，灯光下砖雕更有层次。烟台山是近代领事馆、洋行、教堂、学校聚集地，被叫作「万国建筑博物馆」，与三坊七巷的中式古厝正好形成对照，适合下午到黄昏。朱紫坊是宋明士大夫府第区，安静，适合慢慢走。"
+    },
+    {
+      "keys": ["*", "古厝", "福州", "history", "house"],
+      "answer": "福州古厝有意思的地方，在于它把防火、采光、门第和审美放在同一套做法里：马鞍墙负责隔火，天井负责采光排水，塌寿门头负责遮雨和显门第，灰塑和燕尾脊负责好看。你可以问我具体的建筑细节，比如马鞍墙、燕尾脊、灰塑、窗棂，也可以问我某条巷子里的人物故事。"
+    }
+  ],
+  "route": [
+    {
+      "keys": ["一日", "1日", "一天", "半日"],
+      "answer": "建议这样排：上午从三坊七巷游客中心出发，先进西侧衣锦坊、文儒坊看宅院与灰塑，再走黄巷小黄楼；中午在南后街吃鱼丸、肉燕；下午转东侧宫巷沈葆桢故居、杨桥巷林觉民与冰心故居，最后到南后街南口结束。全程步行，站与站之间 5～10 分钟，整条线顺向不折返。"
+    },
+    {
+      "keys": ["烟台山", "加入", "加上", "想去"],
+      "answer": "已建议把「烟台山历史风貌区」排进行程。它离三坊七巷有一段距离，建议放在当天最后一段，或单独安排半天：下午到黄昏看近代建筑与闽江，光线最好。加上之后整条路线会按地理位置重新就近排序。"
+    },
+    {
+      "keys": ["吃", "鱼丸", "肉燕", "美食", "饭"],
+      "answer": "用餐建议插在南后街中段：同利肉燕、永和鱼丸都在附近，步行五分钟内，不会打断动线。如果想吃锅边糊，可以放到早上，柴火锅边离巷口不远。加进去之后，路线会按最短增量插到最顺路的位置。"
+    },
+    {
+      "keys": ["交通", "地铁", "公交", "打车", "导航"],
+      "answer": "三坊七巷内部全程步行即可，站与站之间 5～10 分钟；巷子较长时可以坐巷内电瓶车。跨片区去上下杭或烟台山，建议地铁 1 号线加步行，或直接打车。每一站旁边都有「导航」按钮，可以分段打开高德网页导航，跟着走就行。"
+    },
+    {
+      "keys": ["*", "路线", "行程", "规划"],
+      "answer": "我可以帮你排行程、加减景点、调整先后顺序。试试说「我还想去烟台山」「不去二梅书屋」「中途想吃鱼丸」，我会按地理位置就近插入并整条重排，保证不折返。"
+    }
+  ],
+  "creative": [
+    {
+      "keys": ["马鞍墙", "马鞍", "国潮"],
+      "answer": "saddle-wall courtyard in Fuzhou, Guochao illustration, flowing curved firewall, blue-grey brick and dark tiles, warm morning light raking across the wall, grey plaster reliefs, vermilion lantern accents, clean lines, architectural accuracy, poster composition, 4k\n中文说明：以马鞍墙的连续曲线为主视觉，青灰砖配朱红灯笼，保留灰塑浮雕细节。"
+    },
+    {
+      "keys": ["燕尾脊", "燕尾"],
+      "answer": "swallowtail ridge silhouette against dusk sky, Fuzhou Min-style roof, forked ridge ends, dark tiles, grey plaster ridge band with bird and flower reliefs, soft golden-hour backlight, Guochao illustration, symmetrical composition, high detail, 4k\n中文说明：用黄昏逆光突出燕尾脊的分叉剪影，脊堵灰塑保留花鸟纹样。"
+    },
+    {
+      "keys": ["三坊七巷", "水彩", "明信片", "巷"],
+      "answer": "watercolour postcard of Three Lanes and Seven Alleys, narrow white-walled lane, saddle walls overhead, red lanterns, wet stone pavement after rain, soft diffused light, loose brush strokes, muted blue-grey and ochre palette, negative space for a caption, high detail\n中文说明：水彩明信片构图，雨后的青石板反光，留白处可放标题。"
+    },
+    {
+      "keys": ["灰塑", "雕塑"],
+      "answer": "close-up of Fuzhou grey plaster relief on a gate lintel, modelled birds and plum blossoms, lime and rice-paste texture, blue-grey and off-white with ochre accents, soft side light revealing depth, gongbi-inspired detail, museum-quality, 4k\n中文说明：门楣灰塑特写，侧光强化浮雕层次，工笔式细节。"
+    },
+    {
+      "keys": ["*", "文创", "海报", "插画", "生成"],
+      "answer": "Fuzhou historic house courtyard, saddle walls and swallowtail ridges, blue-grey brick, dark tiles, red lanterns, oil-paper umbrella, Guochao illustration, warm afternoon light, layered depth, clean lines, architectural accuracy, poster composition, high detail, 4k\n中文说明：默认以古厝院落为主体，国潮插画风格，突出马鞍墙与燕尾脊轮廓。"
+    }
+  ]
+}

@@ -33,6 +33,7 @@
 <script src="vendor/qrcode.min.js"></script>
 <link rel="stylesheet" href="css/base.css?v=12">
 <link rel="stylesheet" href="css/pages.css?v=28">
+<link rel="stylesheet" href="css/ai-helper.css?v=2">
 </head>
 <body>
   <div class="phone">
@@ -1199,7 +1200,7 @@
   <script src="js/04-route.js"></script>
   <script src="js/05-narrations.js?v=15"></script>
   <script src="js/06-narrator.js?v=5"></script>
-  <script src="js/07-nav.js?v=9"></script>
+  <script src="js/07-nav.js?v=10"></script>
   <script src="js/08-creative.js?v=8"></script>
   <script src="js/09-profile.js?v=5"></script>
   <script src="js/10-init.js?v=4"></script>
@@ -1207,6 +1208,17 @@
   <script src="js/i18n/dict.js?v=3"></script>
   <script src="js/i18n/rules.js?v=3"></script>
   <script src="js/11-i18n.js?v=4"></script>
+  <!-- AI 后端地址：同局域网演示自动指向「当前主机:8000」，线上部署请改成实际域名 -->
+  <script>
+    (function () {
+      if (window.FZYJ_AI_API != null) return;
+      var h = location.hostname;
+      if (!h || h === 'localhost' || h === '127.0.0.1') { window.FZYJ_AI_API = 'http://127.0.0.1:8000'; return; }
+      if (/^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(h)) { window.FZYJ_AI_API = location.protocol + '//' + h + ':8000'; return; }
+      window.FZYJ_AI_API = ''; // 公网静态站未部署后端时只走离线样例
+    })();
+  </script>
+  <script src="js/12-ai-helper.js?v=3"></script>
 
   <!-- 分享二维码弹层 -->
   <div id="qrShareMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:24px;" onclick="closeShareQR(event)">

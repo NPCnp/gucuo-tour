@@ -5,3 +5,9 @@
 景点图片1(1)/
 .DS_Store
 Thumbs.db
+
+# AI 服务本地运行产物（源码与配置样例仍需提交）
+__pycache__/
+*.py[cod]
+.venv/
+server/.env

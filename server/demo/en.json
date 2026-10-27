@@ -1,0 +1,76 @@
+{
+  "heritage": [
+    {
+      "keys": ["saddle", "wall", "maan", "ma'an"],
+      "answer": "The saddle wall is Fuzhou's signature fire wall. It rises and dips with the timber frame, both ends turning up while the middle sinks slightly, so from the lane it looks like a horse's saddle. Its first job is stopping fire from spreading between courtyards; its second is drawing the flowing curve that makes Min architecture recognisable. Wall tops usually carry grey plaster and painting, with upturned corners. The best place to see one is the mouth of Yijin or Wenru Lane in the morning, when raking light picks out the curve."
+    },
+    {
+      "keys": ["swallowtail", "swallow", "ridge"],
+      "answer": "The swallowtail ridge is the forked, upturned end of the main roof ridge. It carries the wish of swallows returning to the nest: a family member far from home is symbolically brought back first, a blessing on the household. Because Fuzhou faces the sea, the detail is especially common on coastal houses, often paired with grey-plaster ridge panels and cut porcelain. When you look up, first note the angle of the fork, then the birds and flowers on the ridge panel — that is where the owner spent his money."
+    },
+    {
+      "keys": ["plaster", "huisu", "relief", "sculpture"],
+      "answer": "Fuzhou grey plaster is lime mixed with hemp fibre, glutinous rice paste and brown-sugar water for flexibility, then modelled on by hand. Subjects are mostly birds, flowers, figures, antique motifs and auspicious beasts — the birthday of Guo Ziyi, the Eight Immortals, squirrels and grapes. The palette is restrained: blue-grey and off-white grounds with touches of vermilion and ochre, so it reads plain from a distance and very detailed up close. For the richest examples, look at the lintels and gable walls of houses in Yijin and Wenru lanes."
+    },
+    {
+      "keys": ["three lanes", "sanfang", "lanes", "nanhou"],
+      "answer": "Three Lanes and Seven Alleys is built around Nanhou Street: Yijin, Wenru and Guanglu lanes to the west; Yangqiao, Languan, Ta, Huang, Anmin, Gong and Jibi alleys to the east. It preserves 159 Ming and Qing buildings and is called a living fossil of the ward system. Lin Zexu, Yan Fu, Lin Juemin and Bing Xin all lived here — one courtyard in Yangqiao Alley housed both Lin Juemin and Bing Xin. Allow three to four hours: quieter mornings for the western lanes, then Nanhou Street's shops and lanterns in the afternoon."
+    },
+    {
+      "keys": ["lin zexu", "yan fu", "bing xin", "story", "stories"],
+      "answer": "The lanes are dense with lives. Lin Zexu returned to Fuzhou in old age and pushed for West Lake's restoration. Yan Fu spent his last years in Languan Alley, translating Huxley and coining 'natural selection' in Chinese. Lin Juemin wrote 'A Letter to My Wife' in Yangqiao Alley before dying at Huanghuagang. Bing Xin spent her childhood in the same courtyard and later inscribed 'Hometown'. Shen Baozhen lived in Gong Alley and ran the Fuzhou Navy Yard. Read the plaque at each door — one house often holds two or three generations of stories."
+    },
+    {
+      "keys": ["shangxiahang", "yantai", "zhuzi"],
+      "answer": "Shangxiahang was the Min River wharf district, crowded with guild halls — Caifeng Villa, Gutian and Yongde guild halls — and called a museum of traditional commerce. Go at dusk, when lighting brings out the brick carving. Yantai Hill gathered consulates, trading houses, churches and schools, earning the name 'museum of world architecture'; it pairs well with the Chinese houses of Sanfang Qixiang and suits late afternoon. Zhuzi Fang, a Song-Ming official quarter, is quiet and good for a slow walk."
+    },
+    {
+      "keys": ["*", "house", "fuzhou", "heritage", "history"],
+      "answer": "What makes a Fuzhou old house interesting is that fire safety, daylight, status and beauty sit in one system: saddle walls stop fire, sky wells bring light and drainage, recessed tashou gateways shelter the door, grey plaster and swallowtail ridges supply the ornament. Ask me about a detail — saddle walls, swallowtail ridges, grey plaster, lattice windows — or about the people behind a particular lane."
+    }
+  ],
+  "route": [
+    {
+      "keys": ["one day", "1 day", "half day", "day"],
+      "answer": "Try this: start at the Sanfang Qixiang visitor centre in the morning, take the western lanes first for courtyards and grey plaster, then Little Yellow Tower in Huang Alley. Lunch on Nanhou Street — fish balls and rouyan. In the afternoon cross to Gong Alley for Shen Baozhen's residence, then Yangqiao Alley for Lin Juemin and Bing Xin, finishing at the south end of Nanhou Street. All walking, 5–10 minutes between stops, no backtracking."
+    },
+    {
+      "keys": ["yantai", "add", "also want"],
+      "answer": "Suggested adding Yantai Hill Historic District. It sits some distance from Sanfang Qixiang, so place it as the last leg of the day or give it a half day of its own: late afternoon into dusk is the best light for the treaty-port buildings and the river. Once added, the whole route is re-ordered by geography."
+    },
+    {
+      "keys": ["eat", "food", "fish ball", "rouyan", "lunch"],
+      "answer": "Insert the meal in the middle of Nanhou Street: Tongli Rouyan and Yonghe Fish Balls are both within a five-minute walk and do not break the route. If you want guobian hu, have it for breakfast — the firewood-stove shop is near the lane mouth. Once added, the stop is inserted where it adds the least distance."
+    },
+    {
+      "keys": ["transport", "metro", "bus", "taxi", "navigate"],
+      "answer": "Inside Sanfang Qixiang, walk everywhere: 5–10 minutes between stops, with lane electric carts for the longer stretches. For Shangxiahang or Yantai Hill, take Metro Line 1 plus a walk, or a taxi. Each stop has a Navigate button that opens Amap web navigation for that leg."
+    },
+    {
+      "keys": ["*", "route", "itinerary", "plan"],
+      "answer": "I can plan the day, add or remove stops, and re-order them. Try 'I also want to see Yantai Hill', 'skip Ermei Book House', or 'I want fish balls midway' — I will insert the stop where it adds the least distance and re-order the whole route so it never backtracks."
+    }
+  ],
+  "creative": [
+    {
+      "keys": ["saddle", "guochao"],
+      "answer": "saddle-wall courtyard in Fuzhou, Guochao illustration, flowing curved firewall, blue-grey brick and dark tiles, warm morning light raking across the wall, grey plaster reliefs, vermilion lantern accents, clean lines, architectural accuracy, poster composition, 4k\nNote: the continuous saddle-wall curve is the main subject, blue-grey brick with vermilion lanterns, grey plaster detail preserved."
+    },
+    {
+      "keys": ["swallowtail", "ridge"],
+      "answer": "swallowtail ridge silhouette against dusk sky, Fuzhou Min-style roof, forked ridge ends, dark tiles, grey plaster ridge band with bird and flower reliefs, soft golden-hour backlight, Guochao illustration, symmetrical composition, high detail, 4k\nNote: backlit dusk emphasises the forked silhouette; the ridge band keeps its bird-and-flower reliefs."
+    },
+    {
+      "keys": ["three lanes", "watercolour", "postcard", "lane"],
+      "answer": "watercolour postcard of Three Lanes and Seven Alleys, narrow white-walled lane, saddle walls overhead, red lanterns, wet stone pavement after rain, soft diffused light, loose brush strokes, muted blue-grey and ochre palette, negative space for a caption, high detail\nNote: postcard framing, wet stone reflections, negative space left for a caption."
+    },
+    {
+      "keys": ["plaster", "relief"],
+      "answer": "close-up of Fuzhou grey plaster relief on a gate lintel, modelled birds and plum blossoms, lime and rice-paste texture, blue-grey and off-white with ochre accents, soft side light revealing depth, gongbi-inspired detail, museum-quality, 4k\nNote: lintel close-up, side light to reveal relief depth, gongbi-style detail."
+    },
+    {
+      "keys": ["*", "art", "poster", "illustration"],
+      "answer": "Fuzhou historic house courtyard, saddle walls and swallowtail ridges, blue-grey brick, dark tiles, red lanterns, oil-paper umbrella, Guochao illustration, warm afternoon light, layered depth, clean lines, architectural accuracy, poster composition, high detail, 4k\nNote: default subject is an old-house courtyard in Guochao style, emphasising saddle-wall and swallowtail silhouettes."
+    }
+  ]
+}

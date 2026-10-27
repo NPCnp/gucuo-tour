@@ -605,6 +605,14 @@
   }
 
   function insertReplyText(r) {
+    if (aiLang() === 'en') {
+      let whereEn = '';
+      if (r.prev && r.next) whereEn = ', between ' + r.prev.name + ' and ' + r.next.name;
+      else if (r.prev) whereEn = ', after ' + r.prev.name;
+      else if (r.next) whereEn = ', right before ' + r.next.name;
+      return 'Added ' + r.spot.name + ' as stop ' + (r.index + 1) + whereEn +
+        '. Only about ' + (r.addedMeters / 1000).toFixed(1) + ' km extra, no detour. Map refreshed.';
+    }
     let where = '';
     if (r.prev && r.next) where = '，在「' + r.prev.name + '」与「' + r.next.name + '」之间';
     else if (r.prev) where = '，排在「' + r.prev.name + '」之后';
@@ -613,10 +621,54 @@
       '，仅多走约 ' + (r.addedMeters / 1000).toFixed(1) + ' km，不绕路。地图已刷新。';
   }
 
+  /* ========== 后端 AI 服务（路线专用 prompt；失败回退本地规则） ========== */
+  let aiSending = false;   // 防抖：同一时间只处理一条请求
+  let aiLastSent = 0;
+  let aiHistory = [];
+
+  function aiLang() {
+    return (typeof getLang === 'function' && getLang() === 'en') ? 'en' : 'zh';
+  }
+  function aiS(zh, en) {
+    return aiLang() === 'en' ? en : zh;
+  }
+  function aiPush(role, text) {
+    aiHistory.push({ role: role, text: text });
+    if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+  }
+  function aiApiBase() {
+    return (window.FZYJ_AI_API == null ? 'http://127.0.0.1:8000' : window.FZYJ_AI_API).replace(/\/$/, '');
+  }
+  function aiRequest(mode, question, history) {
+    if (!aiApiBase()) return Promise.reject(new Error('no api base'));
+    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 9000);
+    return fetch(aiApiBase() + '/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: mode, lang: aiLang(), question: question, history: history || [] }),
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(d => {
+      clearTimeout(timer);
+      if (!d || typeof d.reply !== 'string' || !d.reply) throw new Error('bad payload');
+      return d.reply;
+    }).catch(e => {
+      clearTimeout(timer);
+      throw e;
+    });
+  }
+
   function aiSend() {
     const input = document.getElementById('aiInput');
     const text = input.value.trim();
     if (!text) return;
+    const now = Date.now();
+    if (aiSending || now - aiLastSent < 700) return; // 防重复发送
+    aiLastSent = now;
+    aiSending = true;
     const chat = document.getElementById('aiChat');
     const userMsg = document.createElement('div');
     userMsg.className = 'ai-msg user';
@@ -624,60 +676,78 @@
     chat.appendChild(userMsg);
     chat.classList.add('show'); // 对话面板向上弹出
     input.value = '';
-    // 模拟 AI 思考并回复（原型）
-    setTimeout(() => {
-      const result = aiReply(text);
-      const reply = document.createElement('div');
-      reply.className = 'ai-msg ai';
-      reply.textContent = result.text;
-      chat.appendChild(reply);
-      chat.scrollTop = chat.scrollHeight;
-      // 路线被对话修改时，联动刷新上方路线与地图
-      if (result.changed) {
-        refreshRouteUI();
-        showToast('路线已根据地理位置重新排布');
-      }
-    }, 500);
+    aiPush('user', text);
+
+    const pending = document.createElement('div');
+    pending.className = 'ai-msg ai';
+    pending.textContent = aiS('正在整理路线…', 'Working out the route…');
+    chat.appendChild(pending);
     chat.scrollTop = chat.scrollHeight;
+
+    // 增减点位 / 用餐插入由本地规则即时执行，保证地图与站点列表联动
+    const local = aiReply(text);
+    if (local.changed) {
+      pending.textContent = local.text;
+      aiPush('ai', local.text);
+      refreshRouteUI();
+      showToast(aiS('路线已根据地理位置重新排布', 'Route re-ordered by location'));
+      aiSending = false;
+      chat.scrollTop = chat.scrollHeight;
+      return;
+    }
+
+    // 其余行程类问题走后端「路线专用 prompt」，失败时回退本地话术
+    aiRequest('route', text, aiHistory.slice(-6)).then(reply => {
+      pending.textContent = reply;
+      aiPush('ai', reply);
+    }).catch(() => {
+      pending.textContent = local.text;
+      aiPush('ai', local.text);
+    }).then(() => {
+      chat.scrollTop = chat.scrollHeight;
+      aiSending = false;
+    });
   }
 
   function aiReply(q) {
     // ① 增加景点：如「我还想去烟台山」「加入文庙」「加上鼓山」
     const addMatch = q.match(/(?:还想去|想去|加入|加上|增加|添加|顺带去|顺便去)([一-龥]{2,10})/);
     if (addMatch) {
-      if (!currentPlan) return { text: '请先生成路线，再告诉我想去哪。', changed: false };
+      if (!currentPlan) return { text: aiS('请先生成路线，再告诉我想去哪。', 'Generate a route first, then tell me where to add.'), changed: false };
       const kw = addMatch[1].replace(/[的地儿了啊吧呢]$/, '');
       const spot = findAnyByKeyword(kw);
       if (!spot) {
-        return { text: '暂未收录「' + kw + '」。试试「烟台山」「鼓山」「鱼丸」等地点。', changed: false };
+        return { text: aiS('暂未收录「' + kw + '」。试试「烟台山」「鼓山」「鱼丸」等地点。', 'I have no record of "' + kw + '". Try Yantai Hill, Gushan or fish balls.'), changed: false };
       }
       const r = insertAndReorder(spot);
-      if (r.duplicated) return { text: '「' + r.spot.name + '」已在路线里了。', changed: false };
+      if (r.duplicated) return { text: aiS('「' + r.spot.name + '」已在路线里了。', r.spot.name + ' is already on the route.'), changed: false };
       return { text: insertReplyText(r), changed: true };
     }
 
     // ② 删除景点：如「不去二梅书屋」「去掉水榭戏台」
     const delMatch = q.match(/(?:不去|去掉|删除|移除)([一-龥]{2,10})/);
     if (delMatch) {
-      if (!currentPlan) return { text: '请先生成路线。', changed: false };
+      if (!currentPlan) return { text: aiS('请先生成路线。', 'Please generate a route first.'), changed: false };
       const kw = delMatch[1].replace(/[的地儿了啊吧呢]$/, '');
       const idx = currentPlan.spots.findIndex(s => s.name.indexOf(kw) !== -1 || kw.indexOf(s.name) !== -1);
       if (idx === -1) {
-        return { text: '路线里没有「' + kw + '」，可说「还想去' + kw + '」加入。', changed: false };
+        return { text: aiS('路线里没有「' + kw + '」，可说「还想去' + kw + '」加入。', '"' + kw + '" is not on the route. Say "I also want to see ' + kw + '" to add it.'), changed: false };
       }
       const removed = currentPlan.spots.splice(idx, 1)[0];
       // 删除后同样就近重排，避免留下折返空档
       currentPlan.spots = twoOpt(currentPlan.spots, currentStartCoord, currentEndCoord);
       return {
-        text: '已移除「' + removed.name + '」，剩余 ' + currentPlan.spots.length +
-          ' 站就近重排，全程约 ' + (currentFullLength() / 1000).toFixed(1) + ' km，地图已刷新。',
+        text: aiS(
+          '已移除「' + removed.name + '」，剩余 ' + currentPlan.spots.length + ' 站就近重排，全程约 ' + (currentFullLength() / 1000).toFixed(1) + ' km，地图已刷新。',
+          'Removed ' + removed.name + '. ' + currentPlan.spots.length + ' stops remain, re-ordered by location; total about ' + (currentFullLength() / 1000).toFixed(1) + ' km. Map refreshed.'
+        ),
         changed: true
       };
     }
 
     // ③ 用餐需求：如「中途想吃鱼丸」——同样走最优插入 + 整体重排
     if (/吃|餐|饭|鱼丸|肉燕|美食|捞化|锅边|元宵|花生汤|佛跳墙|荔枝肉|夜市|饿|芋泥|甜品/.test(q)) {
-      if (!currentPlan) return { text: '请先生成路线，再告诉我吃什么。', changed: false };
+      if (!currentPlan) return { text: aiS('请先生成路线，再告诉我吃什么。', 'Generate a route first, then tell me what to eat.'), changed: false };
       const kwMatch = q.match(/鱼丸|肉燕|肉丸|捞化|锅边|元宵|花生汤|佛跳墙|荔枝肉|闽菜|甜品|芋泥|夜市/);
       const FOOD_ALIAS = {
         '鱼丸': '永和鱼丸', '肉燕': '同利肉燕老铺', '肉丸': '木金肉丸老铺',
@@ -693,19 +763,28 @@
       if (!food) food = FOODS.find(f => !currentPlan.spots.some(s => s.name === f.name)) || FOODS[0];
       const r = insertAndReorder(food);
       if (r.duplicated) {
-        return { text: '「' + r.spot.name + '」已在路线里了。', changed: false };
+        return { text: aiS('「' + r.spot.name + '」已在路线里了。', r.spot.name + ' is already on the route.'), changed: false };
       }
       return { text: insertReplyText(r), changed: true };
     }
 
     if (/时间|压缩|缩短|快点|赶/.test(q)) {
-      return { text: '已压缩节奏：保留核心点位，' + estimateHours(currentPlan ? currentPlan.spots.slice(0, Math.max(2, (currentPlan.spots.length - 2))) : []) + '，动线仍顺向不折返。', changed: false };
+      return { text: aiS(
+        '已压缩节奏：保留核心点位，' + estimateHours(currentPlan ? currentPlan.spots.slice(0, Math.max(2, (currentPlan.spots.length - 2))) : []) + '，动线仍顺向不折返。',
+        'Pace compressed: keep the core stops, about the same walking direction with no backtracking.'
+      ), changed: false };
     }
     if (/交通|地铁|公交|打车|车/.test(q)) {
-      return { text: '全程步行可达；每站旁有「导航」按钮，可分段打开高德网页导航。', changed: false };
+      return { text: aiS(
+        '全程步行可达；每站旁有「导航」按钮，可分段打开高德网页导航。',
+        'Everything is walkable; each stop has a Navigate button that opens Amap web navigation for that leg.'
+      ), changed: false };
     }
     return {
-      text: '收到！试试说：「还想去烟台山」「中途想吃鱼丸」「不去二梅书屋」，我会就近插入并重排路线。',
+      text: aiS(
+        '收到！试试说：「还想去烟台山」「中途想吃鱼丸」「不去二梅书屋」，我会就近插入并重排路线。',
+        'Try "I also want to see Yantai Hill", "I want fish balls midway" or "skip Ermei Book House" — I will insert and re-order the route.'
+      ),
       changed: false
     };
   }
