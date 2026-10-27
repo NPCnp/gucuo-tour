@@ -349,12 +349,10 @@
   function renderChat() {
     if (!chatBox) return;
     chatBox.innerHTML = '';
-    if (!history.length) {
-      appendMsg('ai', t('greeting'), false);
-      return;
-    }
+    // 问候语常驻首条：每次打开面板先看到问候，再往下才是历史对话
+    appendMsg('ai', t('greeting'), false);
     history.forEach(function (m) { appendMsg(m.role, m.text, false, m.img); });
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = 0;
   }
 
   function appendMsg(role, text, scroll, img) {
