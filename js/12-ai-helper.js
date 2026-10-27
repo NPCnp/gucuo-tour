@@ -33,7 +33,7 @@
       close: '关闭',
       placeholder: '问问古厝历史、马鞍墙、燕尾脊相关知识…',
       send: '发送',
-      tip: '💬 古厝文史问答｜点我提问',
+      tip: '有问题随时问我～',
       quick: ['马鞍墙是什么？', '燕尾脊的由来？', '福州灰塑介绍', '古厝有什么历史故事'],
       busy: '古厝知识库暂时繁忙，请稍后再试',
       thinking: '正在查阅古厝文史资料…',
@@ -44,7 +44,7 @@
       close: 'Close',
       placeholder: 'Ask about Fuzhou historic houses, saddle walls, swallowtail ridges…',
       send: 'Send',
-      tip: '💬 Ancient House Q&A | Tap to ask',
+      tip: 'Ask me anything~',
       quick: ['What is a saddle wall?', 'Origin of the swallowtail ridge?', 'Fuzhou grey plaster craft', 'Stories of the old houses'],
       busy: 'The heritage knowledge base is busy right now. Please try again later.',
       thinking: 'Looking up the heritage archive…',
@@ -182,7 +182,7 @@
     if (hide) {
       if (open) togglePanel(false);
       if (tipEl && tipEl.parentNode) { tipEl.parentNode.removeChild(tipEl); tipEl = null; }
-      if (ball) ball.classList.remove('bounce');
+      if (ball) ball.classList.remove('bounce', 'wave');
     }
     return !hide;
   }
@@ -401,12 +401,13 @@
     });
   }
 
-  /* ---------- 首次气泡提示 ---------- */
+  /* ---------- 首次气泡提示（每次进入站点说一句，招呼 + 招手动作） ---------- */
   function maybeShowTip() {
-    var shown = readJSON(LS_TIP, false);
+    var shown = false;
+    try { shown = sessionStorage.getItem(LS_TIP) === '1'; } catch (e) {}
     if (shown || tipEl || !ballVisible()) return;
-    writeJSON(LS_TIP, true);
-    ball.classList.add('bounce');
+    try { sessionStorage.setItem(LS_TIP, '1'); } catch (e) {}
+    ball.classList.add('bounce', 'wave');
     tipEl = document.createElement('div');
     tipEl.className = 'ai-tip';
     tipEl.setAttribute('data-i18n-ignore', '');
@@ -418,8 +419,12 @@
     tipEl.style.bottom = 'auto';
     tipEl.style.right = 'auto';
     tipEl.style.top = Math.max(8, by - 6) + 'px';
-    if (bx + BALL_SIZE / 2 < b.w / 2) tipEl.style.left = (bx + BALL_SIZE + 8) + 'px';
-    else tipEl.style.right = (b.w - bx + 8) + 'px';
+    if (bx + BALL_SIZE / 2 < b.w / 2) {
+      tipEl.style.left = (bx + BALL_SIZE + 8) + 'px';
+      tipEl.classList.add('tip-left');
+    } else {
+      tipEl.style.right = (b.w - bx + 8) + 'px';
+    }
     host.appendChild(tipEl);
     setTimeout(function () { tipEl && tipEl.classList.add('show'); }, 60);
     setTimeout(function () {
@@ -428,8 +433,8 @@
       var el = tipEl;
       setTimeout(function () { if (el && el.parentNode) el.parentNode.removeChild(el); }, 400);
       tipEl = null;
-    }, 3000);
-    setTimeout(function () { ball && ball.classList.remove('bounce'); }, 900);
+    }, 3200);
+    setTimeout(function () { ball && ball.classList.remove('bounce', 'wave'); }, 3200);
   }
 
   /* ---------- 生命周期 ---------- */

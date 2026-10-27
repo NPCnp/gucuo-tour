@@ -44,6 +44,21 @@
 .ai-float-host .ai-ball.dragging { animation: none; }
 .ai-float-host .ai-ball.active { animation-play-state: paused; transform: scale(.94); }
 .ai-float-host .ai-ball.bounce { animation: aiMascotHop .8s ease .1s 2; }
+/* 打招呼：蹦一下 + 左右挥手，比单纯的 bounce 更活泼 */
+.ai-float-host .ai-ball.bounce.wave {
+  transform-origin: 50% 100%;
+  animation: aiMascotHi 2.8s cubic-bezier(.36, .07, .19, .97) .1s 1;
+}
+@keyframes aiMascotHi {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); }
+  12%  { transform: translateY(-12px) rotate(-8deg) scale(1.04, .98); }
+  26%  { transform: translateY(0) rotate(6deg) scale(.98, 1.03); }
+  40%  { transform: translateY(-6px) rotate(-5deg); }
+  54%  { transform: translateY(0) rotate(5deg); }
+  68%  { transform: translateY(-3px) rotate(-3deg); }
+  82%  { transform: translateY(0) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
 @keyframes aiMascotFloat {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-4px) rotate(-2deg); }
@@ -69,12 +84,28 @@
   line-height: 1.45;
   box-shadow: 0 6px 18px rgba(80, 60, 40, .16);
   opacity: 0;
-  transform: translateY(4px);
-  transition: opacity .28s ease, transform .28s ease;
+  transform: translateY(6px) scale(.82);
+  transform-origin: right center;
+  transition: opacity .26s ease, transform .3s cubic-bezier(.34, 1.56, .64, 1);
   pointer-events: none;
   white-space: nowrap;
 }
-.ai-float-host .ai-tip.show { opacity: 1; transform: translateY(0); }
+/* 气泡指向吉祥物的小尾巴（默认在右侧，球在左时翻到左边） */
+.ai-float-host .ai-tip::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: inherit;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.ai-float-host .ai-tip.tip-left { transform-origin: left center; }
+.ai-float-host .ai-tip.tip-left::after { right: auto; left: -5px; }
+.ai-float-host .ai-tip.show { opacity: 1; transform: translateY(0) scale(1); }
 
 /* ---------- 问答面板 ---------- */
 #aiPanel {
