@@ -207,7 +207,7 @@
     ball.id = 'aiBall';
     ball.className = 'ai-ball';
     ball.setAttribute('aria-label', '古厝文史问答 / Ancient House Q&A');
-    ball.innerHTML = '<img class="ai-ball-img" src="images/ai-mascot.png" alt="" draggable="false" aria-hidden="true" />';
+    ball.innerHTML = '<img class="ai-ball-img" src="images/ai-mascot.png?v=2" alt="" draggable="false" aria-hidden="true" />';
     ball.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
