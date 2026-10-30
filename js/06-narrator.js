@@ -98,15 +98,18 @@
   let routeRenderSeq = 0;   // 渲染序号：多次刷新时丢弃旧的步行规划结果
   const AMAP_KEY = 'd7e92dbe4a718dd4a21efe540834a22f';
 
-  // 加载高德 SDK（只加载一次）
+  // 加载高德 SDK（只加载一次；loader 本身也按需注入，避免阻塞首屏）
   function loadAMap() {
     if (amapReady && amap) return Promise.resolve(amap);
     if (window._amapLoadingPromise) return window._amapLoadingPromise;
-    window._amapLoadingPromise = AMapLoader.load({
+    const loaderReady = typeof ensureAMapLoader === 'function'
+      ? ensureAMapLoader()
+      : Promise.reject(new Error('AMap loader helper missing'));
+    window._amapLoadingPromise = loaderReady.then(() => AMapLoader.load({
       key: AMAP_KEY,
       version: '2.0',
       plugins: ['AMap.Geocoder', 'AMap.Walking', 'AMap.ToolBar', 'AMap.Scale']
-    }).then(AMap => {
+    })).then(AMap => {
       amap = new AMap.Map('amapContainer', {
         viewMode: '2D',
         zoom: 15,
@@ -119,8 +122,10 @@
       return amap;
     }).catch(err => {
       console.error('AMap load failed', err);
-      document.getElementById('amapContainer').style.display = 'none';
-      document.getElementById('amapFallback').style.display = 'flex';
+      const c = document.getElementById('amapContainer');
+      const f = document.getElementById('amapFallback');
+      if (c) c.style.display = 'none';
+      if (f) f.style.display = 'flex';
       throw err;
     });
     return window._amapLoadingPromise;

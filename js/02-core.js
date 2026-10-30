@@ -693,6 +693,18 @@
     return /\.mp4$/i.test(p) ? GH_PROXY + GH_RAW + enc : MEDIA_CDN + enc;
   }
 
+  // 图片加载失败兜底：GitHub Pages 在手机弱网/微信里常超时，自动换 jsDelivr 镜像重试一次
+  document.addEventListener('error', function (e) {
+    const el = e.target;
+    if (!el || el.tagName !== 'IMG' || el.dataset.cdnTried) return;
+    const src = el.getAttribute('src') || '';
+    if (!src || /^http|^data:|^blob:/i.test(src)) return;
+    const alt = cdnMediaUrl(src);
+    if (!alt) return;
+    el.dataset.cdnTried = '1';
+    el.setAttribute('src', alt);
+  }, true);
+
   // 挑选最接近真人的音色：英文模式选英文音色（中文音频缺失时的朗读兜底），否则选中文音色
   function pickNarrVoice() {
     if (!('speechSynthesis' in window)) return;
@@ -851,6 +863,19 @@
         showToast('音频播放失败');
         onNarrEnd();
       });
+      // 弱网下 Pages 音频长时间缓冲（不报错但也播不出来）：超时后自动换 CDN 镜像重试一次
+      const audioRef = currentAudio;
+      setTimeout(() => {
+        if (currentAudio !== audioRef || narrCdnTried || audioRef.readyState >= 2) return;
+        const alt = cdnMediaUrl(audioPath);
+        if (!alt) return;
+        narrCdnTried = true;
+        try {
+          audioRef.src = alt;
+          audioRef.load();
+          audioRef.play().catch(() => {});
+        } catch (e) {}
+      }, 8000);
       return true;
     }
 
@@ -985,6 +1010,19 @@
         showToast('音频播放失败');
         onNarrEnd();
       });
+      // 弱网下 Pages 音频长时间缓冲（不报错但也播不出来）：超时后自动换 CDN 镜像重试一次
+      const audioRef = currentAudio;
+      setTimeout(() => {
+        if (currentAudio !== audioRef || audioCdnTried || audioRef.readyState >= 2) return;
+        const alt = cdnMediaUrl(audioPath);
+        if (!alt) return;
+        audioCdnTried = true;
+        try {
+          audioRef.src = alt;
+          audioRef.load();
+          audioRef.play().catch(() => {});
+        } catch (e) {}
+      }, 8000);
     } else {
       // 没有音频文件，使用语音合成
       const ok = narrSpeak();
@@ -1146,8 +1184,21 @@
     setTimeout(() => {
       if (fired || video._playToken !== token) return;
       cleanup();
+      // 弱网下 Pages 视频常卡在缓冲（不报错但一直转圈）：超时后自动换 CDN 镜像重试一次
+      if (!video.dataset.cdnTried && typeof cdnMediaUrl === 'function') {
+        const alt = cdnMediaUrl(video.dataset.mediaRel);
+        if (alt) {
+          video.dataset.cdnTried = '1';
+          try {
+            video.src = alt;
+            video.load();
+            playVideoWhenReady(video, onFail);
+            return;
+          } catch (e) {}
+        }
+      }
       if (onFail) onFail('slow');
-    }, 12000);
+    }, 8000);
   }
 
   // 播放视频（核心逻辑：有本地 mp4 直接站内播放，无则提示加载失败）

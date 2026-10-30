@@ -26,11 +26,33 @@
 <script>
   window._AMapSecurityConfig = { securityJsCode: 'c31603b7e17903803ca4a1409e4fa0a1' };
 </script>
-<script src="https://webapi.amap.com/loader.js"></script>
-<!-- 凭证保存为图片 -->
-<script src="vendor/html2canvas.min.js"></script>
+<script>
+  // 高德 loader 按需加载：挂在 head 里同步加载会在弱网（尤其微信内）阻塞整页解析，
+  // 表现为进页面要等很久、按钮点了没反应。改为用到地图时再注入，并复用同一个 Promise。
+  window.ensureAMapLoader = function () {
+    if (window.AMapLoader) return Promise.resolve(window.AMapLoader);
+    if (window._amapLoaderPromise) return window._amapLoaderPromise;
+    window._amapLoaderPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://webapi.amap.com/loader.js';
+      s.async = true;
+      s.onload = function () {
+        if (window.AMapLoader) resolve(window.AMapLoader);
+        else { window._amapLoaderPromise = null; reject(new Error('AMapLoader missing')); }
+      };
+      s.onerror = function () {
+        window._amapLoaderPromise = null;
+        reject(new Error('AMap loader load failed'));
+      };
+      document.head.appendChild(s);
+    });
+    return window._amapLoaderPromise;
+  };
+</script>
+<!-- 凭证保存为图片（defer：不阻塞首屏渲染） -->
+<script src="vendor/html2canvas.min.js" defer></script>
 <!-- 二维码生成库（qrcode-generator） -->
-<script src="vendor/qrcode.min.js"></script>
+<script src="vendor/qrcode.min.js" defer></script>
 <link rel="stylesheet" href="css/base.css?v=20">
 <link rel="stylesheet" href="css/pages.css?v=28">
 <link rel="stylesheet" href="css/ai-helper.css?v=9">
@@ -94,7 +116,7 @@
           <div class="home-banner-wrap">
             <div class="home-banner-track" id="homeBannerTrack">
               <div class="home-banner" onclick="gotoDetail('三坊七巷爱心树')">
-                <img class="home-banner-img" src="images/spots/47.jpg" alt="三坊七巷爱心树" />
+                <img class="home-banner-img" src="images/spots/banner-heart.jpg" alt="三坊七巷爱心树" />
                 <div class="home-banner-shade"></div>
                 <span class="home-banner-tag">网红打卡</span>
                 <div class="home-banner-text">
@@ -1254,11 +1276,11 @@
   </div>
 
   <script src="js/01-data.js?v=11"></script>
-  <script src="js/02-core.js?v=29"></script>
-  <script src="js/03-checkin.js?v=12"></script>
+  <script src="js/02-core.js?v=30"></script>
+  <script src="js/03-checkin.js?v=13"></script>
   <script src="js/04-route.js"></script>
   <script src="js/05-narrations.js?v=15"></script>
-  <script src="js/06-narrator.js?v=5"></script>
+  <script src="js/06-narrator.js?v=6"></script>
   <script src="js/07-nav.js?v=10"></script>
   <script src="js/08-creative.js?v=8"></script>
   <script src="js/09-profile.js?v=6"></script>

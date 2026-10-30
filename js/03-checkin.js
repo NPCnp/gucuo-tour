@@ -218,16 +218,16 @@
   function initPointsMap() {
     const fallback = document.getElementById('pointsMapFallback');
     const container = document.getElementById('pointsMapContainer');
-    if (typeof AMapLoader === 'undefined') {
+    if (typeof ensureAMapLoader !== 'function') {
       container.style.display = 'none';
       fallback.style.display = 'flex';
       return;
     }
-    AMapLoader.load({
+    ensureAMapLoader().then(() => AMapLoader.load({
       key: AMAP_KEY,
       version: '2.0',
       plugins: ['AMap.ToolBar', 'AMap.Scale']
-    }).then(AMap => {
+    })).then(AMap => {
       if (pointsMapInstance) {
         pointsMapInstance.destroy();
         pointsMapInstance = null;
